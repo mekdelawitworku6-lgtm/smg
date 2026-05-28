@@ -2,11 +2,13 @@ import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { loginUser } from "../auth/authSlice";
+import { useTranslation } from "../i18n/LanguageContext";
 
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error } = useSelector((state) => state.auth);
+  const { t, toggleLang, lang } = useTranslation();
 
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
@@ -22,12 +24,16 @@ export default function Login() {
     if (error) setLocalError(error);
   }, [error]);
 
+  useEffect(() => {
+    setLocalError("");
+  }, [phone, password]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLocalError("");
 
     if (!phone.trim() || !password.trim()) {
-      setLocalError("Please enter phone and password");
+      setLocalError(t("login.errorEmpty"));
       return;
     }
 
@@ -43,17 +49,20 @@ export default function Login() {
   return (
     <div style={styles.wrapper}>
       <div style={styles.card}>
+        <button onClick={toggleLang} style={styles.langBtn}>
+          {t("lang.switch")}
+        </button>
         <div style={styles.brand}>
           <div style={styles.logo}>SMG</div>
-          <h1 style={styles.title}>Salon Management</h1>
-          <p style={styles.subtitle}>Sign in to your account</p>
+          <h1 style={styles.title}>{t("login.title")}</h1>
+          <p style={styles.subtitle}>{t("login.subtitle")}</p>
         </div>
 
         <form onSubmit={handleLogin} style={styles.form}>
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Phone</label>
+            <label style={styles.label}>{t("login.phoneLabel")}</label>
             <input
-              placeholder="Enter your phone number"
+              placeholder={t("login.phonePlaceholder")}
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               style={styles.input}
@@ -61,10 +70,10 @@ export default function Login() {
           </div>
 
           <div style={styles.inputGroup}>
-            <label style={styles.label}>Password</label>
+            <label style={styles.label}>{t("login.passwordLabel")}</label>
             <input
               type="password"
-              placeholder="Enter your password"
+              placeholder={t("login.passwordPlaceholder")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               style={styles.input}
@@ -83,12 +92,12 @@ export default function Login() {
               ...(loading ? styles.buttonDisabled : {}),
             }}
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? t("login.signingIn") : t("login.signIn")}
           </button>
         </form>
 
         <p style={styles.footer}>
-          Salon Management System v1.0
+          {t("login.footer")}
         </p>
       </div>
     </div>
@@ -111,6 +120,7 @@ const styles = {
     borderRadius: "12px",
     padding: "40px 32px",
     boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+    position: "relative",
   },
   brand: {
     textAlign: "center",
@@ -120,7 +130,7 @@ const styles = {
     width: "64px",
     height: "64px",
     margin: "0 auto 16px",
-    background: "#d4af37",
+    background: "#8B5E3C",
     color: "#111",
     fontSize: "22px",
     fontWeight: 800,
@@ -175,7 +185,7 @@ const styles = {
   button: {
     width: "100%",
     minHeight: "46px",
-    background: "#d4af37",
+    background: "#8B5E3C",
     color: "#111111",
     border: "none",
     borderRadius: "8px",
@@ -203,5 +213,17 @@ const styles = {
     color: "#555",
     fontSize: "12px",
     margin: "28px 0 0",
+  },
+  langBtn: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    background: "none",
+    border: "1px solid #555",
+    color: "#aaa",
+    borderRadius: 6,
+    padding: "4px 10px",
+    fontSize: 12,
+    cursor: "pointer",
   },
 };

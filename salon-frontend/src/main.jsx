@@ -1,4 +1,5 @@
 import React from "react";
+
 import ReactDOM from "react-dom/client";
 
 import App from "./App";
@@ -9,11 +10,29 @@ from "react-redux";
 import { store }
 from "./app/store";
 
+import { LanguageProvider }
+from "./i18n/LanguageContext";
+
+/* 🔥 PWA */
+import { registerSW }
+from "virtual:pwa-register";
+
+/* 🔥 REGISTER SERVICE WORKER */
+registerSW({
+  immediate: true,
+});
+
 ReactDOM.createRoot(
   document.getElementById("root")
 ).render(
 
   <Provider store={store}>
-    <App />
+
+    <LanguageProvider>
+
+      <App />
+
+    </LanguageProvider>
+
   </Provider>
 );

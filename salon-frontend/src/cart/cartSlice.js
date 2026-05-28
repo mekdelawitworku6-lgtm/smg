@@ -13,8 +13,8 @@ const cartSlice = createSlice({
   reducers: {
 
     addToCart: (state, action) => {
-
-      state.items.push(action.payload);
+      const item = { ...action.payload, nonAsrat: false };
+      state.items.push(item);
 
       state.total = state.items.reduce(
         (acc, item) => acc + item.price,
@@ -34,6 +34,13 @@ const cartSlice = createSlice({
       );
     },
 
+    toggleItemNonAsrat: (state, action) => {
+      const index = action.payload;
+      if (state.items[index]) {
+        state.items[index].nonAsrat = !state.items[index].nonAsrat;
+      }
+    },
+
     clearCart: (state) => {
       state.items = [];
       state.total = 0;
@@ -44,6 +51,7 @@ const cartSlice = createSlice({
 export const {
   addToCart,
   removeFromCart,
+  toggleItemNonAsrat,
   clearCart,
 } = cartSlice.actions;
 
