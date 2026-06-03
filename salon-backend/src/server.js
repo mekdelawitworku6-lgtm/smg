@@ -31,7 +31,7 @@ app.use((req, res) => {
   });
 });
 
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 10000;
 
 // Start server only after DB is connected
 connectDB()
