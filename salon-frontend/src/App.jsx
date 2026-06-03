@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import AppRoutes from "./routhes/AppRouthes";
+import AppRoutes from "./pages/AppRoutes";
 import { syncTransactions } from "./offline/sync";
 
 export default function App() {

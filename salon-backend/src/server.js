@@ -10,6 +10,7 @@ import authRoutes from "./routes/auth.routes.js";
 import expenseRoutes from "./routes/expenseRoutes.js";
 import serviceRoutes from "./routes/serviceRoutes.js";
 import staffRoutes from "./routes/staffRoutes.js";
+import transactionRoutes from "./routes/transactionRoutes.js";
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 // Debugging Catch-all for 404s
 app.use((req, res) => {
