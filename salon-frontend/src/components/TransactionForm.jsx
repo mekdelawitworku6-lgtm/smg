@@ -107,7 +107,7 @@ export default function TransactionForm() {
         <div
           style={{
             padding: "10px",
-            backgroundColor: "#f0f0f0",
+            backgroundColor: "var(--bg-body)",
             borderRadius: "4px",
           }}
         >
@@ -159,7 +159,7 @@ export default function TransactionForm() {
         disabled={loading}
         style={{
           padding: "10px",
-          backgroundColor: loading ? "#ccc" : "#4CAF50",
+          backgroundColor: loading ? "var(--border-color)" : "var(--color-success)",
           color: "white",
           border: "none",
           borderRadius: "4px",

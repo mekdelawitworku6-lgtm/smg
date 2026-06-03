@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import API from "../../api/axios";
+import { useDispatch, useSelector } from "react-redux";
+import { setStaffList, fetchStaff } from "../../staff/staffSlice";
 import { useTranslation } from "../../i18n/LanguageContext";
 
 const ROLE_OPTIONS = [
@@ -13,34 +14,36 @@ const ROLE_OPTIONS = [
 
 const styles = {
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 },
-  card: { background: "#f5eedd", borderRadius: 10, padding: 16, border: "1px solid #e8dcc8", cursor: "pointer", transition: "0.15s" },
-  avatar: { width: 48, height: 48, borderRadius: "50%", background: "#e8dcc8", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, color: "#8B5E3C", flexShrink: 0 },
+  card: { background: "var(--bg-card)", borderRadius: 10, padding: 16, border: "1px solid var(--border-color)", cursor: "pointer", transition: "0.15s" },
+  avatar: { width: 48, height: 48, borderRadius: "50%", background: "var(--border-color)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, color: "var(--color-primary)", flexShrink: 0 },
   cardBody: { display: "flex", gap: 12, alignItems: "center" },
-  name: { fontSize: 15, fontWeight: 600, color: "#3d2e1e" },
-  role: { fontSize: 12, color: "#8b7355" },
+  name: { fontSize: 15, fontWeight: 600, color: "var(--text-primary)" },
+  role: { fontSize: 12, color: "var(--text-secondary)" },
   badge: { display: "inlineBlock", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600 },
   modalOverlay: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 },
-  modal: { background: "#fefcf8", borderRadius: 12, padding: 28, maxWidth: 500, width: "90%", border: "1px solid #e8dcc8", maxHeight: "80vh", overflowY: "auto", color: "#3d2e1e" },
+  modal: { background: "#fff", borderRadius: 12, padding: 28, maxWidth: 500, width: "90%", border: "1px solid var(--border-color)", maxHeight: "80vh", overflowY: "auto", color: "var(--text-primary)" },
   modalHeader: { display: "flex", gap: 16, alignItems: "center", marginBottom: 20 },
   field: { marginBottom: 12 },
-  fieldLabel: { fontSize: 11, color: "#8b7355", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
+  fieldLabel: { fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 2 },
   fieldValue: { fontSize: 14, fontWeight: 500 },
-  panel: { background: "#f5eedd", borderRadius: 10, padding: 20, border: "1px solid #e8dcc8", marginBottom: 20 },
-  panelTitle: { fontSize: 15, fontWeight: 600, margin: "0 0 16px", color: "#8B5E3C" },
+  panel: { background: "var(--bg-card)", borderRadius: 10, padding: 20, border: "1px solid var(--border-color)", marginBottom: 20 },
+  panelTitle: { fontSize: 15, fontWeight: 600, margin: "0 0 16px", color: "var(--color-primary)" },
   formRow: { display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "flex-end" },
-  input: { padding: "8px 12px", borderRadius: 6, border: "1px solid #e8dcc8", background: "#fefcf8", color: "#3d2e1e", fontSize: 13 },
-  select: { padding: "8px 12px", borderRadius: 6, border: "1px solid #e8dcc8", background: "#fefcf8", color: "#3d2e1e", fontSize: 13 },
+  input: { padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", fontSize: 13 },
+  select: { padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", fontSize: 13 },
   btn: { padding: "8px 16px", borderRadius: 6, border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" },
-  btnPrimary: { background: "#8B5E3C", color: "#fff" },
-  btnDanger: { background: "#b91c1c", color: "#fff" },
-  btnSecondary: { background: "#e8dcc8", color: "#5c4a32" },
-  row: { display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid #e8dcc8", fontSize: 13 },
+  btnPrimary: { background: "var(--color-primary)", color: "#fff" },
+  btnDanger: { background: "var(--color-danger)", color: "#fff" },
+  btnSecondary: { background: "var(--border-color)", color: "var(--text-primary)" },
+  row: { display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-color)", fontSize: 13 },
 };
 
 const defaultPhoto = (name) => name?.charAt(0).toUpperCase() || "?";
 
-export default function StaffView({ staffList, setStaffList, transactions }) {
+export default function StaffView({ transactions }) {
+  const dispatch = useDispatch();
   const { t } = useTranslation();
+  const staffList = useSelector((state) => state.staff.apiList);
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [formName, setFormName] = useState("");
   const [formRole, setFormRole] = useState("");
@@ -70,14 +73,13 @@ export default function StaffView({ staffList, setStaffList, transactions }) {
     if (!formName.trim()) return;
     const payload = { name: formName.trim(), role: formRole, phone: formPhone, salary: Number(formSalary) || 0 };
     try {
+      const API = (await import("../../api/axios")).default;
       if (editingId) {
-        const res = await API.put(`/staff/${editingId}`, payload);
-        setStaffList(staffList.map((s) => (s._id === editingId ? res.data : s)));
+        await API.put(`/staff/${editingId}`, payload);
       } else {
-        const res = await API.post("/staff", payload);
-        setStaffList([...staffList, res.data]);
+        await API.post("/staff", payload);
       }
-      /* If cashier role, create/update login account */
+      dispatch(fetchStaff());
       if (isCashier && formPhone.trim()) {
         if (!editingId && (!formPassword || formPassword.length < 4)) {
           return alert(t("cashiers.invalidPassword"));
@@ -95,7 +97,7 @@ export default function StaffView({ staffList, setStaffList, transactions }) {
     } catch {
       const id = editingId || `local-${Date.now()}`;
       const entry = { ...payload, _id: id };
-      setStaffList(editingId ? staffList.map((s) => (s._id === id ? entry : s)) : [...staffList, entry]);
+      dispatch(setStaffList(editingId ? staffList.map((s) => (s._id === id ? entry : s)) : [...staffList, entry]));
     }
     setFormName(""); setFormRole(""); setFormPhone(""); setFormSalary(""); setFormPassword(""); setEditingId(null);
   };
@@ -111,8 +113,11 @@ export default function StaffView({ staffList, setStaffList, transactions }) {
 
   const handleDelete = async (s) => {
     if (!window.confirm(t("staff.deleteConfirm", { name: s.name }))) return;
-      try { await API.delete(`/staff/${s._id}`); } catch { /* offline delete, remove locally */ }
-    setStaffList(staffList.filter((x) => x._id !== s._id));
+    try {
+      const API = (await import("../../api/axios")).default;
+      await API.delete(`/staff/${s._id}`);
+    } catch { /* offline delete, remove locally */ }
+    dispatch(setStaffList(staffList.filter((x) => x._id !== s._id)));
     if (selectedStaff?._id === s._id) setSelectedStaff(null);
   };
 
@@ -140,7 +145,7 @@ export default function StaffView({ staffList, setStaffList, transactions }) {
 
       <div style={styles.grid}>
         {staffList.length === 0 ? (
-          <div style={{ fontSize: 13, color: "#a09070" }}>{t("staff.noStaff")}</div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("staff.noStaff")}</div>
         ) : (
           staffList.map((s) => {
             const meta = staffMeta[s.name] || { services: 0, days: new Set() };
@@ -151,9 +156,9 @@ export default function StaffView({ staffList, setStaffList, transactions }) {
                   <div style={{ flex: 1 }}>
                     <div style={styles.name}>{s.name}</div>
                     <div style={styles.role}>{s.role || t("staff.defaultRole")}</div>
-                    <div style={{ fontSize: 11, color: "#a09070", marginTop: 4 }}>{meta.services} {t("staff.services")} · {meta.days.size} {t("staff.days")}</div>
+                    <div style={{ fontSize: 11, color: "var(--text-muted)", marginTop: 4 }}>{meta.services} {t("staff.services")} · {meta.days.size} {t("staff.days")}</div>
                   </div>
-                  <span style={{ ...styles.badge, background: s.active !== false ? "#065f46" : "#374151", color: s.active !== false ? "#6ee7b7" : "#9ca3af" }}>
+                  <span style={{ ...styles.badge, background: s.active !== false ? "#059669" : "var(--text-secondary)", color: s.active !== false ? "#fff" : "var(--text-muted)" }}>
                     {s.active !== false ? t("staff.active") : t("staff.inactive")}
                   </span>
                 </div>
@@ -169,8 +174,8 @@ export default function StaffView({ staffList, setStaffList, transactions }) {
             <div style={styles.modalHeader}>
               <div style={{ ...styles.avatar, width: 56, height: 56, fontSize: 24 }}>{defaultPhoto(selectedStaff.name)}</div>
               <div>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#3d2e1e" }}>{selectedStaff.name}</div>
-                <div style={{ fontSize: 13, color: "#8b7355" }}>{selectedStaff.role || "Staff"}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: "var(--text-primary)" }}>{selectedStaff.name}</div>
+                <div style={{ fontSize: 13, color: "var(--text-secondary)" }}>{selectedStaff.role || "Staff"}</div>
               </div>
             </div>
 

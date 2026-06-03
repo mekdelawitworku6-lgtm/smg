@@ -16,7 +16,7 @@ export default function ServiceList({ services }) {
           key={index}
 
           style={{
-            border: "1px solid #ccc",
+            border: "1px solid var(--border-color)",
             padding: "10px",
             marginBottom: "10px",
             borderRadius: "8px",

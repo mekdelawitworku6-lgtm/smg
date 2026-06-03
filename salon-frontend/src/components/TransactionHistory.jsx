@@ -19,7 +19,7 @@ export default function TransactionHistory() {
   }
 
   if (error) {
-    return <p style={{ color: "red" }}>{error}</p>;
+    return <p style={{ color: "var(--color-danger)" }}>{error}</p>;
   }
 
   const validTransactions = list.filter(
@@ -42,8 +42,8 @@ export default function TransactionHistory() {
         <div
           key={tx._id}
           style={{
-            background: "#fff",
-            border: "1px solid #eee",
+            background: "var(--bg-card)",
+            border: "1px solid var(--border-color)",
             borderRadius: "10px",
             padding: "15px",
             marginBottom: "15px",

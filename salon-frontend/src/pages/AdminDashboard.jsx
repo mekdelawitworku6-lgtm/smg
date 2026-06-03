@@ -2,9 +2,10 @@ import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
-import API from "../api/axios";
 import { logout } from "../auth/authSlice";
 import { getTransactions } from "../transactions/transactionSlice";
+import { fetchServices, setLocalServices } from "../services/servicesSlice";
+import { fetchStaff, setStaffList } from "../staff/staffSlice";
 import { useTranslation } from "../i18n/LanguageContext";
 
 import DashboardView from "./admin/DashboardView";
@@ -25,41 +26,22 @@ export default function AdminDashboard() {
     ["services", t("nav.services")],
     ["staff", t("nav.staff")],
     ["transactions", t("nav.transactions")],
-    ["categories", t("nav.categories")],
     ["reports", t("nav.reports")],
   ], [lang]);
 
   const { list } = useSelector((state) => state.transactions);
+  const services = useSelector((state) => state.services.apiList);
+  const staffList = useSelector((state) => state.staff.apiList);
   const [activeView, setActiveView] = useState("dashboard");
-  const [services, setServices] = useState([]);
-  const [staffList, setStaffList] = useState([]);
   const [message, setMessage] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     dispatch(getTransactions());
+    dispatch(fetchServices());
+    dispatch(fetchStaff());
   }, [dispatch]);
-
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const [svcRes, staffRes] = await Promise.all([
-          API.get("/services"),
-          API.get("/staff"),
-        ]);
-        setServices(Array.isArray(svcRes.data) ? svcRes.data : []);
-        setStaffList(Array.isArray(staffRes.data) ? staffRes.data : []);
-      } catch (err) {
-        if (err.response?.status === 401) {
-          setMessage(t("admin.sessionExpired"));
-        } else {
-          setMessage(t("admin.connectionError"));
-        }
-      }
-    };
-    loadData();
-  }, []);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -100,13 +82,16 @@ export default function AdminDashboard() {
       case "dashboard":
         return <DashboardView transactions={validTransactions} services={services} />;
       case "services":
-        return <ServicesView services={services} setServices={setServices} />;
+        return <>
+          <ServicesView />
+          <div style={{ marginTop: 32 }}>
+            <CategoriesView />
+          </div>
+        </>;
       case "staff":
-        return <StaffView staffList={staffList} setStaffList={setStaffList} transactions={validTransactions} />;
+        return <StaffView transactions={validTransactions} />;
       case "transactions":
         return <TransactionsView transactions={validTransactions} services={services} />;
-      case "categories":
-        return <CategoriesView />;
       case "reports":
         return <ReportsView transactions={validTransactions} />;
       default:
@@ -115,39 +100,98 @@ export default function AdminDashboard() {
   };
 
   const styles = {
-    shell: { display: "flex", minHeight: "100vh", background: "#fdf8f0", color: "#3d2e1e" },
+    shell: { display: "flex", minHeight: "100vh", background: "var(--bg-body)", color: "var(--text-primary)" },
+    topHeader: {
+      display: "flex", alignItems: "center", justifyContent: "space-between",
+      padding: "0 24px", height: 60, background: "var(--bg-card)",
+      borderBottom: "1px solid var(--border-color)", flexShrink: 0,
+      position: "sticky", top: 0, zIndex: 100,
+    },
+    topLeft: { display: "flex", alignItems: "center", gap: 12 },
+    topRight: { display: "flex", alignItems: "center", gap: 8 },
+    brand: { fontSize: 20, fontWeight: 800, color: "var(--color-primary)", letterSpacing: 1 },
+    topBtn: {
+      padding: "8px 14px", borderRadius: 8, border: "none", fontSize: 13,
+      fontWeight: 600, cursor: "pointer", transition: "0.15s",
+    },
+    topBtnActive: {
+      background: "var(--color-primary)", color: "#fff",
+    },
+    topBtnInactive: {
+      background: "transparent", color: "var(--text-secondary)",
+    },
+    logoutBtn: {
+      background: "transparent", border: "1px solid var(--border-color)", color: "var(--color-danger)",
+      padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+      cursor: "pointer", transition: "0.15s",
+    },
+    body: { display: "flex", flex: 1, minHeight: 0 },
     sidebar: {
-      width: 220, background: "#f5eedd", display: "flex", flexDirection: "column", borderRight: "1px solid #e8dcc8", flexShrink: 0,
+      width: 220, background: "var(--bg-card)", borderRight: "1px solid var(--border-color)",
+      flexShrink: 0, padding: "12px 0", overflowY: "auto",
       ...(isMobile ? {
-        position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 1000,
+        position: "fixed", top: 60, left: 0, bottom: 0, zIndex: 1000,
         transform: sidebarOpen ? "translateX(0)" : "translateX(-100%)",
         transition: "transform 0.25s ease",
-        boxShadow: sidebarOpen ? "4px 0 20px rgba(0,0,0,0.15)" : "none",
+        boxShadow: sidebarOpen ? "4px 0 20px rgba(0,0,0,0.12)" : "none",
       } : {}),
     },
-    brand: { padding: "20px 16px", fontSize: 18, fontWeight: 700, color: "#8B5E3C", borderBottom: "1px solid #e8dcc8" },
-    nav: { flex: 1, padding: "12px 0" },
-    navBtn: { display: "block", width: "100%", padding: "10px 20px", textAlign: "left", background: "none", border: "none", color: "#5c4a32", fontSize: 14, cursor: "pointer", transition: "0.15s" },
-    navBtnActive: { background: "#8B5E3C", color: "#fff", fontWeight: 600 },
-    logoutBtn: { padding: "12px 20px", background: "none", border: "none", borderTop: "1px solid #e8dcc8", color: "#c0392b", fontSize: 14, cursor: "pointer", textAlign: "left", width: "100%" },
-    main: { flex: 1, padding: isMobile ? "16px" : "24px 32px", overflowY: "auto" },
-    topbar: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 },
-    title: { fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: 0, color: "#3d2e1e" },
-    notice: { background: "#fce4e4", color: "#c0392b", padding: "10px 16px", borderRadius: 8, marginBottom: 16, fontSize: 13 },
-    hamburger: { background: "none", border: "none", color: "#8B5E3C", fontSize: 24, cursor: "pointer", padding: "4px 8px 4px 0", marginRight: 12 },
+    navBtn: {
+      display: "flex", alignItems: "center", gap: 10,
+      width: "100%", padding: "12px 20px",
+      background: "none", border: "none", color: "var(--text-secondary)",
+      fontSize: 14, cursor: "pointer", textAlign: "left",
+      transition: "0.15s",
+    },
+    navBtnActive: {
+      background: "var(--color-primary-light)", color: "var(--color-primary)", fontWeight: 700,
+      borderRight: "3px solid var(--color-primary)",
+    },
+    main: { flex: 1, padding: isMobile ? "16px" : "24px 32px", overflowY: "auto", minHeight: 0 },
+    header: { marginBottom: 24 },
+    title: { fontSize: isMobile ? 20 : 24, fontWeight: 700, margin: 0, color: "var(--text-primary)" },
+    notice: { background: "#FEF2F2", color: "var(--color-danger)", padding: "10px 16px", borderRadius: 8, marginBottom: 16, fontSize: 13 },
+    hamburger: { background: "none", border: "none", color: "var(--color-primary)", fontSize: 22, cursor: "pointer", padding: "4px" },
+    langBtn: {
+      background: "transparent", border: "1px solid var(--border-color)", color: "var(--text-secondary)",
+      padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+      cursor: "pointer", transition: "0.15s",
+    },
   };
 
   return (
-    <div style={styles.shell}>
-      {isMobile && sidebarOpen && (
-        <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 999 }} />
-      )}
-      <aside style={styles.sidebar}>
-        <div style={styles.brand}>{t("admin.brand")}</div>
+    <div style={{ display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+      <div style={styles.topHeader}>
+        <div style={styles.topLeft}>
+          {isMobile && (
+            <button onClick={() => setSidebarOpen(true)} style={styles.hamburger}>☰</button>
+          )}
+          <span style={styles.brand}>{t("admin.brand")}</span>
+        </div>
+        <div style={styles.topRight}>
+          {navItems.map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => { setActiveView(key); }}
+              style={{
+                ...styles.topBtn,
+                ...(activeView === key ? styles.topBtnActive : styles.topBtnInactive),
+                display: isMobile ? "none" : "block",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+          <button onClick={toggleLang} style={styles.langBtn}>{t("lang.switch")}</button>
+          <button onClick={handleLogout} style={styles.logoutBtn}>{t("admin.logout")}</button>
+        </div>
+      </div>
+
+      <div style={styles.body}>
         {isMobile && sidebarOpen && (
-          <button onClick={() => setSidebarOpen(false)} style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", color: "#aaa", fontSize: 22, cursor: "pointer" }}>✕</button>
+          <div onClick={() => setSidebarOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", zIndex: 999, top: 60 }} />
         )}
-        <nav style={styles.nav}>
+        <aside style={styles.sidebar}>
           {navItems.map(([key, label]) => (
             <button
               key={key}
@@ -157,23 +201,16 @@ export default function AdminDashboard() {
               {label}
             </button>
           ))}
-        </nav>
-        <button onClick={toggleLang} style={{ ...styles.logoutBtn, color: "#8B5E3C", borderTop: "none", fontSize: 12 }}>{t("lang.switch")}</button>
-        <button onClick={handleLogout} style={styles.logoutBtn}>{t("admin.logout")}</button>
-      </aside>
+        </aside>
 
-      <main style={styles.main}>
-        <div style={styles.topbar}>
-          <div style={{ display: "flex", alignItems: "center" }}>
-            {isMobile && (
-              <button onClick={() => setSidebarOpen(true)} style={styles.hamburger}>☰</button>
-            )}
+        <main style={styles.main}>
+          <div style={styles.header}>
             <h1 style={styles.title}>{navItems.find(([k]) => k === activeView)?.[1]}</h1>
           </div>
-        </div>
-        {message && <div style={styles.notice}>{message}</div>}
-        {renderView()}
-      </main>
+          {message && <div style={styles.notice}>{message}</div>}
+          {renderView()}
+        </main>
+      </div>
     </div>
   );
 }

@@ -53,7 +53,7 @@ export default function Login() {
           {t("lang.switch")}
         </button>
         <div style={styles.brand}>
-          <div style={styles.logo}>SMG</div>
+          <div style={styles.logo}>WBS</div>
           <h1 style={styles.title}>{t("login.title")}</h1>
           <p style={styles.subtitle}>{t("login.subtitle")}</p>
         </div>
@@ -110,16 +110,16 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "#101010",
+    background: "var(--bg-body)",
     fontFamily: "Inter, Arial, Helvetica, sans-serif",
   },
   card: {
     width: "380px",
-    background: "#1b1b1b",
-    border: "1px solid #333333",
+    background: "var(--bg-card)",
+    border: "1px solid var(--color-primary-light)",
     borderRadius: "12px",
     padding: "40px 32px",
-    boxShadow: "0 20px 60px rgba(0,0,0,0.5)",
+    boxShadow: "0 20px 60px rgba(0,0,0,0.1)",
     position: "relative",
   },
   brand: {
@@ -130,8 +130,8 @@ const styles = {
     width: "64px",
     height: "64px",
     margin: "0 auto 16px",
-    background: "#8B5E3C",
-    color: "#111",
+    background: "var(--color-primary-light)",
+    color: "var(--color-primary)",
     fontSize: "22px",
     fontWeight: 800,
     display: "flex",
@@ -142,14 +142,14 @@ const styles = {
   },
   title: {
     margin: 0,
-    color: "#ffffff",
+    color: "var(--text-primary)",
     fontSize: "22px",
     fontWeight: 700,
     letterSpacing: 0,
   },
   subtitle: {
     margin: "6px 0 0",
-    color: "#a3a3a3",
+    color: "var(--text-secondary)",
     fontSize: "14px",
   },
   form: {
@@ -163,7 +163,7 @@ const styles = {
     gap: "6px",
   },
   label: {
-    color: "#cfcfcf",
+    color: "var(--text-primary)",
     fontSize: "13px",
     fontWeight: 600,
     textTransform: "uppercase",
@@ -174,9 +174,9 @@ const styles = {
     minHeight: "44px",
     padding: "0 14px",
     boxSizing: "border-box",
-    background: "#111111",
-    color: "#f5f5f5",
-    border: "1px solid #3f3f3f",
+    background: "var(--bg-card)",
+    color: "var(--text-primary)",
+    border: "1px solid var(--color-primary-light)",
     borderRadius: "8px",
     outline: "none",
     fontSize: "15px",
@@ -185,8 +185,8 @@ const styles = {
   button: {
     width: "100%",
     minHeight: "46px",
-    background: "#8B5E3C",
-    color: "#111111",
+    background: "var(--color-primary)",
+    color: "#FFFFFF",
     border: "none",
     borderRadius: "8px",
     fontSize: "15px",
@@ -195,22 +195,22 @@ const styles = {
     marginTop: "4px",
   },
   buttonDisabled: {
-    background: "#665522",
-    color: "#999",
+    background: "var(--color-primary-light)",
+    color: "var(--text-muted)",
     cursor: "not-allowed",
   },
   error: {
     padding: "10px 14px",
-    background: "#2b1414",
-    border: "1px solid #6b2020",
+    background: "#FEF2F2",
+    border: "1px solid #FECACA",
     borderRadius: "8px",
-    color: "#f5a0a0",
+    color: "var(--color-danger)",
     fontSize: "13px",
     textAlign: "center",
   },
   footer: {
     textAlign: "center",
-    color: "#555",
+    color: "var(--text-secondary)",
     fontSize: "12px",
     margin: "28px 0 0",
   },
@@ -219,8 +219,8 @@ const styles = {
     top: 12,
     right: 12,
     background: "none",
-    border: "1px solid #555",
-    color: "#aaa",
+    border: "1px solid var(--color-primary-light)",
+    color: "var(--color-primary)",
     borderRadius: 6,
     padding: "4px 10px",
     fontSize: 12,

@@ -12,18 +12,15 @@ import {
 } from "react-redux";
 
 import { logout } from "../auth/authSlice";
+import { fetchServices } from "../services/servicesSlice";
+import { fetchStaff } from "../staff/staffSlice";
+import { initSession, addTransaction, setTransactions, endSession } from "../session/sessionSlice";
 import { useTranslation } from "../i18n/LanguageContext";
-
-import servicesData from "../data/services";
-import defaultStaff from "../data/staff";
-
-import API from "../api/axios";
 
 import {
   addToCart,
   removeFromCart,
   clearCart,
-  toggleItemNonAsrat,
 } from "../cart/cartSlice";
 
 import { saveTransaction }
@@ -35,95 +32,11 @@ from "../components/OfflineIndicator";
 import OfflineTransactionHistory
 from "../components/OfflineTransactionHistory";
 
-const buildCatalogFromServices = (services) => {
-  const catalogMap = new Map();
+import { syncTransactions }
+from "../offline/sync";
 
-  services.forEach((service) => {
-    const categoryName = service.category;
-    const subcategoryName = service.subcategory;
-
-    if (!categoryName || !subcategoryName) {
-      return;
-    }
-
-    if (!catalogMap.has(categoryName)) {
-      catalogMap.set(categoryName, {
-        category: categoryName,
-        subcategories: new Map(),
-      });
-    }
-
-    const category = catalogMap.get(categoryName);
-
-    if (!category.subcategories.has(subcategoryName)) {
-      category.subcategories.set(subcategoryName, {
-        name: subcategoryName,
-        services: [],
-      });
-    }
-
-    category.subcategories
-      .get(subcategoryName)
-      .services.push({
-        name: service.name,
-        price: service.price,
-        nonAsrat: !!service.nonAsrat,
-      });
-  });
-
-  return Array.from(catalogMap.values()).map(
-    (category) => ({
-      category: category.category,
-      subcategories: Array.from(
-        category.subcategories.values()
-      ),
-    })
-  );
-};
-
-const readStaffList = () => {
-  try {
-    return (
-      JSON.parse(
-        localStorage.getItem("adminStaffList")
-      ) || defaultStaff
-    );
-  } catch {
-    return defaultStaff;
-  }
-};
-
-const readLocalServices = () => {
-  try {
-    const services = JSON.parse(
-      localStorage.getItem("adminLocalServices")
-    );
-
-    return Array.isArray(services) ? services : [];
-  } catch {
-    return [];
-  }
-};
-
-const SESSION_KEY = "cashierCurrentSession";
-
-const loadSession = () => {
-  try {
-    const data = JSON.parse(
-      localStorage.getItem(SESSION_KEY)
-    );
-    if (data && data.sessionId) return data;
-  } catch {
-    return null;
-  }
-};
-
-const saveSession = (data) => {
-  localStorage.setItem(
-    SESSION_KEY,
-    JSON.stringify(data)
-  );
-};
+import servicesData from "../data/services";
+import staffData from "../data/staff";
 
 export default function CashierDashboard() {
 
@@ -133,6 +46,29 @@ export default function CashierDashboard() {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { t, toggleLang, lang } = useTranslation();
+
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    const handleStatus = () => setIsOnline(navigator.onLine);
+    window.addEventListener("online", handleStatus);
+    window.addEventListener("offline", handleStatus);
+    return () => {
+      window.removeEventListener("online", handleStatus);
+      window.removeEventListener("offline", handleStatus);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOnline) return;
+    syncTransactions().then((synced) => {
+      if (synced.length === 0) return;
+      const existingIds = new Set(session.transactions.map((t) => t.uuid));
+      const newOnes = synced.filter((t) => !existingIds.has(t.uuid));
+      if (newOnes.length === 0) return;
+      dispatch(setTransactions([...session.transactions, ...newOnes]));
+    }).catch(() => {});
+  }, [isOnline]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -144,104 +80,41 @@ export default function CashierDashboard() {
     (state) => state.cart
   );
 
-  const [apiServices, setApiServices] = useState([]);
-  const [localServices, setLocalServices] =
-    useState(readLocalServices);
-  const [staffList, setStaffList] = useState(
-    readStaffList
-  );
-  const [sessionId, setSessionId] = useState("");
-  const [sessionStart, setSessionStart] =
-    useState("");
-  const [sessionTransactions, setSessionTransactions] =
-    useState([]);
+  const apiServices = useSelector((state) => state.services.apiList);
+  const localServices = useSelector((state) => state.services.localList);
+  const staffList = useSelector((state) => state.staff.apiList);
+  const staffNames = useMemo(() => {
+    const raw = staffList.length > 0 ? staffList : staffData;
+    return raw.map((s) => (typeof s === "string" ? s : s.name));
+  }, [staffList]);
+  const session = useSelector((state) => state.session);
+  const { id: sessionId, start: sessionStart, transactions: sessionTransactions } = session;
+
   const [showEndSummary, setShowEndSummary] =
     useState(false);
   const [endSummary, setEndSummary] = useState(null);
 
   useEffect(() => {
-    const loadServices = async () => {
-      try {
-        const res = await API.get("/services");
-        setApiServices(
-          Array.isArray(res.data) ? res.data : []
-        );
-      } catch {
-        setApiServices([]);
+    dispatch(fetchServices());
+    dispatch(fetchStaff());
+    if (!session.id) dispatch(initSession());
+  }, []);
+
+  const buildCatalogFromServices = (services) => {
+    const map = {};
+    for (const svc of services) {
+      if (!map[svc.category]) {
+        map[svc.category] = { category: svc.category, subcategories: [{ name: svc.category, services: [] }] };
       }
-    };
-
-    loadServices();
-  }, []);
-
-  useEffect(() => {
-    const syncAdminData = () => {
-      setStaffList(readStaffList());
-      setLocalServices(readLocalServices());
-    };
-
-    window.addEventListener("storage", syncAdminData);
-    window.addEventListener("focus", syncAdminData);
-
-    return () => {
-      window.removeEventListener(
-        "storage",
-        syncAdminData
-      );
-      window.removeEventListener(
-        "focus",
-        syncAdminData
-      );
-    };
-  }, []);
-
-  useEffect(() => {
-    const saved = loadSession();
-    if (saved && saved.sessionId) {
-      setSessionId(saved.sessionId);
-      setSessionStart(saved.startedAt);
-      setSessionTransactions(
-        saved.transactions || []
-      );
-    } else {
-      const id = crypto.randomUUID();
-      const now = new Date().toISOString();
-      setSessionId(id);
-      setSessionStart(now);
-      setSessionTransactions([]);
-      saveSession({
-        sessionId: id,
-        startedAt: now,
-        transactions: [],
-      });
+      map[svc.category].subcategories[0].services.push(svc);
     }
-  }, []);
+    return Object.values(map);
+  };
 
   const serviceCatalog = useMemo(() => {
-    const flatDefaults = servicesData.flatMap((cat) =>
-      cat.subcategories.flatMap((sub) =>
-        sub.services.map((svc) => ({
-          name: svc.name,
-          category: cat.category,
-          subcategory: sub.name,
-          price: svc.price,
-          nonAsrat: !!svc.nonAsrat,
-        }))
-      )
-    );
-
-    const merged = new Map();
-    for (const s of flatDefaults) {
-      merged.set(`${s.category}|${s.subcategory}|${s.name}`, s);
-    }
-    for (const s of localServices) {
-      merged.set(`${s.category}|${s.subcategory}|${s.name}`, s);
-    }
-    for (const s of apiServices) {
-      merged.set(`${s.category}|${s.subcategory}|${s.name}`, s);
-    }
-
-    return buildCatalogFromServices(Array.from(merged.values()));
+    const allServices = [...(apiServices || []), ...(localServices || [])];
+    if (allServices.length > 0) return buildCatalogFromServices(allServices);
+    return servicesData;
   }, [apiServices, localServices]);
 
   const allServicesFlat = useMemo(() => {
@@ -277,7 +150,7 @@ export default function CashierDashboard() {
   const [paymentMethod, setPaymentMethod] =
     useState("cash");
 
-  const [tipAmount, setTipAmount] = useState(0);
+  const [tipEntries, setTipEntries] = useState([]);
 
   const [savingTransaction, setSavingTransaction] =
     useState(false);
@@ -300,13 +173,20 @@ export default function CashierDashboard() {
       return alert(t("cashier.cartEmpty"));
     }
 
-    const tip = Math.max(0, Number(tipAmount) || 0);
+    const validTips = tipEntries.filter(
+      (e) => e.staff && Number(e.amount) > 0
+    );
+    const totalTip = validTips.reduce(
+      (s, e) => s + Number(e.amount),
+      0
+    );
 
     const transactionData = {
       uuid: crypto.randomUUID(),
       services: items,
       total,
-      tip,
+      tip: totalTip,
+      tips: validTips,
       paymentType: paymentMethod,
     };
 
@@ -317,22 +197,13 @@ export default function CashierDashboard() {
     setSavingTransaction(false);
 
     dispatch(clearCart());
-    setTipAmount(0);
-    const updated = [
-      ...sessionTransactions,
-      {
-        ...transactionData,
-        completedAt: new Date().toISOString(),
-      },
-    ];
-    setSessionTransactions(updated);
-    saveSession({
-      sessionId,
-      startedAt: sessionStart,
-      transactions: updated,
-    });
+    setTipEntries([]);
+    dispatch(addTransaction({
+      ...transactionData,
+      completedAt: new Date().toISOString(),
+    }));
 
-    if (result.offline) {
+    if (result.offline || !isOnline) {
       alert(t("cashier.txSavedOffline"));
     } else {
       alert(t("cashier.txCompleted"));
@@ -358,6 +229,19 @@ export default function CashierDashboard() {
       (s) => s.checked
     ).length;
   }, [serviceSelections]);
+
+  const staffTips = useMemo(() => {
+    const map = new Map();
+    for (const tx of sessionTransactions) {
+      const txTips = tx.tips || [];
+      for (const t of txTips) {
+        if (t.staff && Number(t.amount) > 0) {
+          map.set(t.staff, (map.get(t.staff) || 0) + Number(t.amount));
+        }
+      }
+    }
+    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
+  }, [sessionTransactions]);
 
   const handleAddSelectedServices = () => {
     let added = 0;
@@ -401,31 +285,28 @@ export default function CashierDashboard() {
       .filter((t) => t.paymentType === "cash")
       .reduce((sum, t) => sum + t.total, 0);
 
-    const transferPayments = sessionTransactions
-      .filter(
-        (t) =>
-          t.paymentType !== "cash"
-      )
+    const telebirrPayments = sessionTransactions
+      .filter((t) => t.paymentType === "telebirr")
       .reduce((sum, t) => sum + t.total, 0);
 
-    const nonAsratSales = sessionTransactions
-      .reduce((sum, t) => {
-        const txNonAsrat = (t.services || [])
-          .filter((svc) => svc.nonAsrat)
-          .reduce((s, svc) => s + (Number(svc.price) || 0), 0);
-        return sum + txNonAsrat;
-      }, 0);
+    const abysinyaPayments = sessionTransactions
+      .filter((t) => t.paymentType === "abysinya")
+      .reduce((sum, t) => sum + t.total, 0);
 
-    const deductibleAmount =
-      totalIncome - nonAsratSales;
+    const cbePayments = sessionTransactions
+      .filter((t) => t.paymentType === "cbe")
+      .reduce((sum, t) => sum + t.total, 0);
 
     const asratMoney =
-      deductibleAmount > 5500
-        ? (deductibleAmount - 5500) * 0.1
+      totalIncome > 5500
+        ? (totalIncome - 5500) * 0.1
         : 0;
 
     const totalTips = sessionTransactions.reduce(
-      (sum, t) => sum + (t.tip || 0),
+      (sum, t) => {
+        const txTips = t.tips || [];
+        return sum + txTips.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+      },
       0
     );
 
@@ -441,9 +322,9 @@ export default function CashierDashboard() {
         sessionTransactions.length,
       totalIncome,
       cashPayments,
-      transferPayments,
-      nonAsratSales,
-      deductibleAmount,
+      telebirrPayments,
+      abysinyaPayments,
+      cbePayments,
       asratMoney,
       totalTips,
       finalCashAmount,
@@ -454,27 +335,10 @@ export default function CashierDashboard() {
   };
 
   const confirmEndDay = () => {
-    const summaries = JSON.parse(
-      localStorage.getItem("dailySummaries") || "[]"
-    );
-    summaries.push(endSummary);
-    localStorage.setItem(
-      "dailySummaries",
-      JSON.stringify(summaries)
-    );
-
+    dispatch(endSession());
+    dispatch(initSession());
     dispatch(clearCart());
-    setTipAmount(0);
-    const id = crypto.randomUUID();
-    const now = new Date().toISOString();
-    setSessionId(id);
-    setSessionStart(now);
-    setSessionTransactions([]);
-    saveSession({
-      sessionId: id,
-      startedAt: now,
-      transactions: [],
-    });
+    setTipEntries([]);
     setShowEndSummary(false);
     setEndSummary(null);
   };
@@ -490,8 +354,9 @@ export default function CashierDashboard() {
       style={{
         display: "flex",
         flexDirection: "column",
-        minHeight: "100vh",
-        background: "#fdf8f0",
+        height: isMobile ? "auto" : "100vh",
+        overflow: "hidden",
+        background: "var(--bg-body)",
       }}
     >
 
@@ -502,8 +367,8 @@ export default function CashierDashboard() {
       <div
         style={{
           padding: "15px 20px",
-          backgroundColor: "#f5eedd",
-          borderBottom: "1px solid #e8dcc8",
+          backgroundColor: "var(--bg-card)",
+          borderBottom: "1px solid var(--border-color)",
 
           display: "flex",
           flexDirection: isMobile ? "column" : "row",
@@ -514,8 +379,8 @@ export default function CashierDashboard() {
       >
 
         <div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 18 : 24, color: "#3d2e1e" }}>{t("cashier.title")}</h1>
-          <small style={{ color: "#8b7355" }}>
+          <h1 style={{ margin: 0, fontSize: isMobile ? 18 : 24, color: "var(--text-primary)" }}>{t("cashier.title")}</h1>
+          <small style={{ color: "var(--text-secondary)" }}>
             {t("cashier.session")}{" "}
             {sessionStart
               ? new Date(
@@ -527,8 +392,8 @@ export default function CashierDashboard() {
         </div>
 
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <OfflineIndicator />
-          <button onClick={toggleLang} style={{ padding: "8px 12px", background: "#8B5E3C", color: "#111", border: "none", borderRadius: 4, cursor: "pointer", fontWeight: 600 }}>{t("lang.switch")}</button>
+          <OfflineIndicator isOnline={isOnline} />
+          <button onClick={toggleLang} style={{ padding: "8px 12px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontWeight: 600 }}>{t("lang.switch")}</button>
           <button
             onClick={handleEndDay}
             disabled={
@@ -538,12 +403,12 @@ export default function CashierDashboard() {
               padding: "8px 16px",
               backgroundColor:
                 sessionTransactions.length === 0
-                  ? "#ccc"
-                  : "#8B5E3C",
+                  ? "var(--border-color)"
+                  : "var(--color-primary)",
               color:
                 sessionTransactions.length === 0
-                  ? "#999"
-                  : "#111",
+                  ? "var(--text-muted)"
+                  : "#fff",
               border: "none",
               borderRadius: "4px",
               cursor:
@@ -560,7 +425,7 @@ export default function CashierDashboard() {
             onClick={handleLogout}
             style={{
               padding: "8px 16px",
-              backgroundColor: "#f44336",
+              backgroundColor: "var(--color-danger)",
               color: "white",
               border: "none",
               borderRadius: "4px",
@@ -583,6 +448,7 @@ export default function CashierDashboard() {
           flexDirection: isMobile ? "column" : "row",
           flex: 1,
           minHeight: 0,
+          overflow: isMobile ? "auto" : "hidden",
         }}
       >
 
@@ -594,23 +460,82 @@ export default function CashierDashboard() {
           style={{
             width: isMobile ? "100%" : "60%",
             padding: isMobile ? "12px" : "20px",
-            overflowY: "auto",
-            borderRight: isMobile ? "none" : "1px solid #ddd",
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+            borderRight: isMobile ? "none" : "1px solid var(--border-color)",
           }}
         >
+          <div style={{ paddingRight: isMobile ? 0 : 20, flexShrink: 0 }}>
+            <h2
+              style={{
+                margin: "0 0 10px",
+                fontSize: "18px",
+                color: "var(--text-primary)",
+              }}
+            >
+              {t("cashier.services")}
+            </h2>
 
-          <h2
-            style={{
-              margin: "0 0 20px",
-              fontSize: "18px",
-              color: "#3d2e1e",
+            <button
+              onClick={handleAddSelectedServices}
+              disabled={selectedCount === 0}
+              style={{
+                width: "100%",
+                padding: "14px",
+                backgroundColor:
+                  selectedCount === 0
+                    ? "var(--border-color)"
+                    : "var(--color-primary)",
+                color:
+                  selectedCount === 0
+                    ? "var(--text-muted)"
+                    : "#fff",
+                border: "none",
+                borderRadius: "8px",
+                fontSize: "16px",
+                fontWeight: 700,
+                cursor:
+                  selectedCount === 0
+                    ? "not-allowed"
+                    : "pointer",
+              }}
+            >
+              {t("cashier.addSelected")}
+              {selectedCount > 0 ? ` (${selectedCount})` : ""}
+            </button>
+
+            {showServices && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => setShowServices(false)}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 8,
+                    border: "1px solid var(--border-color)",
+                    background: "#fff",
+                    color: "var(--text-primary)",
+                    cursor: "pointer",
+                  }}
+                >
+                  {t("cashier.hideServices")}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div 
+            style={{ 
+              overflowY: isMobile ? "visible" : "auto", 
+              flex: 1, 
+              minHeight: 0, 
+              paddingRight: isMobile ? 0 : 20, 
+              marginTop: 12 
             }}
           >
-            {t("cashier.services")}
-          </h2>
-
-          {!showServices ? (
-            <div style={{ color: "#8b7355", padding: 20, background: "#fefcf8", borderRadius: 10, border: "1px solid #e8dcc8" }}>
+            {!showServices ? (
+            <div style={{ color: "var(--text-secondary)", padding: 20, background: "#fff", borderRadius: 10, border: "1px solid var(--border-color)" }}>
               <p style={{ margin: 0, marginBottom: 12 }}>
                 {t("cashier.servicesHidden")}
               </p>
@@ -621,7 +546,7 @@ export default function CashierDashboard() {
                   padding: "10px 14px",
                   borderRadius: 8,
                   border: "none",
-                  background: "#8B5E3C",
+                  background: "var(--color-primary)",
                   color: "#fff",
                   cursor: "pointer",
                 }}
@@ -630,38 +555,21 @@ export default function CashierDashboard() {
               </button>
             </div>
           ) : groupedServices.length === 0 ? (
-            <p style={{ color: "#999" }}>
+            <p style={{ color: "var(--text-muted)" }}>
               {t("cashier.noServices")}
             </p>
           ) : (
-            <>
-              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 14 }}>
-                <button
-                  type="button"
-                  onClick={() => setShowServices(false)}
-                  style={{
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    border: "1px solid #e8dcc8",
-                    background: "#f5eedd",
-                    color: "#5c4a32",
-                    cursor: "pointer",
-                  }}
-                >
-                  {t("cashier.hideServices")}
-                </button>
-              </div>
-              {groupedServices.map((group) => (
-                <div
-                  key={group.category}
-                  style={{
-                    marginBottom: "24px",
-                  }}
-                >
+            groupedServices.map((group) => (
+              <div
+                key={group.category}
+                style={{
+                  marginBottom: "24px",
+                }}
+              >
                 <div
                   style={{
                     padding: "8px 12px",
-                    backgroundColor: "#8B5E3C",
+                    backgroundColor: "var(--color-primary)",
                     color: "#fff",
                     borderRadius: "6px",
                     fontSize: "13px",
@@ -676,18 +584,15 @@ export default function CashierDashboard() {
 
                 <div
                   style={{
-                    background: "#fefcf8",
+                    background: "#fff",
                     borderRadius: "6px",
                     overflow: "hidden",
-                    boxShadow:
-                      "0 1px 3px rgba(0,0,0,0.08)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
                   }}
                 >
                   {group.services.map((svc) => {
-                    const key =
-                      `${svc.category}|${svc.name}`;
-                    const sel =
-                      serviceSelections[key] || {};
+                    const key = `${svc.category}|${svc.name}`;
+                    const sel = serviceSelections[key] || {};
 
                     return (
                       <div
@@ -696,65 +601,37 @@ export default function CashierDashboard() {
                           display: "flex",
                           alignItems: "center",
                           gap: "8px",
-                          padding:
-                            "8px 12px",
-                          borderBottom:
-                            "1px solid #f5edd0",
-                          backgroundColor:
-                            sel.checked
-                              ? "#fdf5e6"
-                              : "transparent",
+                          padding: "8px 12px",
+                          borderBottom: "1px solid var(--border-color)",
+                          backgroundColor: sel.checked ? "var(--color-primary-light)" : "transparent",
                         }}
                       >
                         <input
                           type="checkbox"
-                          checked={
-                            !!sel.checked
-                          }
+                          checked={!!sel.checked}
                           onChange={(e) =>
-                            setServiceSelections(
-                              (prev) => ({
-                                ...prev,
-                                [key]: {
-                                  ...prev[
-                                    key
-                                  ],
-                                  checked:
-                                    e.target
-                                      .checked,
-                                },
-                              })
-                            )
+                            setServiceSelections((prev) => ({
+                              ...prev,
+                              [key]: {
+                                ...prev[key],
+                                checked: e.target.checked,
+                              },
+                            }))
                           }
-                          style={{
-                            width: "18px",
-                            height: "18px",
-                            flexShrink: 0,
-                          }}
+                          style={{ width: "18px", height: "18px", flexShrink: 0 }}
                         />
 
-                        <span
-                          style={{
-                            flex: 1,
-                            fontSize:
-                              "14px",
-                            fontWeight: 500,
-                          }}
-                        >
+                        <span style={{ flex: 1, fontSize: "14px", fontWeight: 500 }}>
                           {svc.name}
                         </span>
-                        {svc.nonAsrat && <span style={{ background: "#f5eedd", color: "#8B5E3C", fontSize: 9, padding: "1px 5px", borderRadius: 6, fontWeight: 600, whiteSpace: "nowrap" }}>Non-Asrat</span>}
 
                         <span
                           style={{
                             width: "80px",
-                            textAlign:
-                              "right",
-                            fontSize:
-                              "14px",
+                            textAlign: "right",
+                            fontSize: "14px",
                             fontWeight: 700,
-                            whiteSpace:
-                              "nowrap",
+                            whiteSpace: "nowrap",
                             flexShrink: 0,
                           }}
                         >
@@ -762,93 +639,40 @@ export default function CashierDashboard() {
                         </span>
 
                         <select
-                          value={
-                            sel.staff || ""
-                          }
+                          value={sel.staff || ""}
                           onChange={(e) =>
-                            setServiceSelections(
-                              (prev) => ({
-                                ...prev,
-                                [key]: {
-                                  checked:
-                                    prev[key]
-                                      ?.checked ??
-                                    true,
-                                  staff:
-                                    e.target
-                                      .value,
-                                },
-                              })
-                            )
+                            setServiceSelections((prev) => ({
+                              ...prev,
+                              [key]: {
+                                checked: prev[key]?.checked ?? true,
+                                staff: e.target.value,
+                              },
+                            }))
                           }
                           style={{
                             width: "130px",
-                            padding:
-                              "5px 4px",
-                            borderRadius:
-                              "4px",
-                            border:
-                              "1px solid #e8dcc8",
-                            fontSize:
-                              "13px",
+                            padding: "5px 4px",
+                            borderRadius: "4px",
+                            border: "1px solid var(--border-color)",
+                            fontSize: "13px",
                             flexShrink: 0,
                           }}
                         >
-                          <option value="">
-                            {t("cashier.staffSelect")}
-                          </option>
-                          {staffList.map(
-                            (s) => (
-                              <option
-                                key={s}
-                                value={s}
-                              >
-                                {s}
-                              </option>
-                            )
-                          )}
+                          <option value="">{t("cashier.staffSelect")}</option>
+                          {staffNames.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
                         </select>
                       </div>
                     );
                   })}
                 </div>
               </div>
-            ))}
-            </>
+            ))
           )}
-
-          <button
-            onClick={
-              handleAddSelectedServices
-            }
-            disabled={selectedCount === 0}
-            style={{
-              width: "100%",
-              padding: "14px",
-              backgroundColor:
-                selectedCount === 0
-                  ? "#e8dcc8"
-                  : "#8B5E3C",
-              color:
-                selectedCount === 0
-                  ? "#a09070"
-                  : "#fff",
-              border: "none",
-              borderRadius: "8px",
-              fontSize: "16px",
-              fontWeight: 700,
-              cursor:
-                selectedCount === 0
-                  ? "not-allowed"
-                  : "pointer",
-              marginTop: "8px",
-            }}
-          >
-            {t("cashier.addSelected")}{selectedCount > 0
-              ? ` (${selectedCount})`
-              : ""}
-          </button>
-
+          </div>
         </div>
 
         {/* =========================
@@ -859,59 +683,35 @@ export default function CashierDashboard() {
           style={{
             width: isMobile ? "100%" : "40%",
             padding: isMobile ? "12px" : "20px",
-            overflowY: "auto",
+            overflowY: isMobile ? "visible" : "auto",
+            height: isMobile ? "auto" : "100%",
           }}
         >
 
-          <h2 style={{ color: "#3d2e1e" }}>{t("cashier.cart")}</h2>
+           <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.cart")}</h2>
 
-          {items.map((item, index) => (
+          <p style={{ color: "var(--text-primary)", margin: "0 0 12px" }}>
+            {items.length} {t("cashier.services")} — {total} Birr
+          </p>
 
-            <div
-              key={index}
-
-              style={{
-                borderBottom: "1px solid #e8dcc8",
-                marginBottom: "10px",
-                paddingBottom: "10px",
-              }}
-            >
-
-              <h4 style={{ color: "#3d2e1e", margin: "0 0 4px" }}>{item.name}</h4>
-
-              <p style={{ margin: "0 0 2px", color: "#5c4a32" }}>{item.price} Birr</p>
-              <small style={{ color: "#8b7355" }}>{t("cashier.staffSelect")}: {item.staff}</small>
-
-              <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 6 }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#8b7355", cursor: "pointer" }}>
-                  <input
-                    type="checkbox"
-                    checked={!!item.nonAsrat}
-                    onChange={() =>
-                      dispatch(
-                        toggleItemNonAsrat(index)
-                      )
-                    }
-                  />
-                  {t("cashier.nonAsrat")}
-                </label>
-
-                <button
-                  onClick={() =>
-                    dispatch(
-                      removeFromCart(index)
-                    )
-                  }
-                  style={{ fontSize: 12, padding: "3px 10px", background: "#b91c1c", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-                >
-                  {t("cashier.remove")}
-                </button>
-              </div>
-
+          {items.length > 0 && (
+            <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 12, border: "1px solid var(--border-color)", borderRadius: 6, padding: "4px 8px", background: "#fff" }}>
+              {items.map((item, index) => (
+                <div key={index} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0",                     borderBottom: index < items.length - 1 ? "1px solid var(--border-color)" : "none" }}>
+                  <span style={{ flex: 1, fontSize: 13 }}>
+                    {item.name} <small style={{ color: "var(--text-secondary)" }}>({item.staff})</small>
+                  </span>
+                  <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>{item.price} Birr</span>
+                  <button
+                    onClick={() => dispatch(removeFromCart(index))}
+                    style={{ fontSize: 11, padding: "2px 8px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
+                  >
+                    {t("cashier.remove")}
+                  </button>
+                </div>
+              ))}
             </div>
-          ))}
-
-          <h2 style={{ color: "#8B5E3C" }}>{t("cashier.total")} {total} Birr</h2>
+          )}
 
           {/* PAYMENT */}
 
@@ -928,10 +728,10 @@ export default function CashierDashboard() {
               width: "100%",
               padding: "10px",
               marginBottom: "15px",
-              border: "1px solid #e8dcc8",
+              border: "1px solid var(--border-color)",
               borderRadius: "6px",
-              background: "#fefcf8",
-              color: "#3d2e1e",
+              background: "#fff",
+              color: "var(--text-primary)",
             }}
           >
 
@@ -955,45 +755,66 @@ export default function CashierDashboard() {
 
           {/* TIP */}
 
-          <div
-            style={{
-              marginBottom: "15px",
-            }}
-          >
-            <label
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontWeight: 600,
-                color: "#3d2e1e",
-              }}
-            >
+          <div style={{ marginBottom: "15px" }}>
+            <label style={{ display: "block", marginBottom: "5px", fontWeight: 600, color: "var(--text-primary)" }}>
               {t("cashier.tipLabel")}
             </label>
-            <input
-              type="number"
-              min="0"
-              value={tipAmount}
-              onChange={(e) =>
-                setTipAmount(
-                  Math.max(
-                    0,
-                    Number(e.target.value) || 0
-                  )
-                )
-              }
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "5px",
-                border:
-                  "1px solid #e8dcc8",
-                boxSizing:
-                  "border-box",
-                background: "#fefcf8",
-                color: "#3d2e1e",
-              }}
-            />
+            {tipEntries.map((entry, i) => (
+              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
+                <select
+                  value={entry.staff}
+                  onChange={(e) => {
+                    const next = [...tipEntries];
+                    next[i] = { ...next[i], staff: e.target.value };
+                    setTipEntries(next);
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: "8px",
+                    borderRadius: "5px",
+                    border: "1px solid var(--border-color)",
+                    background: "#fff",
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  <option value="">{t("cashier.staffSelect")}</option>
+                  {staffNames.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={entry.amount}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, "");
+                    const next = [...tipEntries];
+                    next[i] = { ...next[i], amount: val === "" ? 0 : Number(val) };
+                    setTipEntries(next);
+                  }}
+                  style={{
+                    width: "100px",
+                    padding: "8px",
+                    borderRadius: "5px",
+                    border: "1px solid var(--border-color)",
+                    background: "#fff",
+                    color: "var(--text-primary)",
+                  }}
+                />
+                <button
+                  onClick={() => setTipEntries(tipEntries.filter((_, idx) => idx !== i))}
+                  style={{ padding: "6px 10px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+            <button
+              onClick={() => setTipEntries([...tipEntries, { staff: "", amount: 0 }])}
+              style={{ padding: "8px 12px", background: "#fff", color: "var(--text-primary)", border: "1px solid var(--border-color)", borderRadius: 6, cursor: "pointer", fontSize: 13, marginTop: 4 }}
+            >
+              + {t("cashier.addStaff")}
+            </button>
           </div>
 
           {/* BUTTONS */}
@@ -1007,7 +828,7 @@ export default function CashierDashboard() {
             style={{
               width: "100%",
               padding: "15px",
-              background: savingTransaction ? "#a09070" : "#8B5E3C",
+              background: savingTransaction ? "var(--text-muted)" : "var(--color-primary)",
               color: "#fff",
               border: "none",
               borderRadius: "8px",
@@ -1026,7 +847,7 @@ export default function CashierDashboard() {
             style={{
               width: "100%",
               padding: "15px",
-              background: "#5c4a32",
+              background: "var(--text-primary)",
               color: "#fff",
               border: "none",
               borderRadius: "8px",
@@ -1038,9 +859,9 @@ export default function CashierDashboard() {
           {/* SESSION SUMMARY */}
 
           <div style={{ marginTop: "30px" }}>
-            <h2 style={{ color: "#3d2e1e" }}>{t("cashier.sessionSummary")}</h2>
+            <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.sessionSummary")}</h2>
             {sessionTransactions.length === 0 ? (
-              <p style={{ color: "#a09070" }}>
+              <p style={{ color: "var(--text-muted)" }}>
                 {t("cashier.noTxYet")}
               </p>
             ) : (
@@ -1117,11 +938,23 @@ export default function CashierDashboard() {
                   Birr
                 </p>
 
+                {staffTips.length > 0 && (
+                  <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-primary)" }}>
+                    <strong>{t("cashier.tipsByStaff")}:</strong>
+                    {staffTips.map(([name, amount]) => (
+                      <div key={name} style={{ display: "flex", justifyContent: "space-between", paddingLeft: 8, marginTop: 2 }}>
+                        <span>{name}</span>
+                        <span>{Math.round(amount)} Birr</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <hr
                   style={{
                     border: "none",
                     borderTop:
-                      "1px solid #e8dcc8",
+                      "1px solid var(--border-color)",
                     margin: "10px 0",
                   }}
                 />
@@ -1142,7 +975,7 @@ export default function CashierDashboard() {
           {/* LOCAL OFFLINE TRANSACTIONS */}
 
           <div style={{ marginTop: "30px" }}>
-            <h2 style={{ color: "#3d2e1e" }}>Local Transaction History</h2>
+            <h2 style={{ color: "var(--text-primary)" }}>Local Transaction History</h2>
             <OfflineTransactionHistory />
           </div>
 
@@ -1158,7 +991,7 @@ export default function CashierDashboard() {
             position: "fixed",
             inset: 0,
             background:
-              "rgba(0,0,0,0.6)",
+              "rgba(0,0,0,0.5)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -1167,20 +1000,20 @@ export default function CashierDashboard() {
         >
           <div
             style={{
-              background: "#fefcf8",
+              background: "#fff",
               padding: "30px",
               borderRadius: "12px",
               maxWidth: "420px",
               width: "90%",
               boxShadow:
                 "0 10px 40px rgba(0,0,0,0.3)",
-              color: "#3d2e1e",
+              color: "var(--text-primary)",
             }}
           >
             <h2
               style={{
                 margin: "0 0 20px",
-                color: "#3d2e1e",
+                color: "var(--text-primary)",
               }}
             >
                             {t("cashier.endSummaryTitle")}
@@ -1199,7 +1032,7 @@ export default function CashierDashboard() {
               style={{
                 border: "none",
                 borderTop:
-                  "1px solid #e8dcc8",
+                  "1px solid var(--border-color)",
                 margin: "15px 0",
               }}
             />
@@ -1213,27 +1046,27 @@ export default function CashierDashboard() {
               {endSummary.cashPayments} Birr
             </p>
             <p>
-              {t("cashier.transferPayments")}{" "}
-              {endSummary.transferPayments} Birr
+              {t("cashier.paymentTelebirr")}{" "}
+              {endSummary.telebirrPayments} Birr
             </p>
             <p>
-              {t("cashier.nonAsratSales")}{" "}
-              {endSummary.nonAsratSales} Birr
+              {t("cashier.paymentAbysinya")}{" "}
+              {endSummary.abysinyaPayments} Birr
+            </p>
+            <p>
+              {t("cashier.paymentCBE")}{" "}
+              {endSummary.cbePayments} Birr
             </p>
 
             <hr
               style={{
                 border: "none",
                 borderTop:
-                  "1px solid #e8dcc8",
+                  "1px solid var(--border-color)",
                 margin: "15px 0",
               }}
             />
 
-            <p>
-              {t("cashier.deductibleAmount")}{" "}
-              {endSummary.deductibleAmount} Birr
-            </p>
             <p>
               {t("cashier.asratMoney")}{" "}
               <strong>
@@ -1249,7 +1082,7 @@ export default function CashierDashboard() {
               style={{
                 border: "none",
                 borderTop:
-                  "1px solid #e8dcc8",
+                  "1px solid var(--border-color)",
                 margin: "15px 0",
               }}
             />
@@ -1277,7 +1110,7 @@ export default function CashierDashboard() {
                 style={{
                   flex: 1,
                   padding: "12px",
-                  background: "#8B5E3C",
+                  background: "var(--color-primary)",
                   color: "#fff",
                   border: "none",
                   borderRadius: "8px",
@@ -1292,9 +1125,9 @@ export default function CashierDashboard() {
                 style={{
                   flex: 1,
                   padding: "12px",
-                  background: "#f5eedd",
-                  color: "#5c4a32",
-                  border: "1px solid #e8dcc8",
+                  background: "#fff",
+                  color: "var(--text-primary)",
+                  border: "1px solid var(--border-color)",
                   borderRadius: "8px",
                   cursor: "pointer",
                 }}

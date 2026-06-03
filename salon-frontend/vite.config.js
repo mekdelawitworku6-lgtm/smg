@@ -22,9 +22,9 @@ export default defineConfig({
 
       manifest: {
 
-        name: "Salon Management System",
+        name: "Wondeya Beaut Spa",
 
-        short_name: "SalonPOS",
+        short_name: "Wondeya Spa",
 
         start_url: "/",
 

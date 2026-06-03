@@ -19,10 +19,21 @@ export const loginUser = createAsyncThunk(
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
       localStorage.setItem("name", name);
+      localStorage.setItem("phone", data.phone);
+      localStorage.setItem("password", data.password);
 
       return res.data;
 
     } catch (err) {
+      const savedPhone = localStorage.getItem("phone");
+      const savedPassword = localStorage.getItem("password");
+      const savedRole = localStorage.getItem("role");
+      const savedName = localStorage.getItem("name");
+
+      if (savedPhone === data.phone && savedPassword === data.password && savedRole) {
+        return { token: localStorage.getItem("token"), role: savedRole, name: savedName, offline: true };
+      }
+
       return thunkAPI.rejectWithValue(
         err.response?.data?.message || "Login failed"
       );

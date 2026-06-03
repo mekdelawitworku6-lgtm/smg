@@ -24,7 +24,7 @@ export default function Cart() {
           key={index}
 
           style={{
-            borderBottom: "1px solid #ddd",
+            borderBottom: "1px solid var(--border-color)",
             marginBottom: "10px",
             paddingBottom: "10px",
           }}

@@ -1,14 +1,10 @@
-import { useState }
-from "react";
+import { useState } from "react";
 
 import useOfflineTransactions
 from "../offline/useOfflineTransactions";
 
-import { db }
-from "../offline/db";
-
-import API
-from "../api/axios";
+import { syncTransactions }
+from "../offline/sync";
 
 import { useTranslation }
 from "../i18n/LanguageContext";
@@ -17,27 +13,26 @@ export default function OfflineTransactionHistory() {
 
   const { t } = useTranslation();
 
-  const transactions =
-    useOfflineTransactions();
-
   const [filter, setFilter] =
     useState("ALL");
+  const [syncing, setSyncing] = useState(false);
+
+  const transactions =
+    useOfflineTransactions();
 
   const filtered =
     transactions.filter((tx) => {
       if (filter === "ALL") return true;
-      if (filter === "SYNCED") return tx.synced;
       if (filter === "PENDING") return !tx.synced;
+      return false;
     });
 
-  const retrySync = async (tx) => {
+  const handleSyncAll = async () => {
+    setSyncing(true);
     try {
-      await API.post("/transactions", tx);
-      await db.transactions.update(tx.id, { synced: true });
-      alert(t("offline.syncedSuccess"));
-    } catch {
-      alert(t("offline.stillOffline"));
-    }
+      await syncTransactions();
+    } catch {}
+    setSyncing(false);
   };
 
   return (
@@ -52,11 +47,15 @@ export default function OfflineTransactionHistory() {
         <button onClick={() => setFilter("ALL")}>
           {t("offline.all")}
         </button>
-        <button onClick={() => setFilter("SYNCED")}>
-          {t("offline.synced")}
-        </button>
         <button onClick={() => setFilter("PENDING")}>
           {t("offline.pending")}
+        </button>
+        <button
+          onClick={handleSyncAll}
+          disabled={syncing}
+          style={{ marginLeft: 8, padding: "6px 10px", background: "var(--color-success)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
+        >
+          {syncing ? "Syncing..." : "Sync All"}
         </button>
       </div>
 
@@ -69,39 +68,24 @@ export default function OfflineTransactionHistory() {
         <div
           key={tx.id}
           style={{
-            border: "1px solid #ddd",
+            border: "1px solid var(--border-color)",
             padding: "10px",
             marginBottom: "10px",
             borderRadius: "6px",
           }}
         >
 
-          {/* STATUS BADGE */}
           <div>
-
-            {tx.synced ? (
-              <span
-                style={{
-                  color: "green",
-                  fontWeight: "bold",
-                }}
-              >
-                ✔ {t("offline.synced")}
-              </span>
-            ) : (
-              <span
-                style={{
-                  color: "orange",
-                  fontWeight: "bold",
-                }}
-              >
-                🟠 {t("offline.pending")}
-              </span>
-            )}
-
+            <span
+              style={{
+                color: "var(--color-warning)",
+                fontWeight: "bold",
+              }}
+            >
+              🟠 {t("offline.pending")}
+            </span>
           </div>
 
-          {/* INFO */}
           <p>
             Services:{" "}
             {tx.services
@@ -127,23 +111,6 @@ export default function OfflineTransactionHistory() {
               tx.date
             ).toLocaleString()}
           </p>
-
-          {!tx.synced && (
-            <button
-              onClick={() => retrySync(tx)}
-              style={{
-                marginTop: "8px",
-                padding: "6px 10px",
-                background: "#2196f3",
-                color: "white",
-                border: "none",
-                borderRadius: "4px",
-                cursor: "pointer",
-              }}
-            >
-              {t("offline.retrySync")}
-            </button>
-          )}
 
         </div>
       ))}

@@ -1,8 +1,8 @@
 const translations = {
   en: {
     // Login
-    "login.brand": "SMG",
-    "login.title": "Salon Management",
+    "login.brand": "Wondeya Beaut Spa",
+    "login.title": "Wondeya Beaut Spa",
     "login.subtitle": "Sign in to your account",
     "login.phoneLabel": "Phone",
     "login.phonePlaceholder": "Enter your phone number",
@@ -11,13 +11,13 @@ const translations = {
     "login.errorEmpty": "Please enter phone and password",
     "login.signingIn": "Signing in...",
     "login.signIn": "Sign In",
-    "login.footer": "Salon Management System v1.0",
+    "login.footer": "Wondeya Beaut Spa v1.0",
 
     // Language toggle
     "lang.switch": "አማርኛ",
 
     // Admin
-    "admin.brand": "SMG Admin",
+    "admin.brand": "Wondeya Beaut Spa",
     "admin.logout": "Logout",
     "admin.sessionExpired": "Session expired. Please log in again.",
     "admin.connectionError": "Could not load all data. Check backend connection.",
@@ -50,6 +50,8 @@ const translations = {
     "cashier.paymentAbysinya": "Abysinya",
     "cashier.paymentCBE": "CBE",
     "cashier.tipLabel": "Tip Amount (Birr)",
+    "cashier.addStaff": "Add Staff",
+    "cashier.tipsByStaff": "Tips by Staff",
     "cashier.nonAsrat": "Non-Asrat",
     "cashier.saving": "Saving...",
     "cashier.completeTx": "Complete Transaction",
@@ -94,7 +96,7 @@ const translations = {
     "dashboard.daily": "Daily",
     "dashboard.weekly": "Weekly",
     "dashboard.monthly": "Monthly",
-    "dashboard.revenueTrend": "Revenue Trend (14 days)",
+    "dashboard.revenueTrend": "Revenue Trend (Weekly)",
     "dashboard.noData": "No data",
 
     // ServicesView
@@ -267,6 +269,34 @@ const translations = {
     "report.tip": "ቲፕ:",
     "report.totalTips": "ጠቅላላ ቲፕ",
     "report.birr": "ብር",
+  },
+
+  am: {
+    "login.brand": "Wondeya Beaut Spa",
+    "login.title": "Wondeya Beaut Spa",
+    "login.subtitle": "ወደ መለያዎ ይግቡ",
+    "login.phoneLabel": "ስልክ",
+    "login.phonePlaceholder": "ስልክ ቁጥርዎን ያስገቡ",
+    "login.passwordLabel": "የይለፍ ቃል",
+    "login.passwordPlaceholder": "የይለፍ ቃልዎን ያስገቡ",
+    "login.errorEmpty": "እባክዎ ስልክ እና የይለፍ ቃል ያስገቡ",
+    "login.signingIn": "በመግባት ላይ...",
+    "login.signIn": "ግባ",
+    "login.footer": "Wondeya Beaut Spa v1.0",
+    "lang.switch": "English",
+    "admin.brand": "Wondeya Beaut Spa",
+    "admin.logout": "ውጣ",
+    "admin.sessionExpired": "ክፍለ ጊዜዎ አልቋል። እባክዎ እንደገና ይግቡ።",
+    "admin.connectionError": "ሁሉንም ውሂብ ማምጣት አልተቻለም። የኋላ መጨረሻ ግንኙነት ያረጋግጡ።",
+    "nav.dashboard": "ዳሽቦርድ",
+    "nav.services": "አገልግሎቶች",
+    "nav.staff": "ሰራተኞች",
+    "nav.transactions": "ግብይቶች",
+    "nav.categories": "ምድቦች",
+    "nav.reports": "ሪፖርቶች",
+    "nav.cashiers": "ካሼሮች",
+    "cashier.tipsByStaff": "በሰራተኛ ቲፕ",
+    "cashier.addStaff": "ሰራተኛ ጨምር",
   },
 };
 

@@ -5,17 +5,17 @@ import OfflineTransactionHistory from "../../components/OfflineTransactionHistor
 const styles = {
   filterRow: { display: "flex", gap: 12, alignItems: "flex-end", marginBottom: 20, flexWrap: "wrap" },
   filterGroup: { display: "flex", flexDirection: "column", gap: 4 },
-  filterLabel: { fontSize: 11, color: "#8b7355", textTransform: "uppercase", letterSpacing: 0.5 },
-  input: { padding: "8px 12px", borderRadius: 6, border: "1px solid #e8dcc8", background: "#fefcf8", color: "#3d2e1e", fontSize: 13 },
-  select: { padding: "8px 12px", borderRadius: 6, border: "1px solid #e8dcc8", background: "#fefcf8", color: "#3d2e1e", fontSize: 13, minWidth: 120 },
-  panel: { background: "#f5eedd", borderRadius: 10, padding: 20, border: "1px solid #e8dcc8" },
-  panelTitle: { fontSize: 15, fontWeight: 600, margin: "0 0 16px", color: "#8B5E3C" },
-  txItem: { padding: "12px 0", borderBottom: "1px solid #e8dcc8", fontSize: 13 },
+  filterLabel: { fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase", letterSpacing: 0.5 },
+  input: { padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", fontSize: 13 },
+  select: { padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", fontSize: 13, minWidth: 120 },
+  panel: { background: "var(--bg-card)", borderRadius: 10, padding: 20, border: "1px solid var(--border-color)" },
+  panelTitle: { fontSize: 15, fontWeight: 600, margin: "0 0 16px", color: "var(--color-primary)" },
+  txItem: { padding: "12px 0", borderBottom: "1px solid var(--border-color)", fontSize: 13 },
   txHeader: { display: "flex", justifyContent: "space-between", marginBottom: 4 },
-  txMeta: { display: "flex", gap: 12, fontSize: 11, color: "#8b7355" },
+  txMeta: { display: "flex", gap: 12, fontSize: 11, color: "var(--text-secondary)" },
   badge: { display: "inline-block", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600 },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 },
-  card: { background: "#f5eedd", borderRadius: 10, padding: 16, border: "1px solid #e8dcc8" },
+  card: { background: "var(--bg-card)", borderRadius: 10, padding: 16, border: "1px solid var(--border-color)" },
   row: { display: "flex", justifyContent: "space-between", padding: "4px 0", fontSize: 12 },
 };
 
@@ -102,7 +102,7 @@ export default function TransactionsView({ transactions }) {
             setSearch("");
             setShowResults(true);
           }}
-          style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid #e8dcc8", background: "#f5eedd", color: "#5c4a32", cursor: "pointer" }}
+          style={{ padding: "10px 14px", borderRadius: 8, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", cursor: "pointer" }}
         >
           {t("tx.showAll")}
         </button>
@@ -113,9 +113,9 @@ export default function TransactionsView({ transactions }) {
           style={{
             padding: "10px 14px",
             borderRadius: 8,
-            border: "1px solid #e8dcc8",
-            background: canSearch ? "#8B5E3C" : "#e8dcc8",
-            color: canSearch ? "#fff" : "#a09070",
+            border: "1px solid var(--border-color)",
+            background: canSearch ? "var(--color-primary)" : "var(--border-color)",
+            color: canSearch ? "#fff" : "var(--text-muted)",
             cursor: canSearch ? "pointer" : "not-allowed",
           }}
         >
@@ -128,9 +128,9 @@ export default function TransactionsView({ transactions }) {
             style={{
               padding: "10px 14px",
               borderRadius: 8,
-              border: "1px solid #e8dcc8",
-              background: "#e8dcc8",
-              color: "#5c4a32",
+              border: "1px solid var(--border-color)",
+              background: "var(--border-color)",
+              color: "var(--text-primary)",
               cursor: "pointer",
             }}
           >
@@ -140,49 +140,62 @@ export default function TransactionsView({ transactions }) {
       </div>
 
       {showResults ? (
-        <div style={styles.grid}>
-        {filtered.length === 0 ? (
-          <div style={{ fontSize: 13, color: "#a09070", gridColumn: "1/-1" }}>{t("tx.noFound")}</div>
-        ) : (
-          filtered.map((tx) => (
-            <div key={tx._id || tx.uuid} style={styles.card}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-                <div style={{ fontSize: 11, color: "#a09070" }}>
-                  {new Date(tx.createdAt).toLocaleString()}
-                </div>
-                <span style={{ ...styles.badge, background: "#e8dcc8", color: "#5c4a32" }}>
-                  {tx.paymentType}
-                </span>
-              </div>
-
-              {tx.services?.map((svc, i) => (
-                <div key={i} style={styles.row}>
-                  <span>{svc.name}</span>
-                  <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <span style={{ color: "#8b7355" }}>{svc.staff}</span>
-                    <span style={{ fontWeight: 600 }}>{svc.price} Birr</span>
-                  </span>
-                </div>
-              ))}
-
-              <div style={{ borderTop: "1px solid #e8dcc8", marginTop: 8, paddingTop: 8 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <span style={{ fontSize: 11, color: "#8b7355" }}>{t("tx.total")}</span>
-                    <span style={{ fontWeight: 700, color: "#8B5E3C" }}>{tx.total} Birr</span>
-                    {tx.tip > 0 && <span style={{ fontSize: 11, color: "#8b7355" }}>{t("tx.tip")} {tx.tip} Birr</span>}
-                  </div>
-                  {(tx.services || []).some((svc) => svc.nonAsrat) && (
-                    <span style={{ ...styles.badge, background: "#f5eedd", color: "#8B5E3C", fontSize: 10 }}>{t("tx.nonAsrat")}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))
-        )}
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", minWidth: 700, borderCollapse: "collapse", fontSize: 13, background: "var(--bg-card)", borderRadius: 10, border: "1px solid var(--border-color)" }}>
+            <thead>
+              <tr style={{ background: "var(--border-color)", color: "var(--text-primary)" }}>
+                <th style={{ padding: "10px 12px", textAlign: "left" }}>Date</th>
+                <th style={{ padding: "10px 12px", textAlign: "left" }}>{t("tx.service")}</th>
+                <th style={{ padding: "10px 12px", textAlign: "left" }}>Staff</th>
+                <th style={{ padding: "10px 12px", textAlign: "left" }}>{t("tx.payment")}</th>
+                <th style={{ padding: "10px 12px", textAlign: "right" }}>{t("tx.total")}</th>
+                <th style={{ padding: "10px 12px", textAlign: "right" }}>{t("tx.tip")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={6} style={{ padding: 20, textAlign: "center", color: "var(--text-muted)" }}>{t("tx.noFound")}</td></tr>
+              ) : (
+                filtered.map((tx) => {
+                  const svcs = tx.services || [];
+                  return svcs.length === 0 ? (
+                    <tr key={tx._id || tx.uuid} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                      <td style={{ padding: "8px 12px", whiteSpace: "nowrap" }}>{new Date(tx.createdAt).toLocaleString()}</td>
+                      <td style={{ padding: "8px 12px" }}>—</td>
+                      <td style={{ padding: "8px 12px" }}>—</td>
+                      <td style={{ padding: "8px 12px", whiteSpace: "nowrap" }}><span style={{ background: "var(--border-color)", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600 }}>{tx.paymentType}</span></td>
+                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, whiteSpace: "nowrap" }}>{tx.total} Birr</td>
+                      <td style={{ padding: "8px 12px", textAlign: "right", whiteSpace: "nowrap" }}>{tx.tip > 0 ? `${tx.tip} Birr` : "—"}</td>
+                    </tr>
+                  ) : svcs.map((svc, i) => (
+                    <tr key={`${tx._id || tx.uuid}-${i}`} style={{ borderBottom: "1px solid var(--border-color)" }}>
+                      {i === 0 && (
+                        <td rowSpan={svcs.length} style={{ padding: "8px 12px", whiteSpace: "nowrap", verticalAlign: "top" }}>
+                          {new Date(tx.createdAt).toLocaleString()}
+                        </td>
+                      )}
+                      <td style={{ padding: "8px 12px" }}>{svc.name}</td>
+                      <td style={{ padding: "8px 12px", color: "var(--text-secondary)" }}>{svc.staff}</td>
+                      {i === 0 && (
+                        <td rowSpan={svcs.length} style={{ padding: "8px 12px", whiteSpace: "nowrap", verticalAlign: "top" }}>
+                          <span style={{ background: "var(--border-color)", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600 }}>{tx.paymentType}</span>
+                        </td>
+                      )}
+                      {i === 0 && (
+                        <td rowSpan={svcs.length} style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, whiteSpace: "nowrap", verticalAlign: "top" }}>{tx.total} Birr</td>
+                      )}
+                      {i === 0 && (
+                        <td rowSpan={svcs.length} style={{ padding: "8px 12px", textAlign: "right", whiteSpace: "nowrap", verticalAlign: "top" }}>{tx.tip > 0 ? `${tx.tip} Birr` : "—"}</td>
+                      )}
+                    </tr>
+                  ));
+                })
+              )}
+            </tbody>
+          </table>
         </div>
       ) : (
-        <div style={{ fontSize: 14, color: "#a09070", padding: 20, background: "#f5eedd", borderRadius: 10, border: "1px solid #e8dcc8" }}>
+        <div style={{ fontSize: 14, color: "var(--text-muted)", padding: 20, background: "var(--bg-card)", borderRadius: 10, border: "1px solid var(--border-color)" }}>
           {t("tx.instructions")}
         </div>
       )}
