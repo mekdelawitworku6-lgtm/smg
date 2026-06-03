@@ -13,14 +13,14 @@ const serviceSchema = new mongoose.Schema(
       required: true,
     },
 
-    subcategory: {
-      type: String,
-      required: true,
-    },
-
     price: {
       type: Number,
       required: true,
+    },
+
+    nonAsrat: {
+      type: Boolean,
+      default: false,
     },
 
     active: {

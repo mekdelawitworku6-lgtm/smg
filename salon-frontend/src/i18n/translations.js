@@ -27,6 +27,7 @@ const translations = {
     "nav.transactions": "Transactions",
     "nav.categories": "Categories",
     "nav.reports": "Reports",
+    "nav.settings": "Settings",
     "nav.cashiers": "Cashiers",
 
     // Cashier
@@ -294,6 +295,7 @@ const translations = {
     "nav.transactions": "ግብይቶች",
     "nav.categories": "ምድቦች",
     "nav.reports": "ሪፖርቶች",
+    "nav.settings": "ቅንብሮች",
     "nav.cashiers": "ካሼሮች",
     "cashier.tipsByStaff": "በሰራተኛ ቲፕ",
     "cashier.addStaff": "ሰራተኛ ጨምር",

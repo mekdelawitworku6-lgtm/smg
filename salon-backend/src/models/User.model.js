@@ -10,6 +10,7 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "cashier"],
       default: "cashier",
     },
+    active: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

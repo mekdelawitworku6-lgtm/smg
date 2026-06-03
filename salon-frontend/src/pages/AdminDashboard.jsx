@@ -14,6 +14,7 @@ import StaffView from "./admin/StaffView";
 import TransactionsView from "./admin/TransactionsView";
 import CategoriesView from "./admin/CategoriesView";
 import ReportsView from "./admin/ReportsView";
+import SettingsView from "./admin/SettingsView";
 
 
 export default function AdminDashboard() {
@@ -27,6 +28,7 @@ export default function AdminDashboard() {
     ["staff", t("nav.staff")],
     ["transactions", t("nav.transactions")],
     ["reports", t("nav.reports")],
+    ["settings", t("nav.settings") || "Settings"],
   ], [lang]);
 
   const { list } = useSelector((state) => state.transactions);
@@ -94,6 +96,8 @@ export default function AdminDashboard() {
         return <TransactionsView transactions={validTransactions} services={services} />;
       case "reports":
         return <ReportsView transactions={validTransactions} />;
+      case "settings":
+        return <SettingsView />;
       default:
         return null;
     }

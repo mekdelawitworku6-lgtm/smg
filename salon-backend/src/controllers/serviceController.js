@@ -12,14 +12,14 @@ export const createService =
       const {
         name,
         category,
-        subcategory,
         price,
+        nonAsrat,
       } = req.body;
 
-      if (!name || !category || !subcategory || price === "") {
+      if (!name || !category || price === "") {
         return res.status(400).json({
           message:
-            "Name, category, subcategory, and price are required",
+            "Name, category, and price are required",
         });
       }
 
@@ -27,8 +27,8 @@ export const createService =
         await Service.create({
           name: name.trim(),
           category: category.trim(),
-          subcategory: subcategory.trim(),
           price: Number(price),
+          nonAsrat: Boolean(nonAsrat),
         });
 
       res.status(201).json(service);
@@ -85,10 +85,6 @@ export const updateService =
 
       if (updates.category) {
         updates.category = updates.category.trim();
-      }
-
-      if (updates.subcategory) {
-        updates.subcategory = updates.subcategory.trim();
       }
 
       if (updates.price !== undefined) {
