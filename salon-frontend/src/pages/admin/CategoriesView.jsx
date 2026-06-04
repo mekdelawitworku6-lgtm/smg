@@ -63,32 +63,34 @@ export default function CategoriesView() {
         <h3 style={{ ...styles.panelTitle, cursor: "pointer" }} onClick={() => setShowCategories(!showCategories)}>
           {showCategories ? "▼ " : "▶ "}{t("cat.categories")}
         </h3>
-        {showCategories && <>
-        <div style={styles.info}>{t("cat.info")}</div>
-        {categories.length === 0 ? (
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("cat.noCategories")}</div>
-        ) : (
-          categories.map((cat) => (
-            <div key={cat} style={styles.listItem}>
-              {editCat === cat ? (
-                <div style={{ display: "flex", gap: 8, flex: 1 }}>
-                  <input value={editVal} onChange={(e) => setEditVal(e.target.value)} style={{ ...styles.input, flex: 1 }} autoFocus />
-                  <button onClick={() => handleRename(cat)} style={{ ...styles.btn, ...styles.btnPrimary, padding: "8px 12px", fontSize: 12 }}>{t("cat.save")}</button>
-                  <button onClick={() => setEditCat("")} style={{ ...styles.btn, ...{ background: "var(--border-color)", color: "var(--text-primary)" }, padding: "8px 12px", fontSize: 12 }}>{t("cat.cancel")}</button>
+        {showCategories && (
+          <div>
+            <div style={styles.info}>{t("cat.info")}</div>
+            {categories.length === 0 ? (
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("cat.noCategories")}</div>
+            ) : (
+              categories.map((cat) => (
+                <div key={cat} style={styles.listItem}>
+                  {editCat === cat ? (
+                    <div style={{ display: "flex", gap: 8, flex: 1 }}>
+                      <input value={editVal} onChange={(e) => setEditVal(e.target.value)} style={{ ...styles.input, flex: 1 }} autoFocus />
+                      <button onClick={() => handleRename(cat)} style={{ ...styles.btn, ...styles.btnPrimary, padding: "8px 12px", fontSize: 12 }}>{t("cat.save")}</button>
+                      <button onClick={() => setEditCat("")} style={{ ...styles.btn, ...{ background: "var(--border-color)", color: "var(--text-primary)" }, padding: "8px 12px", fontSize: 12 }}>{t("cat.cancel")}</button>
+                    </div>
+                  ) : (
+                    <>
+                      <span style={{ fontWeight: 600 }}>{cat}</span>
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <button onClick={() => { setEditCat(cat); setEditVal(cat); }} style={{ ...styles.btn, background: "var(--border-color)", color: "var(--text-primary)", padding: "6px 12px", fontSize: 12 }}>{t("cat.edit")}</button>
+                        <button onClick={() => handleDelete(cat)} style={{ ...styles.btn, ...styles.btnDanger, padding: "6px 12px", fontSize: 12 }}>{t("cat.delete")}</button>
+                      </div>
+                    </>
+                  )}
                 </div>
-              ) : (
-                <>
-                  <span style={{ fontWeight: 600 }}>{cat}</span>
-                  <div style={{ display: "flex", gap: 6 }}>
-                    <button onClick={() => { setEditCat(cat); setEditVal(cat); }} style={{ ...styles.btn, background: "var(--border-color)", color: "var(--text-primary)", padding: "6px 12px", fontSize: 12 }}>{t("cat.edit")}</button>
-                    <button onClick={() => handleDelete(cat)} style={{ ...styles.btn, ...styles.btnDanger, padding: "6px 12px", fontSize: 12 }}>{t("cat.delete")}</button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+              ))
+            )}
+          </div>
         )}
-        </>}
       </div>
 
       <div style={styles.panel}>
