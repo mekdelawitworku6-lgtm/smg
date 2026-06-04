@@ -6,6 +6,9 @@ function getBaseURL() {
   if (saved) return saved.replace(/\/+$/, "");
   const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl) return envUrl.replace(/\/+$/, "");
+  if (import.meta.env.PROD) {
+    return "https://smg-backend-z72j.onrender.com/api";
+  }
   return "/api";
 }
 
