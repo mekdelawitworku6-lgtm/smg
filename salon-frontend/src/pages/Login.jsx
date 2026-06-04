@@ -66,6 +66,7 @@ export default function Login() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               style={styles.input}
+              autoComplete="tel"
             />
           </div>
 
@@ -77,6 +78,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               style={styles.input}
+              autoComplete="current-password"
             />
           </div>
 
