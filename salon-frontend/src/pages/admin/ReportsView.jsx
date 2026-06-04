@@ -20,11 +20,26 @@ const styles = {
   formulaBox: { background: "var(--bg-card)", borderRadius: 8, padding: 16, marginTop: 12, fontSize: 13, fontFamily: "monospace", lineHeight: 1.6, border: "1px solid var(--border-color)", color: "var(--text-primary)" },
 };
 
+function ReportSection({ title, open, onToggle, children }) {
+  return (
+    <div style={{ background: "var(--bg-card)", borderRadius: 12, padding: 20, border: "1px solid var(--border-color)", marginBottom: 16, boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
+      <h3 onClick={onToggle} style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "var(--color-primary)", cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 8 }}>
+        <span style={{ fontSize: 12 }}>{open ? "▼" : "▶"}</span> {title}
+      </h3>
+      {open && <div style={{ marginTop: 16 }}>{children}</div>}
+    </div>
+  );
+}
+
 export default function ReportsView({ transactions }) {
   const { t } = useTranslation();
   const today = new Date().toISOString().split("T")[0];
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
+  const [showSummary, setShowSummary] = useState(true);
+  const [showCalc, setShowCalc] = useState(false);
+  const [showPayments, setShowPayments] = useState(false);
+  const [showTxList, setShowTxList] = useState(false);
 
   const dayTx = useMemo(() => {
     return transactions.filter((tx) => {
@@ -66,20 +81,18 @@ export default function ReportsView({ transactions }) {
         </div>
       </div>
 
-      <div style={styles.reportCard}>
-        <h2 style={styles.reportTitle}>Report — {dateFrom} to {dateTo}</h2>
-
+      <ReportSection title={t("report.reportRange", { from: dateFrom, to: dateTo })} open={showSummary} onToggle={() => setShowSummary(!showSummary)}>
         <div style={styles.grid2}>
           <div style={styles.fieldBox}>
             <div style={styles.fieldLabel}>{t("report.totalIncome")}</div>
             <div style={styles.fieldValue}>{totalIncome.toLocaleString()} Birr</div>
           </div>
           <div style={styles.fieldBox}>
-            <div style={styles.fieldLabel}>Cash Total</div>
+            <div style={styles.fieldLabel}>{t("report.cashTotal")}</div>
             <div style={styles.fieldValue}>{cashTotal.toLocaleString()} Birr</div>
           </div>
           <div style={styles.fieldBox}>
-            <div style={styles.fieldLabel}>Transfer Total</div>
+            <div style={styles.fieldLabel}>{t("report.transferTotal")}</div>
             <div style={styles.fieldValue}>{transferTotal.toLocaleString()} Birr</div>
           </div>
           <div style={styles.fieldBox}>
@@ -91,7 +104,7 @@ export default function ReportsView({ transactions }) {
             <div style={styles.fieldValue}>{txCount}</div>
           </div>
           <div style={styles.fieldBox}>
-            <div style={styles.fieldLabel}>Services Count</div>
+            <div style={styles.fieldLabel}>{t("report.servicesCount")}</div>
             <div style={styles.fieldValue}>{servicesCount}</div>
           </div>
           <div style={styles.fieldBox}>
@@ -107,14 +120,14 @@ export default function ReportsView({ transactions }) {
             <div style={{ ...styles.fieldValue, fontSize: 28 }}>{finalCashAmount.toLocaleString()} Birr</div>
           </div>
         </div>
-      </div>
+      </ReportSection>
 
-      <div style={{ display: "flex", gap: 20, marginTop: 24, flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 400px" }}>
-          <div style={styles.panel}>
-            <h3 style={styles.panelTitle}>{t("report.finalCashCalc")}</h3>
+      <ReportSection title={t("report.finalCashCalc")} open={showCalc} onToggle={() => setShowCalc(!showCalc)}>
+        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
+          <div style={{ flex: "1 1 300px" }}>
+            <h4 style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-secondary)" }}>{t("report.finalCashCalc")}</h4>
             <div style={styles.row}><span>{t("report.totalIncome")}</span><span>{totalIncome.toLocaleString()} Birr</span></div>
-            <div style={styles.row}><span>Transfer Total</span><span>{transferTotal.toLocaleString()} Birr</span></div>
+            <div style={styles.row}><span>{t("report.transferTotal")}</span><span>{transferTotal.toLocaleString()} Birr</span></div>
             <div style={styles.row}><span>{t("report.nonAsratSales")}</span><span>{nonAsratSales.toLocaleString()} Birr</span></div>
             <div style={styles.row}><span>{t("report.asratMoney")}</span><span style={{ color: "var(--color-danger)" }}>- {asratMoney.toLocaleString()} Birr</span></div>
             <div style={styles.row}><span>{t("report.totalTips")}</span><span style={{ color: "var(--color-danger)" }}>- {totalTips.toLocaleString()} Birr</span></div>
@@ -123,11 +136,8 @@ export default function ReportsView({ transactions }) {
               <span>{finalCashAmount.toLocaleString()} Birr</span>
             </div>
           </div>
-        </div>
-
-        <div style={{ flex: "1 1 400px" }}>
-          <div style={styles.panel}>
-            <h3 style={styles.panelTitle}>{t("report.asratCalc")}</h3>
+          <div style={{ flex: "1 1 300px" }}>
+            <h4 style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-secondary)" }}>{t("report.asratCalc")}</h4>
             <div style={styles.formulaBox}>
               <div>{t("report.formula")}</div>
               <div style={{ marginTop: 8 }}>
@@ -146,26 +156,24 @@ export default function ReportsView({ transactions }) {
             </div>
           </div>
         </div>
-      </div>
+      </ReportSection>
 
-      <div style={styles.panel}>
-        <h3 style={styles.panelTitle}>Payment Breakdown</h3>
+      <ReportSection title={t("report.paymentBreakdown")} open={showPayments} onToggle={() => setShowPayments(!showPayments)}>
         <div style={styles.row}><span>{t("cashier.paymentCash")}</span><span>{cashTotal.toLocaleString()} Birr</span></div>
         <div style={styles.row}><span>{t("cashier.paymentTelebirr")}</span><span>{telebirrTotal.toLocaleString()} Birr</span></div>
         <div style={styles.row}><span>{t("cashier.paymentAbysinya")}</span><span>{abysinyaTotal.toLocaleString()} Birr</span></div>
         <div style={styles.row}><span>{t("cashier.paymentCBE")}</span><span>{cbeTotal.toLocaleString()} Birr</span></div>
-      </div>
+      </ReportSection>
 
-      <div style={styles.panel}>
-        <h3 style={styles.panelTitle}>Transactions</h3>
+      <ReportSection title={t("report.transactions")} open={showTxList} onToggle={() => setShowTxList(!showTxList)}>
         {dayTx.length === 0 ? (
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>No transactions for this date</div>
+          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("report.noTxForDate")}</div>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", minWidth: 700, borderCollapse: "collapse", fontSize: 13 }}>
               <thead>
                 <tr style={{ borderBottom: "2px solid var(--border-color)", color: "var(--text-primary)" }}>
-                  <th style={{ padding: "8px 12px", textAlign: "left" }}>Time</th>
+                  <th style={{ padding: "8px 12px", textAlign: "left" }}>{t("report.time")}</th>
                   <th style={{ padding: "8px 12px", textAlign: "left" }}>{t("tx.service")}</th>
                   <th style={{ padding: "8px 12px", textAlign: "left" }}>{t("staff.name")}</th>
                   <th style={{ padding: "8px 12px", textAlign: "left" }}>{t("tx.payment")}</th>
@@ -200,7 +208,7 @@ export default function ReportsView({ transactions }) {
             </table>
           </div>
         )}
-      </div>
+      </ReportSection>
     </div>
   );
 }

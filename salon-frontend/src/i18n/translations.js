@@ -216,6 +216,14 @@ const translations = {
     "report.tipBreakdown": "Tip Breakdown",
     "report.noTips": "No tips for this date.",
     "report.tip": "Tip:",
+    "report.cashTotal": "Cash Total",
+    "report.transferTotal": "Transfer Total",
+    "report.servicesCount": "Services Count",
+    "report.paymentBreakdown": "Payment Breakdown",
+    "report.transactions": "Transactions",
+    "report.time": "Time",
+    "report.noTxForDate": "No transactions for this date",
+    "report.reportRange": "Report — {from} to {to}",
   },
 
   am: {
@@ -435,6 +443,14 @@ const translations = {
     "report.tipBreakdown": "የቲፕ ቅንፍ",
     "report.noTips": "ለዚህ ቀን ምንም ቲፕ የለም።",
     "report.tip": "ቲፕ:",
+    "report.cashTotal": "ጠቅላላ ጥሬ ገንዘብ",
+    "report.transferTotal": "ጠቅላላ ዝውውር",
+    "report.servicesCount": "የአገልግሎቶች ብዛት",
+    "report.paymentBreakdown": "የክፍያ ቅንፍ",
+    "report.transactions": "ግብይቶች",
+    "report.time": "ሰዓት",
+    "report.noTxForDate": "ለዚህ ቀን ምንም ግብይት የለም።",
+    "report.reportRange": "ሪፖርት — ከ {from} እስከ {to}",
   },
 };
 

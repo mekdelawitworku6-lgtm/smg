@@ -26,6 +26,8 @@ export default function CategoriesView() {
   const [newCat, setNewCat] = useState("");
   const [editCat, setEditCat] = useState("");
   const [editVal, setEditVal] = useState("");
+  const [showCategories, setShowCategories] = useState(false);
+  const [showActive, setShowActive] = useState(false);
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -58,7 +60,10 @@ export default function CategoriesView() {
       </div>
 
       <div style={styles.panel}>
-        <h3 style={styles.panelTitle}>{t("cat.categories")}</h3>
+        <h3 style={{ ...styles.panelTitle, cursor: "pointer" }} onClick={() => setShowCategories(!showCategories)}>
+          {showCategories ? "▼ " : "▶ "}{t("cat.categories")}
+        </h3>
+        {showCategories && <>
         <div style={styles.info}>{t("cat.info")}</div>
         {categories.length === 0 ? (
           <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("cat.noCategories")}</div>
@@ -81,12 +86,16 @@ export default function CategoriesView() {
                 </>
               )}
             </div>
-          ))
+          ))}
         )}
+        </>}
       </div>
 
       <div style={styles.panel}>
-        <h3 style={styles.panelTitle}>{t("cat.activeCategories")}</h3>
+        <h3 style={{ ...styles.panelTitle, cursor: "pointer" }} onClick={() => setShowActive(!showActive)}>
+          {showActive ? "▼ " : "▶ "}{t("cat.activeCategories")}
+        </h3>
+        {showActive && (
         <div style={styles.grid}>
           {categories.map((cat) => (
             <div key={cat} style={styles.catCard}>
@@ -95,6 +104,7 @@ export default function CategoriesView() {
             </div>
           ))}
         </div>
+        )}
       </div>
     </div>
   );
