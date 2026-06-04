@@ -10,9 +10,15 @@ export const loginUser = createAsyncThunk(
     try {
       const res = await API.post("/auth/login", data);
 
+      if (import.meta.env.PROD) {
+        console.log("[login] response status:", res.status);
+        console.log("[login] response data:", res.data);
+      }
+
       const { token, role, name } = res.data;
 
       if (!token) {
+        console.error("[login] No token in response:", JSON.stringify(res.data));
         return thunkAPI.rejectWithValue("No token received");
       }
 

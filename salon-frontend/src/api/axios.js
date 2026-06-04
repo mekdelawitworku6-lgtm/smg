@@ -1,17 +1,21 @@
 
 import axios from "axios";
 
-const API = axios.create({
-  baseURL: "/api",
-});
+function getBaseURL() {
+  const saved = localStorage.getItem("api_url");
+  if (saved) return saved.replace(/\/+$/, "");
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) return envUrl.replace(/\/+$/, "");
+  return "/api";
+}
+
+const API = axios.create({ baseURL: getBaseURL() });
 
 API.interceptors.request.use((req) => {
   const token = localStorage.getItem("token");
-
   if (token) {
     req.headers.Authorization = `Bearer ${token}`;
   }
-
   return req;
 });
 
