@@ -36,14 +36,8 @@ export default function AdminDashboard() {
   const staffList = useSelector((state) => state.staff.apiList);
   const [activeView, setActiveView] = useState("dashboard");
   const [message, setMessage] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    dispatch(getTransactions());
-    dispatch(fetchServices());
-    dispatch(fetchStaff());
-  }, [dispatch]);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -52,7 +46,6 @@ export default function AdminDashboard() {
       if (mobile) setSidebarOpen(false);
       else setSidebarOpen(true);
     };
-    checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
@@ -107,13 +100,13 @@ export default function AdminDashboard() {
     shell: { display: "flex", minHeight: "100vh", background: "var(--bg-body)", color: "var(--text-primary)" },
     topHeader: {
       display: "flex", alignItems: "center", justifyContent: "space-between",
-      padding: "0 24px", height: 60, background: "var(--bg-card)",
+      padding: isMobile ? "0 12px" : "0 24px", height: 60, background: "var(--bg-card)",
       borderBottom: "1px solid var(--border-color)", flexShrink: 0,
       position: "sticky", top: 0, zIndex: 100,
     },
-    topLeft: { display: "flex", alignItems: "center", gap: 12 },
-    topRight: { display: "flex", alignItems: "center", gap: 8 },
-    brand: { fontSize: 20, fontWeight: 800, color: "var(--color-primary)", letterSpacing: 1 },
+    topLeft: { display: "flex", alignItems: "center", gap: isMobile ? 8 : 12 },
+    topRight: { display: "flex", alignItems: "center", gap: isMobile ? 4 : 8 },
+    brand: { fontSize: isMobile ? 16 : 20, fontWeight: 800, color: "var(--color-primary)", letterSpacing: 1 },
     topBtn: {
       padding: "8px 14px", borderRadius: 8, border: "none", fontSize: 13,
       fontWeight: 600, cursor: "pointer", transition: "0.15s",
@@ -126,7 +119,8 @@ export default function AdminDashboard() {
     },
     logoutBtn: {
       background: "transparent", border: "1px solid var(--border-color)", color: "var(--color-danger)",
-      padding: "8px 14px", borderRadius: 8, fontSize: 13, fontWeight: 600,
+      padding: isMobile ? "6px 10px" : "8px 14px", borderRadius: 8,
+      fontSize: isMobile ? 12 : 13, fontWeight: 600,
       cursor: "pointer", transition: "0.15s",
     },
     body: { display: "flex", flex: 1, minHeight: 0 },
@@ -158,7 +152,8 @@ export default function AdminDashboard() {
     hamburger: { background: "none", border: "none", color: "var(--color-primary)", fontSize: 22, cursor: "pointer", padding: "4px" },
     langBtn: {
       background: "transparent", border: "1px solid var(--border-color)", color: "var(--text-secondary)",
-      padding: "8px 12px", borderRadius: 8, fontSize: 12, fontWeight: 600,
+      padding: isMobile ? "6px 8px" : "8px 12px", borderRadius: 8,
+      fontSize: isMobile ? 11 : 12, fontWeight: 600,
       cursor: "pointer", transition: "0.15s",
     },
   };
