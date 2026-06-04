@@ -268,6 +268,7 @@ export default function CashierDashboard() {
     }
     if (added > 0) {
       setServiceSelections({});
+      setShowServices(false);
     }
   };
 
@@ -391,16 +392,17 @@ export default function CashierDashboard() {
           </small>
         </div>
 
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: isMobile ? 6 : 10, alignItems: "center", flexWrap: "wrap" }}>
           <OfflineIndicator isOnline={isOnline} />
-          <button onClick={toggleLang} style={{ padding: "8px 12px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontWeight: 600 }}>{t("lang.switch")}</button>
+          <button onClick={toggleLang} style={{ padding: isMobile ? "6px 8px" : "8px 12px", fontSize: isMobile ? 12 : undefined, background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontWeight: 600 }}>{t("lang.switch")}</button>
           <button
             onClick={handleEndDay}
             disabled={
               sessionTransactions.length === 0
             }
             style={{
-              padding: "8px 16px",
+              padding: isMobile ? "6px 10px" : "8px 16px",
+              fontSize: isMobile ? 12 : undefined,
               backgroundColor:
                 sessionTransactions.length === 0
                   ? "var(--border-color)"
@@ -424,7 +426,8 @@ export default function CashierDashboard() {
           <button
             onClick={handleLogout}
             style={{
-              padding: "8px 16px",
+              padding: isMobile ? "6px 10px" : "8px 16px",
+              fontSize: isMobile ? 12 : undefined,
               backgroundColor: "var(--color-danger)",
               color: "white",
               border: "none",
@@ -975,7 +978,7 @@ export default function CashierDashboard() {
           {/* LOCAL OFFLINE TRANSACTIONS */}
 
           <div style={{ marginTop: "30px" }}>
-            <h2 style={{ color: "var(--text-primary)" }}>Local Transaction History</h2>
+            <h2 style={{ color: "var(--text-primary)" }}>{t("offline.title")}</h2>
             <OfflineTransactionHistory />
           </div>
 

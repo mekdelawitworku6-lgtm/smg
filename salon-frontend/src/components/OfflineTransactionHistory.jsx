@@ -55,7 +55,7 @@ export default function OfflineTransactionHistory() {
           disabled={syncing}
           style={{ marginLeft: 8, padding: "6px 10px", background: "var(--color-success)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
         >
-          {syncing ? "Syncing..." : "Sync All"}
+          {syncing ? t("offline.syncing") : t("offline.syncAll")}
         </button>
       </div>
 
@@ -87,7 +87,7 @@ export default function OfflineTransactionHistory() {
           </div>
 
           <p>
-            Services:{" "}
+            {t("offline.services")}{" "}
             {tx.services
               ?.map(
                 (s) => s.name
@@ -96,17 +96,17 @@ export default function OfflineTransactionHistory() {
           </p>
 
           <p>
-            Payment:{" "}
+            {t("offline.payment")}{" "}
             {tx.paymentType}
           </p>
 
           <p>
-            Total:{" "}
+            {t("offline.total")}{" "}
             {tx.total} Birr
           </p>
 
           <p>
-            Date:{" "}
+            {t("offline.date")}{" "}
             {new Date(
               tx.date
             ).toLocaleString()}

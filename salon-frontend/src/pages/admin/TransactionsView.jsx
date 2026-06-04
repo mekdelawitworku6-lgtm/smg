@@ -146,7 +146,7 @@ export default function TransactionsView({ transactions }) {
               <tr style={{ background: "var(--border-color)", color: "var(--text-primary)" }}>
                 <th style={{ padding: "10px 12px", textAlign: "left" }}>Date</th>
                 <th style={{ padding: "10px 12px", textAlign: "left" }}>{t("tx.service")}</th>
-                <th style={{ padding: "10px 12px", textAlign: "left" }}>Staff</th>
+                <th style={{ padding: "10px 12px", textAlign: "left" }}>{t("staff.name")}</th>
                 <th style={{ padding: "10px 12px", textAlign: "left" }}>{t("tx.payment")}</th>
                 <th style={{ padding: "10px 12px", textAlign: "right" }}>{t("tx.total")}</th>
                 <th style={{ padding: "10px 12px", textAlign: "right" }}>{t("tx.tip")}</th>
