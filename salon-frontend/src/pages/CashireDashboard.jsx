@@ -155,6 +155,12 @@ export default function CashierDashboard() {
   const [savingTransaction, setSavingTransaction] =
     useState(false);
 
+  const formatDayName = (dateStr) => {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+  };
+
   /* =========================
      POS SERVICE SELECTION
   ========================= */
@@ -223,6 +229,19 @@ export default function CashierDashboard() {
     }
     return Array.from(map.values());
   }, [allServicesFlat]);
+
+  const sortedGroupedServices = useMemo(() => {
+    return groupedServices.map(group => ({
+      ...group,
+      services: [...group.services].sort((a, b) => {
+        const keyA = `${a.category}|${a.name}`;
+        const keyB = `${b.category}|${b.name}`;
+        const checkedA = serviceSelections[keyA]?.checked ? 1 : 0;
+        const checkedB = serviceSelections[keyB]?.checked ? 1 : 0;
+        return checkedB - checkedA;
+      }),
+    }));
+  }, [groupedServices, serviceSelections]);
 
   const selectedCount = useMemo(() => {
     return Object.values(serviceSelections).filter(
@@ -383,11 +402,7 @@ export default function CashierDashboard() {
           <h1 style={{ margin: 0, fontSize: isMobile ? 18 : 24, color: "var(--text-primary)" }}>{t("cashier.title")}</h1>
           <small style={{ color: "var(--text-secondary)" }}>
             {t("cashier.session")}{" "}
-            {sessionStart
-              ? new Date(
-                  sessionStart
-                ).toLocaleDateString()
-              : ""}{" "}
+            {formatDayName(sessionStart)}{" "}
             | {sessionTransactions.length} {t("cashier.transactions")}
           </small>
         </div>
@@ -562,7 +577,7 @@ export default function CashierDashboard() {
               {t("cashier.noServices")}
             </p>
           ) : (
-            groupedServices.map((group) => (
+            sortedGroupedServices.map((group) => (
               <div
                 key={group.category}
                 style={{
@@ -1024,7 +1039,7 @@ export default function CashierDashboard() {
 
             <p>
               <strong>{t("cashier.date")}</strong> {" "}
-              {endSummary.date}
+              {formatDayName(endSummary.date)}
             </p>
             <p>
                             <strong>{t("cashier.txCount")}</strong> {" "}

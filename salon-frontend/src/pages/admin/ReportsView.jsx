@@ -64,7 +64,7 @@ export default function ReportsView({ transactions }) {
     const txTips = t.tips || [];
     return s + txTips.reduce((ss, e) => ss + (Number(e.amount) || 0), 0);
   }, 0);
-  const finalCashAmount = totalIncome - asratMoney - totalTips;
+  const finalCashAmount = totalIncome - totalTips;
   const txCount = dayTx.length;
   const servicesCount = dayTx.reduce((s, t) => s + ((t.services || []).length), 0);
 

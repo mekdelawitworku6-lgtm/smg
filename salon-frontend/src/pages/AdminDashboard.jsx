@@ -40,6 +40,12 @@ export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
 
   useEffect(() => {
+    dispatch(getTransactions());
+    dispatch(fetchServices());
+    dispatch(fetchStaff());
+  }, [dispatch]);
+
+  useEffect(() => {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);

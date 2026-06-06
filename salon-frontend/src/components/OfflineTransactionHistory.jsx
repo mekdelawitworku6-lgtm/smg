@@ -6,6 +6,9 @@ from "../offline/useOfflineTransactions";
 import { syncTransactions }
 from "../offline/sync";
 
+import { db }
+from "../offline/db";
+
 import { useTranslation }
 from "../i18n/LanguageContext";
 
@@ -16,9 +19,12 @@ export default function OfflineTransactionHistory() {
   const [filter, setFilter] =
     useState("ALL");
   const [syncing, setSyncing] = useState(false);
+  const [hidden, setHidden] = useState(false);
 
   const transactions =
     useOfflineTransactions();
+
+  if (transactions.length === 0 || hidden) return null;
 
   const filtered =
     transactions.filter((tx) => {
@@ -35,27 +41,45 @@ export default function OfflineTransactionHistory() {
     setSyncing(false);
   };
 
+  const handleRemoveAll = async () => {
+    await db.transactions.clear();
+  };
+
   return (
 
     <div>
 
-      <h3>
-        {t("offline.title")}
-      </h3>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+        <h3 style={{ margin: 0 }}>
+          {t("offline.title")}
+        </h3>
+        <button
+          onClick={() => setHidden(true)}
+          style={{ padding: "4px 10px", background: "var(--border-color)", color: "var(--text-primary)", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}
+        >
+          {t("cashier.hideServices")}
+        </button>
+      </div>
 
-      <div style={{ marginBottom: "10px" }}>
-        <button onClick={() => setFilter("ALL")}>
+      <div style={{ marginBottom: "10px", display: "flex", gap: 6, flexWrap: "wrap" }}>
+        <button onClick={() => setFilter("ALL")} style={{ padding: "6px 10px", borderRadius: 4, border: "1px solid var(--border-color)", background: filter === "ALL" ? "var(--color-primary)" : "#fff", color: filter === "ALL" ? "#fff" : "var(--text-primary)", cursor: "pointer" }}>
           {t("offline.all")}
         </button>
-        <button onClick={() => setFilter("PENDING")}>
+        <button onClick={() => setFilter("PENDING")} style={{ padding: "6px 10px", borderRadius: 4, border: "1px solid var(--border-color)", background: filter === "PENDING" ? "var(--color-primary)" : "#fff", color: filter === "PENDING" ? "#fff" : "var(--text-primary)", cursor: "pointer" }}>
           {t("offline.pending")}
         </button>
         <button
           onClick={handleSyncAll}
           disabled={syncing}
-          style={{ marginLeft: 8, padding: "6px 10px", background: "var(--color-success)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
+          style={{ padding: "6px 10px", background: "var(--color-success)", color: "#fff", border: "none", borderRadius: 4, cursor: syncing ? "not-allowed" : "pointer" }}
         >
           {syncing ? t("offline.syncing") : t("offline.syncAll")}
+        </button>
+        <button
+          onClick={handleRemoveAll}
+          style={{ padding: "6px 10px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
+        >
+          {t("offline.removeAll")}
         </button>
       </div>
 
