@@ -378,7 +378,7 @@ export default function CashierDashboard() {
       style={{
         display: "flex",
         flexDirection: "column",
-        height: isMobile ? "auto" : "100vh",
+        height: "100dvh",
         overflow: "hidden",
         background: "var(--bg-body)",
       }}
@@ -470,7 +470,7 @@ export default function CashierDashboard() {
           flexDirection: isMobile ? "column" : "row",
           flex: 1,
           minHeight: 0,
-          overflow: isMobile ? "auto" : "hidden",
+          overflow: "hidden",
         }}
       >
 
@@ -488,7 +488,7 @@ export default function CashierDashboard() {
             borderRight: isMobile ? "none" : "1px solid var(--border-color)",
           }}
         >
-          <div style={{ position: "sticky", top: 0, zIndex: 2, background: "var(--bg-body)", margin: isMobile ? "0 -12px" : "0 -20px", padding: isMobile ? "0 12px 8px" : "0 20px 8px" }}>
+          <div style={{ flexShrink: 0 }}>
             <h2
               style={{
                 margin: "0 0 10px",
@@ -549,7 +549,7 @@ export default function CashierDashboard() {
 
           <div 
             style={{ 
-              overflowY: isMobile ? "visible" : "auto", 
+              overflowY: "auto", 
               flex: 1, 
               minHeight: 0, 
               paddingRight: isMobile ? 0 : 20, 
@@ -705,8 +705,8 @@ export default function CashierDashboard() {
           style={{
             width: isMobile ? "100%" : "40%",
             padding: isMobile ? "12px" : "20px",
-            overflowY: isMobile ? "visible" : "auto",
-            height: isMobile ? "auto" : "100%",
+            overflowY: "auto",
+            height: "100%",
           }}
         >
 
