@@ -8,6 +8,16 @@ export default function SettingsView() {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [saving, setSaving] = useState(false);
 
+  const handleClearCache = () => {
+    if (!window.confirm("Clear all cached data? This will reset offline services, staff, and categories.")) return;
+    localStorage.removeItem("adminLocalServices");
+    localStorage.removeItem("adminStaffList");
+    localStorage.removeItem("adminCategories");
+    localStorage.removeItem("dailySummaries");
+    showMsg("Cache cleared. Reloading...");
+    setTimeout(() => window.location.reload(), 1000);
+  };
+
   const showMsg = (text, type = "success") => {
     setMessage({ text, type });
     setTimeout(() => setMessage({ text: "", type: "" }), 3500);
@@ -200,6 +210,30 @@ export default function SettingsView() {
           {saving ? "Updating..." : "Update"}
         </button>
       </form>
+
+      <div style={{ ...card, marginTop: 24, textAlign: "center" }}>
+        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: "var(--color-danger)" }}>
+          Danger Zone
+        </h3>
+        <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 }}>
+          Clear locally cached services, staff, and categories data
+        </p>
+        <button
+          onClick={handleClearCache}
+          style={{
+            padding: "12px 28px",
+            fontSize: 15,
+            fontWeight: 600,
+            border: "none",
+            borderRadius: 8,
+            background: "var(--color-danger)",
+            color: "#fff",
+            cursor: "pointer",
+          }}
+        >
+          Clear Cache
+        </button>
+      </div>
     </div>
   );
 }

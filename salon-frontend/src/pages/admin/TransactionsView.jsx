@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "../../i18n/LanguageContext";
-import OfflineTransactionHistory from "../../components/OfflineTransactionHistory";
 
 const styles = {
   filterRow: { display: "flex", gap: 12, alignItems: "flex-end", marginBottom: 20, flexWrap: "wrap" },
@@ -200,9 +199,6 @@ export default function TransactionsView({ transactions }) {
         </div>
       )}
 
-      <div style={{ marginTop: "30px" }}>
-        <OfflineTransactionHistory />
-      </div>
     </div>
   );
 }

@@ -48,6 +48,7 @@ export default function StaffView({ transactions }) {
   const [formName, setFormName] = useState("");
   const [formRole, setFormRole] = useState("");
   const [formPhone, setFormPhone] = useState("");
+  const [formAccount, setFormAccount] = useState("");
   const [formSalary, setFormSalary] = useState("");
   const [formPassword, setFormPassword] = useState("");
   const [editingId, setEditingId] = useState(null);
@@ -71,7 +72,7 @@ export default function StaffView({ transactions }) {
   const handleSave = async (e) => {
     e.preventDefault();
     if (!formName.trim()) return;
-    const payload = { name: formName.trim(), role: formRole, phone: formPhone, salary: Number(formSalary) || 0 };
+    const payload = { name: formName.trim(), role: formRole, phone: formPhone, accountNumber: formAccount.trim(), salary: Number(formSalary) || 0 };
     try {
       const API = (await import("../../api/axios")).default;
       if (editingId) {
@@ -99,13 +100,14 @@ export default function StaffView({ transactions }) {
       const entry = { ...payload, _id: id };
       dispatch(setStaffList(editingId ? staffList.map((s) => (s._id === id ? entry : s)) : [...staffList, entry]));
     }
-    setFormName(""); setFormRole(""); setFormPhone(""); setFormSalary(""); setFormPassword(""); setEditingId(null);
+    setFormName(""); setFormRole(""); setFormPhone(""); setFormAccount(""); setFormSalary(""); setFormPassword(""); setEditingId(null);
   };
 
   const handleEdit = (s) => {
     setFormName(s.name);
     setFormRole(s.role || "");
     setFormPhone(s.phone || "");
+    setFormAccount(s.accountNumber || "");
     setFormSalary(s.salary || "");
     setFormPassword("");
     setEditingId(s._id);
@@ -133,6 +135,7 @@ export default function StaffView({ transactions }) {
               {ROLE_OPTIONS.map((r) => <option key={r} value={r}>{r}</option>)}
             </select>
             <input placeholder={t("staff.phone")} value={formPhone} onChange={(e) => setFormPhone(e.target.value)} style={{ ...styles.input, width: 130 }} />
+            <input placeholder="Account No" value={formAccount} onChange={(e) => setFormAccount(e.target.value)} style={{ ...styles.input, width: 110 }} />
             <input placeholder={t("staff.salary")} type="number" value={formSalary} onChange={(e) => setFormSalary(e.target.value)} style={{ ...styles.input, width: 100 }} />
             {isCashier && !editingId && (
               <input placeholder={t("cashiers.password")} type="password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} style={{ ...styles.input, width: 120 }} />
@@ -182,6 +185,10 @@ export default function StaffView({ transactions }) {
             <div style={styles.field}>
                 <div style={styles.fieldLabel}>{t("staff.phone")}</div>
                 <div style={styles.fieldValue}>{selectedStaff.phone || "—"}</div>
+              </div>
+              <div style={styles.field}>
+                <div style={styles.fieldLabel}>Account No</div>
+                <div style={styles.fieldValue}>{selectedStaff.accountNumber || "—"}</div>
               </div>
               <div style={styles.field}>
                 <div style={styles.fieldLabel}>{t("staff.salary")}</div>

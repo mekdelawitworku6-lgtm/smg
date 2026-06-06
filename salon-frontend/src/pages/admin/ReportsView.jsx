@@ -54,12 +54,6 @@ export default function ReportsView({ transactions }) {
   const abysinyaTotal = dayTx.filter((t) => t.paymentType === "abysinya").reduce((s, t) => s + (t.total || 0), 0);
   const cbeTotal = dayTx.filter((t) => t.paymentType === "cbe").reduce((s, t) => s + (t.total || 0), 0);
   const transferTotal = telebirrTotal + abysinyaTotal + cbeTotal;
-  const nonAsratSales = dayTx.reduce((s, t) => {
-    const txNon = (t.services || []).filter((svc) => svc.nonAsrat).reduce((ss, svc) => ss + (Number(svc.price) || 0), 0);
-    return s + txNon;
-  }, 0);
-  const deductibleAmount = totalIncome - nonAsratSales;
-  const asratMoney = deductibleAmount > 5500 ? (deductibleAmount - 5500) * 0.1 : 0;
   const totalTips = dayTx.reduce((s, t) => {
     const txTips = t.tips || [];
     return s + txTips.reduce((ss, e) => ss + (Number(e.amount) || 0), 0);
@@ -107,53 +101,9 @@ export default function ReportsView({ transactions }) {
             <div style={styles.fieldLabel}>{t("report.servicesCount")}</div>
             <div style={styles.fieldValue}>{servicesCount}</div>
           </div>
-          <div style={styles.fieldBox}>
-            <div style={styles.fieldLabel}>{t("report.nonAsratSales")}</div>
-            <div style={styles.fieldValue}>{nonAsratSales.toLocaleString()} Birr</div>
-          </div>
-          <div style={styles.fieldBox}>
-            <div style={styles.fieldLabel}>{t("report.asratMoney")}</div>
-            <div style={{ ...styles.fieldValue, ...styles.highlightValue }}>{asratMoney.toLocaleString()} Birr</div>
-          </div>
           <div style={{ ...styles.fieldBox, gridColumn: "1/-1" }}>
             <div style={styles.fieldLabel}>{t("report.finalCashAmount")}</div>
             <div style={{ ...styles.fieldValue, fontSize: 28 }}>{finalCashAmount.toLocaleString()} Birr</div>
-          </div>
-        </div>
-      </ReportSection>
-
-      <ReportSection title={t("report.finalCashCalc")} open={showCalc} onToggle={() => setShowCalc(!showCalc)}>
-        <div style={{ display: "flex", gap: 20, flexWrap: "wrap" }}>
-          <div style={{ flex: "1 1 300px" }}>
-            <h4 style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-secondary)" }}>{t("report.finalCashCalc")}</h4>
-            <div style={styles.row}><span>{t("report.totalIncome")}</span><span>{totalIncome.toLocaleString()} Birr</span></div>
-            <div style={styles.row}><span>{t("report.transferTotal")}</span><span>{transferTotal.toLocaleString()} Birr</span></div>
-            <div style={styles.row}><span>{t("report.nonAsratSales")}</span><span>{nonAsratSales.toLocaleString()} Birr</span></div>
-            <div style={styles.row}><span>{t("report.asratMoney")}</span><span style={{ color: "var(--color-danger)" }}>- {asratMoney.toLocaleString()} Birr</span></div>
-            <div style={styles.row}><span>{t("report.totalTips")}</span><span style={{ color: "var(--color-danger)" }}>- {totalTips.toLocaleString()} Birr</span></div>
-            <div style={{ ...styles.totalRow, borderTop: "1px solid var(--color-primary)", marginTop: 8, paddingTop: 12 }}>
-              <span>{t("report.finalCashAmount")}</span>
-              <span>{finalCashAmount.toLocaleString()} Birr</span>
-            </div>
-          </div>
-          <div style={{ flex: "1 1 300px" }}>
-            <h4 style={{ margin: "0 0 12px", fontSize: 14, color: "var(--text-secondary)" }}>{t("report.asratCalc")}</h4>
-            <div style={styles.formulaBox}>
-              <div>{t("report.formula")}</div>
-              <div style={{ marginTop: 8 }}>
-                = <span style={{ color: "var(--color-primary)", fontWeight: 600 }}>{totalIncome.toLocaleString()}</span> − <span style={{ color: "var(--color-primary)", fontWeight: 600 }}>{nonAsratSales.toLocaleString()}</span>
-              </div>
-              <div style={{ marginTop: 4, fontWeight: 700 }}>= {deductibleAmount.toLocaleString()} Birr</div>
-              {deductibleAmount > 5500 ? (
-                <>
-                  <div style={{ marginTop: 12 }}>{t("report.sinceGt")}</div>
-                  <div style={{ marginTop: 4 }}>{t("report.asratBase", { deductible: deductibleAmount.toLocaleString(), base: (deductibleAmount - 5500).toLocaleString() })}</div>
-                  <div style={{ marginTop: 4 }}>{t("report.asratMoneyEq", { base: (deductibleAmount - 5500).toLocaleString(), asrat: asratMoney.toLocaleString() })}</div>
-                </>
-              ) : (
-                <div style={{ marginTop: 12 }}>{t("report.sinceLte")}</div>
-              )}
-            </div>
           </div>
         </div>
       </ReportSection>

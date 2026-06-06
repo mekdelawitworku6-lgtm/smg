@@ -2,6 +2,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useRef,
 } from "react";
 
 import { useNavigate } from "react-router-dom";
@@ -60,17 +61,6 @@ export default function CashierDashboard() {
   }, []);
 
   useEffect(() => {
-    if (!isOnline) return;
-    syncTransactions().then((synced) => {
-      if (synced.length === 0) return;
-      const existingIds = new Set(session.transactions.map((t) => t.uuid));
-      const newOnes = synced.filter((t) => !existingIds.has(t.uuid));
-      if (newOnes.length === 0) return;
-      dispatch(setTransactions([...session.transactions, ...newOnes]));
-    }).catch(() => {});
-  }, [isOnline]);
-
-  useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
@@ -89,6 +79,8 @@ export default function CashierDashboard() {
   }, [staffList]);
   const session = useSelector((state) => state.session);
   const { id: sessionId, start: sessionStart, transactions: sessionTransactions } = session;
+  const sessionTxsRef = useRef(sessionTransactions);
+  sessionTxsRef.current = sessionTransactions;
 
   const [showEndSummary, setShowEndSummary] =
     useState(false);
@@ -99,6 +91,18 @@ export default function CashierDashboard() {
     dispatch(fetchStaff());
     if (!session.id) dispatch(initSession());
   }, []);
+
+  useEffect(() => {
+    if (!isOnline) return;
+    syncTransactions().then((synced) => {
+      if (synced.length === 0) return;
+      const txs = sessionTxsRef.current;
+      const existingIds = new Set(txs.map((t) => t.uuid));
+      const newOnes = synced.filter((t) => !existingIds.has(t.uuid));
+      if (newOnes.length === 0) return;
+      dispatch(setTransactions([...txs, ...newOnes]));
+    }).catch(() => {});
+  }, [isOnline]);
 
   const buildCatalogFromServices = (services) => {
     const map = {};
@@ -484,7 +488,7 @@ export default function CashierDashboard() {
             borderRight: isMobile ? "none" : "1px solid var(--border-color)",
           }}
         >
-          <div style={{ paddingRight: isMobile ? 0 : 20, position: "sticky", top: 0, zIndex: 2, background: "var(--bg-body)" }}>
+          <div style={{ position: "sticky", top: 0, zIndex: 2, background: "var(--bg-body)", margin: isMobile ? "0 -12px" : "0 -20px", padding: isMobile ? "0 12px 8px" : "0 20px 8px" }}>
             <h2
               style={{
                 margin: "0 0 10px",

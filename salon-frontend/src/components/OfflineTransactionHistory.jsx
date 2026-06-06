@@ -23,12 +23,7 @@ export default function OfflineTransactionHistory() {
 
   if (transactions.length === 0 || hidden) return null;
 
-  const filtered =
-    transactions.filter((tx) => {
-      if (filter === "ALL") return true;
-      if (filter === "PENDING") return !tx.synced;
-      return false;
-    });
+  const pendingCount = transactions.filter((tx) => !tx.synced).length;
 
   const handleSyncAll = async () => {
     setSyncing(true);
@@ -54,77 +49,18 @@ export default function OfflineTransactionHistory() {
         </button>
       </div>
 
-      <div style={{ marginBottom: "10px", display: "flex", gap: 6, flexWrap: "wrap" }}>
-        <button onClick={() => setFilter("ALL")} style={{ padding: "6px 10px", borderRadius: 4, border: "1px solid var(--border-color)", background: filter === "ALL" ? "var(--color-primary)" : "#fff", color: filter === "ALL" ? "#fff" : "var(--text-primary)", cursor: "pointer" }}>
-          {t("offline.all")}
-        </button>
-        <button onClick={() => setFilter("PENDING")} style={{ padding: "6px 10px", borderRadius: 4, border: "1px solid var(--border-color)", background: filter === "PENDING" ? "var(--color-primary)" : "#fff", color: filter === "PENDING" ? "#fff" : "var(--text-primary)", cursor: "pointer" }}>
-          {t("offline.pending")}
-        </button>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+        <span style={{ fontSize: 14, background: "var(--color-warning)", color: "#fff", padding: "4px 12px", borderRadius: 12, fontWeight: 600 }}>
+          {pendingCount} {t("offline.pending")}
+        </span>
         <button
           onClick={handleSyncAll}
           disabled={syncing}
-          style={{ padding: "6px 10px", background: "var(--color-success)", color: "#fff", border: "none", borderRadius: 4, cursor: syncing ? "not-allowed" : "pointer" }}
+          style={{ padding: "6px 14px", background: "var(--color-success)", color: "#fff", border: "none", borderRadius: 4, cursor: syncing ? "not-allowed" : "pointer", fontSize: 13, fontWeight: 600 }}
         >
           {syncing ? t("offline.syncing") : t("offline.syncAll")}
         </button>
       </div>
-
-      {filtered.length === 0 && (
-        <p>{t("offline.noLocal")}</p>
-      )}
-
-      {filtered.map((tx) => (
-
-        <div
-          key={tx.id}
-          style={{
-            border: "1px solid var(--border-color)",
-            padding: "10px",
-            marginBottom: "10px",
-            borderRadius: "6px",
-          }}
-        >
-
-          <div>
-            <span
-              style={{
-                color: "var(--color-warning)",
-                fontWeight: "bold",
-              }}
-            >
-              🟠 {t("offline.pending")}
-            </span>
-          </div>
-
-          <p>
-            {t("offline.services")}{" "}
-            {tx.services
-              ?.map(
-                (s) => s.name
-              )
-              .join(", ")}
-          </p>
-
-          <p>
-            {t("offline.payment")}{" "}
-            {tx.paymentType}
-          </p>
-
-          <p>
-            {t("offline.total")}{" "}
-            {tx.total} Birr
-          </p>
-
-          <p>
-            {t("offline.date")}{" "}
-            {new Date(
-              tx.date
-            ).toLocaleString()}
-          </p>
-
-        </div>
-      ))}
 
     </div>
   );
