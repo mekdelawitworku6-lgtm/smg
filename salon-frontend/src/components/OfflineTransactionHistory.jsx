@@ -6,9 +6,6 @@ from "../offline/useOfflineTransactions";
 import { syncTransactions }
 from "../offline/sync";
 
-import { db }
-from "../offline/db";
-
 import { useTranslation }
 from "../i18n/LanguageContext";
 
@@ -41,10 +38,6 @@ export default function OfflineTransactionHistory() {
     setSyncing(false);
   };
 
-  const handleRemoveAll = async () => {
-    await db.transactions.clear();
-  };
-
   return (
 
     <div>
@@ -74,12 +67,6 @@ export default function OfflineTransactionHistory() {
           style={{ padding: "6px 10px", background: "var(--color-success)", color: "#fff", border: "none", borderRadius: 4, cursor: syncing ? "not-allowed" : "pointer" }}
         >
           {syncing ? t("offline.syncing") : t("offline.syncAll")}
-        </button>
-        <button
-          onClick={handleRemoveAll}
-          style={{ padding: "6px 10px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-        >
-          {t("offline.removeAll")}
         </button>
       </div>
 

@@ -36,7 +36,7 @@ export default function ReportsView({ transactions }) {
   const today = new Date().toISOString().split("T")[0];
   const [dateFrom, setDateFrom] = useState(today);
   const [dateTo, setDateTo] = useState(today);
-  const [showSummary, setShowSummary] = useState(true);
+  const [showSummary, setShowSummary] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
   const [showTxList, setShowTxList] = useState(false);

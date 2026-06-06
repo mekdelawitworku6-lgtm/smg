@@ -36,7 +36,7 @@ export default function DashboardView({ transactions }) {
     thisWeek.setDate(thisWeek.getDate() - thisWeek.getDay());
     const thisWeekKey = thisWeek.toISOString().split("T")[0];
     const thisMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
-    const trend = Object.entries(weekly).sort().slice(-8).map(([date, amount]) => ({ label: formatLabel(date), amount }));
+    const trend = Object.entries(weekly).filter(([date]) => date !== thisWeekKey).sort().slice(-8).map(([date, amount]) => ({ label: formatLabel(date), amount }));
     return { daily: daily[today] || 0, weekly: weekly[thisWeekKey] || 0, monthly: monthly[thisMonth] || 0, trend };
   }, [transactions]);
 

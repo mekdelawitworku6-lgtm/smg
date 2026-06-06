@@ -484,7 +484,7 @@ export default function CashierDashboard() {
             borderRight: isMobile ? "none" : "1px solid var(--border-color)",
           }}
         >
-          <div style={{ paddingRight: isMobile ? 0 : 20, flexShrink: 0 }}>
+          <div style={{ paddingRight: isMobile ? 0 : 20, position: "sticky", top: 0, zIndex: 2, background: "var(--bg-body)" }}>
             <h2
               style={{
                 margin: "0 0 10px",
