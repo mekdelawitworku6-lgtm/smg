@@ -707,7 +707,7 @@ export default function CashierDashboard() {
             width: isMobile ? "100%" : "40%",
             flex: isMobile ? "0 0 auto" : undefined,
             padding: isMobile ? "12px" : "20px",
-            overflowY: isMobile ? "visible" : "auto",
+            overflowY: "auto",
             maxHeight: isMobile ? "45vh" : undefined,
           }}
         >
