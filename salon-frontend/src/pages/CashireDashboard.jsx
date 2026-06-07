@@ -705,10 +705,10 @@ export default function CashierDashboard() {
         <div
           style={{
             width: isMobile ? "100%" : "40%",
-            flex: isMobile ? "1" : undefined,
+            flex: isMobile ? "0 0 auto" : undefined,
             padding: isMobile ? "12px" : "20px",
-            overflowY: "auto",
-            height: isMobile ? "auto" : "100%",
+            overflowY: isMobile ? "visible" : "auto",
+            maxHeight: isMobile ? "45vh" : undefined,
           }}
         >
 
