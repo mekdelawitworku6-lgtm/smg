@@ -478,7 +478,7 @@ export default function CashierDashboard() {
             LEFT SIDE — POS Service Table
         ========================= */}
 
-        <div
+        {(!isMobile || showServices) && <div
           style={{
             width: isMobile ? "100%" : "60%",
             flex: isMobile && showServices ? "1" : undefined,
@@ -696,7 +696,7 @@ export default function CashierDashboard() {
             ))
           )}
           </div>
-        </div>
+        </div>}
 
         {/* =========================
             RIGHT SIDE
