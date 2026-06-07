@@ -11,11 +11,11 @@ export const getStaff = async (req, res) => {
 
 export const createStaff = async (req, res) => {
   try {
-    const { name, role, photo, phone, salary } = req.body;
+    const { name, role, photo, phone, accountNumber, salary } = req.body;
     if (!name) {
       return res.status(400).json({ message: "Name is required" });
     }
-    const staff = await Staff.create({ name, role, photo, phone, salary });
+    const staff = await Staff.create({ name, role, photo, phone, accountNumber, salary });
     res.status(201).json(staff);
   } catch (err) {
     res.status(500).json({ message: err.message });

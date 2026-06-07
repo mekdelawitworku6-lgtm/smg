@@ -6,6 +6,7 @@ const staffSchema = new mongoose.Schema(
     role: { type: String, default: "" },
     photo: { type: String, default: "" },
     phone: { type: String, default: "" },
+    accountNumber: { type: String, default: "" },
     salary: { type: Number, default: 0 },
     active: { type: Boolean, default: true },
   },

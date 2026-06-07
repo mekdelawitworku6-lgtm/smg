@@ -554,7 +554,7 @@ export default function CashierDashboard() {
               flex: 1, 
               minHeight: 0, 
               paddingRight: isMobile ? 0 : 20, 
-              paddingBottom: isMobile ? 260 : undefined,
+              paddingBottom: isMobile && !showServices ? 260 : undefined,
               marginTop: 12 
             }}
           >
@@ -705,6 +705,7 @@ export default function CashierDashboard() {
 
         <div
           style={{
+            display: isMobile && showServices ? "none" : undefined,
             width: isMobile ? "100%" : "40%",
             padding: isMobile ? "12px" : "20px",
             overflowY: "auto",
