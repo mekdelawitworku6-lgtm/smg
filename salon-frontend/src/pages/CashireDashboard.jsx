@@ -481,7 +481,7 @@ export default function CashierDashboard() {
         <div
           style={{
             width: isMobile ? "100%" : "60%",
-            flex: isMobile ? "1" : undefined,
+            flex: isMobile && showServices ? "1" : undefined,
             padding: isMobile ? "12px" : "20px",
             display: "flex",
             flexDirection: "column",
@@ -553,8 +553,7 @@ export default function CashierDashboard() {
               overflowY: "auto", 
               flex: 1, 
               minHeight: 0, 
-              paddingRight: isMobile ? 0 : 20, 
-              paddingBottom: isMobile && !showServices ? 260 : undefined,
+              paddingRight: isMobile ? 0 : 20,
               marginTop: 12 
             }}
           >
@@ -709,16 +708,12 @@ export default function CashierDashboard() {
             width: isMobile ? "100%" : "40%",
             padding: isMobile ? "12px" : "20px",
             overflowY: "auto",
-            maxHeight: isMobile ? "40vh" : undefined,
+            maxHeight: isMobile && showServices ? "40vh" : undefined,
             height: isMobile ? "auto" : "100%",
-            position: isMobile ? "fixed" : undefined,
-            bottom: isMobile ? "0" : undefined,
-            left: isMobile ? "0" : undefined,
-            right: isMobile ? "0" : undefined,
-            background: isMobile ? "var(--bg-card)" : undefined,
-            zIndex: isMobile ? "1000" : undefined,
-            borderTop: isMobile ? "1px solid var(--border-color)" : undefined,
-            boxShadow: isMobile ? "0 -2px 8px rgba(0,0,0,0.1)" : undefined,
+            flex: isMobile && !showServices ? "1" : undefined,
+            background: isMobile && !showServices ? "var(--bg-card)" : undefined,
+            borderTop: isMobile && showServices ? "1px solid var(--border-color)" : undefined,
+            boxShadow: isMobile && showServices ? "0 -2px 8px rgba(0,0,0,0.1)" : undefined,
           }}
         >
 
