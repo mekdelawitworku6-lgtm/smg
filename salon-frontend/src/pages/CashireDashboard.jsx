@@ -531,6 +531,12 @@ export default function CashierDashboard() {
             </div>
           ) : (
             <div style={{ height: "100%", overflowY: "auto", padding: "12px", background: "var(--bg-card)" }}>
+              <button
+                onClick={() => setShowServices(true)}
+                style={{ width: "100%", padding: "14px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "16px", fontWeight: 700, cursor: "pointer", marginBottom: "12px" }}
+              >
+                + {t("cashier.showServices")}
+              </button>
               <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.cart")}</h2>
               <p style={{ color: "var(--text-primary)", margin: "0 0 12px" }}>
                 {items.length} {t("cashier.services")} — {total} Birr
