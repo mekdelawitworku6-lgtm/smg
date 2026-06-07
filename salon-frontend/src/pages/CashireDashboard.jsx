@@ -466,549 +466,262 @@ export default function CashierDashboard() {
 
       <div
         style={{
-          display: "flex",
-          flexDirection: isMobile ? "column" : "row",
           flex: 1,
           minHeight: 0,
           overflow: "hidden",
         }}
       >
-
-        {/* =========================
-            LEFT SIDE — POS Service Table
-        ========================= */}
-
-        {(!isMobile || showServices) && <div
-          style={{
-            width: isMobile ? "100%" : "60%",
-            flex: isMobile && showServices ? "1" : undefined,
-            padding: isMobile ? "12px" : "20px",
-            display: "flex",
-            flexDirection: "column",
-            minHeight: 0,
-            borderRight: isMobile ? "none" : "1px solid var(--border-color)",
-          }}
-        >
-          <div style={{ flexShrink: 0 }}>
-            <h2
-              style={{
-                margin: "0 0 10px",
-                fontSize: "18px",
-                color: "var(--text-primary)",
-              }}
-            >
-              {t("cashier.services")}
-            </h2>
-
-            <button
-              onClick={handleAddSelectedServices}
-              disabled={selectedCount === 0}
-              style={{
-                width: "100%",
-                padding: "14px",
-                backgroundColor:
-                  selectedCount === 0
-                    ? "var(--border-color)"
-                    : "var(--color-primary)",
-                color:
-                  selectedCount === 0
-                    ? "var(--text-muted)"
-                    : "#fff",
-                border: "none",
-                borderRadius: "8px",
-                fontSize: "16px",
-                fontWeight: 700,
-                cursor:
-                  selectedCount === 0
-                    ? "not-allowed"
-                    : "pointer",
-              }}
-            >
-              {t("cashier.addSelected")}
-              {selectedCount > 0 ? ` (${selectedCount})` : ""}
-            </button>
-
-            {showServices && (
-              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+        {isMobile ? (
+          showServices ? (
+            <div style={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
+              <div style={{ flexShrink: 0, padding: "12px 12px 0" }}>
+                <h2 style={{ margin: "0 0 10px", fontSize: "18px", color: "var(--text-primary)" }}>
+                  {t("cashier.services")}
+                </h2>
                 <button
-                  type="button"
-                  onClick={() => setShowServices(false)}
+                  onClick={handleAddSelectedServices}
+                  disabled={selectedCount === 0}
                   style={{
-                    padding: "8px 12px",
-                    borderRadius: 8,
-                    border: "1px solid var(--border-color)",
-                    background: "#fff",
-                    color: "var(--text-primary)",
-                    cursor: "pointer",
+                    width: "100%", padding: "14px",
+                    backgroundColor: selectedCount === 0 ? "var(--border-color)" : "var(--color-primary)",
+                    color: selectedCount === 0 ? "var(--text-muted)" : "#fff",
+                    border: "none", borderRadius: "8px", fontSize: "16px", fontWeight: 700,
+                    cursor: selectedCount === 0 ? "not-allowed" : "pointer",
                   }}
                 >
-                  {t("cashier.hideServices")}
+                  {t("cashier.addSelected")}{selectedCount > 0 ? ` (${selectedCount})` : ""}
                 </button>
-              </div>
-            )}
-          </div>
-
-          <div 
-            style={{ 
-              overflowY: "auto", 
-              flex: 1, 
-              minHeight: 0, 
-              paddingRight: isMobile ? 0 : 20,
-              marginTop: 12 
-            }}
-          >
-            {!showServices ? (
-            <div style={{ color: "var(--text-secondary)", padding: 20, background: "#fff", borderRadius: 10, border: "1px solid var(--border-color)" }}>
-              <p style={{ margin: 0, marginBottom: 12 }}>
-                {t("cashier.servicesHidden")}
-              </p>
-              <button
-                type="button"
-                onClick={() => setShowServices(true)}
-                style={{
-                  padding: "10px 14px",
-                  borderRadius: 8,
-                  border: "none",
-                  background: "var(--color-primary)",
-                  color: "#fff",
-                  cursor: "pointer",
-                }}
-              >
-                {t("cashier.showServices")}
-              </button>
-            </div>
-          ) : groupedServices.length === 0 ? (
-            <p style={{ color: "var(--text-muted)" }}>
-              {t("cashier.noServices")}
-            </p>
-          ) : (
-            sortedGroupedServices.map((group) => (
-              <div
-                key={group.category}
-                style={{
-                  marginBottom: "24px",
-                }}
-              >
-                <div
-                  style={{
-                    padding: "8px 12px",
-                    backgroundColor: "var(--color-primary)",
-                    color: "#fff",
-                    borderRadius: "6px",
-                    fontSize: "13px",
-                    fontWeight: 700,
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                    marginBottom: "4px",
-                  }}
-                >
-                  {group.category}
-                </div>
-
-                <div
-                  style={{
-                    background: "#fff",
-                    borderRadius: "6px",
-                    overflow: "hidden",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                  }}
-                >
-                  {group.services.map((svc) => {
-                    const key = `${svc.category}|${svc.name}`;
-                    const sel = serviceSelections[key] || {};
-
-                    return (
-                      <div
-                        key={key}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "8px",
-                          padding: "8px 12px",
-                          borderBottom: "1px solid var(--border-color)",
-                          backgroundColor: sel.checked ? "var(--color-primary-light)" : "transparent",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={!!sel.checked}
-                          onChange={(e) =>
-                            setServiceSelections((prev) => ({
-                              ...prev,
-                              [key]: {
-                                ...prev[key],
-                                checked: e.target.checked,
-                              },
-                            }))
-                          }
-                          style={{ width: "18px", height: "18px", flexShrink: 0 }}
-                        />
-
-                        <span style={{ flex: 1, fontSize: "14px", fontWeight: 500 }}>
-                          {svc.name}
-                        </span>
-
-                        <span
-                          style={{
-                            width: "80px",
-                            textAlign: "right",
-                            fontSize: "14px",
-                            fontWeight: 700,
-                            whiteSpace: "nowrap",
-                            flexShrink: 0,
-                          }}
-                        >
-                          {svc.price} Birr
-                        </span>
-
-                        <select
-                          value={sel.staff || ""}
-                          onChange={(e) =>
-                            setServiceSelections((prev) => ({
-                              ...prev,
-                              [key]: {
-                                checked: prev[key]?.checked ?? true,
-                                staff: e.target.value,
-                              },
-                            }))
-                          }
-                          style={{
-                            width: "130px",
-                            padding: "5px 4px",
-                            borderRadius: "4px",
-                            border: "1px solid var(--border-color)",
-                            fontSize: "13px",
-                            flexShrink: 0,
-                          }}
-                        >
-                          <option value="">{t("cashier.staffSelect")}</option>
-                          {staffNames.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))
-          )}
-          </div>
-        </div>}
-
-        {/* =========================
-            RIGHT SIDE
-        ========================= */}
-
-        <div
-          style={{
-            display: isMobile && showServices ? "none" : undefined,
-            width: isMobile ? "100%" : "40%",
-            padding: isMobile ? "12px" : "20px",
-            overflowY: "auto",
-            maxHeight: isMobile && showServices ? "40vh" : undefined,
-            height: isMobile ? "auto" : "100%",
-            flex: isMobile && !showServices ? "1" : undefined,
-            background: isMobile && !showServices ? "var(--bg-card)" : undefined,
-            borderTop: isMobile && showServices ? "1px solid var(--border-color)" : undefined,
-            boxShadow: isMobile && showServices ? "0 -2px 8px rgba(0,0,0,0.1)" : undefined,
-          }}
-        >
-
-           <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.cart")}</h2>
-
-          <p style={{ color: "var(--text-primary)", margin: "0 0 12px" }}>
-            {items.length} {t("cashier.services")} — {total} Birr
-          </p>
-
-          {items.length > 0 && (
-            <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 12, border: "1px solid var(--border-color)", borderRadius: 6, padding: "4px 8px", background: "#fff" }}>
-              {items.map((item, index) => (
-                <div key={index} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0",                     borderBottom: index < items.length - 1 ? "1px solid var(--border-color)" : "none" }}>
-                  <span style={{ flex: 1, fontSize: 13 }}>
-                    {item.name} <small style={{ color: "var(--text-secondary)" }}>({item.staff})</small>
-                  </span>
-                  <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>{item.price} Birr</span>
-                  <button
-                    onClick={() => dispatch(removeFromCart(index))}
-                    style={{ fontSize: 11, padding: "2px 8px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}
-                  >
-                    {t("cashier.remove")}
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                  <button type="button" onClick={() => setShowServices(false)}
+                    style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", cursor: "pointer" }}>
+                    {t("cashier.hideServices")}
                   </button>
                 </div>
-              ))}
-            </div>
-          )}
-
-          {/* PAYMENT */}
-
-          <select
-            value={paymentMethod}
-
-            onChange={(e) =>
-              setPaymentMethod(
-                e.target.value
-              )
-            }
-
-            style={{
-              width: "100%",
-              padding: "10px",
-              marginBottom: "15px",
-              border: "1px solid var(--border-color)",
-              borderRadius: "6px",
-              background: "#fff",
-              color: "var(--text-primary)",
-            }}
-          >
-
-            <option value="cash">
-              {t("cashier.paymentCash")}
-            </option>
-
-            <option value="telebirr">
-              {t("cashier.paymentTelebirr")}
-            </option>
-
-            <option value="abysinya">
-              {t("cashier.paymentAbysinya")}
-            </option>
-
-            <option value="cbe">
-              {t("cashier.paymentCBE")}
-            </option>
-
-          </select>
-
-          {/* TIP */}
-
-          <div style={{ marginBottom: "15px" }}>
-            <label style={{ display: "block", marginBottom: "5px", fontWeight: 600, color: "var(--text-primary)" }}>
-              {t("cashier.tipLabel")}
-            </label>
-            {tipEntries.map((entry, i) => (
-              <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
-                <select
-                  value={entry.staff}
-                  onChange={(e) => {
-                    const next = [...tipEntries];
-                    next[i] = { ...next[i], staff: e.target.value };
-                    setTipEntries(next);
-                  }}
-                  style={{
-                    flex: 1,
-                    padding: "8px",
-                    borderRadius: "5px",
-                    border: "1px solid var(--border-color)",
-                    background: "#fff",
-                    color: "var(--text-primary)",
-                  }}
-                >
-                  <option value="">{t("cashier.staffSelect")}</option>
-                  {staffNames.map((s) => (
-                    <option key={s} value={s}>{s}</option>
-                  ))}
-                </select>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={entry.amount}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/\D/g, "");
-                    const next = [...tipEntries];
-                    next[i] = { ...next[i], amount: val === "" ? 0 : Number(val) };
-                    setTipEntries(next);
-                  }}
-                  style={{
-                    width: "100px",
-                    padding: "8px",
-                    borderRadius: "5px",
-                    border: "1px solid var(--border-color)",
-                    background: "#fff",
-                    color: "var(--text-primary)",
-                  }}
-                />
-                <button
-                  onClick={() => setTipEntries(tipEntries.filter((_, idx) => idx !== i))}
-                  style={{ padding: "6px 10px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}
-                >
-                  ✕
-                </button>
               </div>
-            ))}
-            <button
-              onClick={() => setTipEntries([...tipEntries, { staff: "", amount: 0 }])}
-              style={{ padding: "8px 12px", background: "#fff", color: "var(--text-primary)", border: "1px solid var(--border-color)", borderRadius: 6, cursor: "pointer", fontSize: 13, marginTop: 4 }}
-            >
-              + {t("cashier.addStaff")}
-            </button>
-          </div>
-
-          {/* BUTTONS */}
-
-          <button
-            onClick={
-              handleCompleteTransaction
-            }
-            disabled={savingTransaction}
-
-            style={{
-              width: "100%",
-              padding: "15px",
-              background: savingTransaction ? "var(--text-muted)" : "var(--color-primary)",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-              marginBottom: "10px",
-            }}
-          >
-            {savingTransaction
-              ? t("cashier.saving")
-              : t("cashier.completeTx")}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleClearCart}
-
-            style={{
-              width: "100%",
-              padding: "15px",
-              background: "var(--text-primary)",
-              color: "#fff",
-              border: "none",
-              borderRadius: "8px",
-            }}
-          >
-            {t("cashier.clearCart")}
-          </button>
-
-          {/* SESSION SUMMARY */}
-
-          <div style={{ marginTop: "30px" }}>
-            <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.sessionSummary")}</h2>
-            {sessionTransactions.length === 0 ? (
-              <p style={{ color: "var(--text-muted)" }}>
-                {t("cashier.noTxYet")}
-              </p>
-            ) : (
-              <div>
-                                <p>
-                  <strong>
-                    {
-                      sessionTransactions.length
-                    }{" "}
-                    {t("cashier.transactions")}
-                  </strong>
-                </p>
-                <p>
-                  {t("cashier.cashLabel")} {" "}
-                  {sessionTransactions
-                    .filter(
-                      (t) =>
-                        t.paymentType === "cash"
-                    )
-                    .reduce(
-                      (s, t) => s + t.total,
-                      0
-                    )}{" "}
-                  Birr
-                </p>
-                                <p>
-                  {t("cashier.telebirrLabel")} {" "}
-                  {sessionTransactions
-                    .filter(
-                      (t) =>
-                        t.paymentType ===
-                        "telebirr"
-                    )
-                    .reduce(
-                      (s, t) => s + t.total,
-                      0
-                    )}{" "}
-                  Birr
-                </p>
-                                <p>
-                  {t("cashier.abysinyaLabel")} {" "}
-                  {sessionTransactions
-                    .filter(
-                      (t) =>
-                        t.paymentType ===
-                        "abysinya"
-                    )
-                    .reduce(
-                      (s, t) => s + t.total,
-                      0
-                    )}{" "}
-                  Birr
-                </p>
-                                <p>
-                  {t("cashier.cbeLabel")} {" "}
-                  {sessionTransactions
-                    .filter(
-                      (t) =>
-                        t.paymentType === "cbe"
-                    )
-                    .reduce(
-                      (s, t) => s + t.total,
-                      0
-                    )}{" "}
-                  Birr
-                </p>
-                                <p>
-                  {t("cashier.tipsLabel")} {" "}
-                  {sessionTransactions.reduce(
-                    (s, t) =>
-                      s + (t.tip || 0),
-                    0
-                  )}{" "}
-                  Birr
-                </p>
-
-                {staffTips.length > 0 && (
-                  <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-primary)" }}>
-                    <strong>{t("cashier.tipsByStaff")}:</strong>
-                    {staffTips.map(([name, amount]) => (
-                      <div key={name} style={{ display: "flex", justifyContent: "space-between", paddingLeft: 8, marginTop: 2 }}>
-                        <span>{name}</span>
-                        <span>{Math.round(amount)} Birr</span>
+              <div style={{ overflowY: "auto", flex: 1, minHeight: 0, marginTop: 12, padding: "0 12px 12px" }}>
+                {groupedServices.length === 0 ? (
+                  <p style={{ color: "var(--text-muted)" }}>{t("cashier.noServices")}</p>
+                ) : (
+                  sortedGroupedServices.map((group) => (
+                    <div key={group.category} style={{ marginBottom: "24px" }}>
+                      <div style={{ padding: "8px 12px", backgroundColor: "var(--color-primary)", color: "#fff", borderRadius: "6px", fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>
+                        {group.category}
                       </div>
-                    ))}
+                      <div style={{ background: "#fff", borderRadius: "6px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+                        {group.services.map((svc) => {
+                          const key = `${svc.category}|${svc.name}`;
+                          const sel = serviceSelections[key] || {};
+                          return (
+                            <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderBottom: "1px solid var(--border-color)", backgroundColor: sel.checked ? "var(--color-primary-light)" : "transparent" }}>
+                              <input type="checkbox" checked={!!sel.checked} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { ...prev[key], checked: e.target.checked } }))} style={{ width: "18px", height: "18px", flexShrink: 0 }} />
+                              <span style={{ flex: 1, fontSize: "14px", fontWeight: 500 }}>{svc.name}</span>
+                              <span style={{ width: "80px", textAlign: "right", fontSize: "14px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>{svc.price} Birr</span>
+                              <select value={sel.staff || ""} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { checked: prev[key]?.checked ?? true, staff: e.target.value } }))} style={{ width: "130px", padding: "5px 4px", borderRadius: "4px", border: "1px solid var(--border-color)", fontSize: "13px", flexShrink: 0 }}>
+                                <option value="">{t("cashier.staffSelect")}</option>
+                                {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          ) : (
+            <div style={{ height: "100%", overflowY: "auto", padding: "12px", background: "var(--bg-card)" }}>
+              <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.cart")}</h2>
+              <p style={{ color: "var(--text-primary)", margin: "0 0 12px" }}>
+                {items.length} {t("cashier.services")} — {total} Birr
+              </p>
+              {items.length > 0 && (
+                <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 12, border: "1px solid var(--border-color)", borderRadius: 6, padding: "4px 8px", background: "#fff" }}>
+                  {items.map((item, index) => (
+                    <div key={index} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: index < items.length - 1 ? "1px solid var(--border-color)" : "none" }}>
+                      <span style={{ flex: 1, fontSize: 13 }}>
+                        {item.name} <small style={{ color: "var(--text-secondary)" }}>({item.staff})</small>
+                      </span>
+                      <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>{item.price} Birr</span>
+                      <button onClick={() => dispatch(removeFromCart(index))} style={{ fontSize: 11, padding: "2px 8px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
+                        {t("cashier.remove")}
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} style={{ width: "100%", padding: "10px", marginBottom: "15px", border: "1px solid var(--border-color)", borderRadius: "6px", background: "#fff", color: "var(--text-primary)" }}>
+                <option value="cash">{t("cashier.paymentCash")}</option>
+                <option value="telebirr">{t("cashier.paymentTelebirr")}</option>
+                <option value="abysinya">{t("cashier.paymentAbysinya")}</option>
+                <option value="cbe">{t("cashier.paymentCBE")}</option>
+              </select>
+              <div style={{ marginBottom: "15px" }}>
+                <label style={{ display: "block", marginBottom: "5px", fontWeight: 600, color: "var(--text-primary)" }}>{t("cashier.tipLabel")}</label>
+                {tipEntries.map((entry, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
+                    <select value={entry.staff} onChange={(e) => { const next = [...tipEntries]; next[i] = { ...next[i], staff: e.target.value }; setTipEntries(next); }} style={{ flex: 1, padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)" }}>
+                      <option value="">{t("cashier.staffSelect")}</option>
+                      {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
+                    </select>
+                    <input type="text" inputMode="numeric" value={entry.amount} onChange={(e) => { const val = e.target.value.replace(/\D/g, ""); const next = [...tipEntries]; next[i] = { ...next[i], amount: val === "" ? 0 : Number(val) }; setTipEntries(next); }} style={{ width: "100px", padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)" }} />
+                    <button onClick={() => setTipEntries(tipEntries.filter((_, idx) => idx !== i))} style={{ padding: "6px 10px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>✕</button>
+                  </div>
+                ))}
+                <button onClick={() => setTipEntries([...tipEntries, { staff: "", amount: 0 }])} style={{ padding: "8px 12px", background: "#fff", color: "var(--text-primary)", border: "1px solid var(--border-color)", borderRadius: 6, cursor: "pointer", fontSize: 13, marginTop: 4 }}>+ {t("cashier.addStaff")}</button>
+              </div>
+              <button onClick={handleCompleteTransaction} disabled={savingTransaction} style={{ width: "100%", padding: "15px", background: savingTransaction ? "var(--text-muted)" : "var(--color-primary)", color: "#fff", border: "none", borderRadius: "8px", marginBottom: "10px" }}>
+                {savingTransaction ? t("cashier.saving") : t("cashier.completeTx")}
+              </button>
+              <button type="button" onClick={handleClearCart} style={{ width: "100%", padding: "15px", background: "var(--text-primary)", color: "#fff", border: "none", borderRadius: "8px" }}>
+                {t("cashier.clearCart")}
+              </button>
+              <div style={{ marginTop: "30px" }}>
+                <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.sessionSummary")}</h2>
+                {sessionTransactions.length === 0 ? (
+                  <p style={{ color: "var(--text-muted)" }}>{t("cashier.noTxYet")}</p>
+                ) : (
+                  <div>
+                    <p><strong>{sessionTransactions.length} {t("cashier.transactions")}</strong></p>
+                    <p>{t("cashier.cashLabel")} {sessionTransactions.filter((t) => t.paymentType === "cash").reduce((s, t) => s + t.total, 0)} Birr</p>
+                    <p>{t("cashier.telebirrLabel")} {sessionTransactions.filter((t) => t.paymentType === "telebirr").reduce((s, t) => s + t.total, 0)} Birr</p>
+                    <p>{t("cashier.abysinyaLabel")} {sessionTransactions.filter((t) => t.paymentType === "abysinya").reduce((s, t) => s + t.total, 0)} Birr</p>
+                    <p>{t("cashier.cbeLabel")} {sessionTransactions.filter((t) => t.paymentType === "cbe").reduce((s, t) => s + t.total, 0)} Birr</p>
+                    <p>{t("cashier.tipsLabel")} {sessionTransactions.reduce((s, t) => s + (t.tip || 0), 0)} Birr</p>
+                    {staffTips.length > 0 && (
+                      <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-primary)" }}>
+                        <strong>{t("cashier.tipsByStaff")}:</strong>
+                        {staffTips.map(([name, amount]) => (
+                          <div key={name} style={{ display: "flex", justifyContent: "space-between", paddingLeft: 8, marginTop: 2 }}>
+                            <span>{name}</span><span>{Math.round(amount)} Birr</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "10px 0" }} />
+                    <p><strong>{t("cashier.grandTotal")} {sessionTransactions.reduce((s, t) => s + t.total, 0)} Birr</strong></p>
                   </div>
                 )}
-
-                <hr
-                  style={{
-                    border: "none",
-                    borderTop:
-                      "1px solid var(--border-color)",
-                    margin: "10px 0",
-                  }}
-                />
-                                <p>
-                  <strong>
-                    {t("cashier.grandTotal")} {" "}
-                    {sessionTransactions.reduce(
-                      (s, t) => s + t.total,
-                      0
-                    )}{" "}
-                    Birr
-                  </strong>
-                </p>
               </div>
-            )}
+              <div style={{ marginTop: "30px" }}>
+                <h2 style={{ color: "var(--text-primary)" }}>{t("offline.title")}</h2>
+                <OfflineTransactionHistory />
+              </div>
+            </div>
+          )
+        ) : (
+          <div style={{ display: "flex", flexDirection: "row", flex: 1, minHeight: 0, overflow: "hidden" }}>
+            <div style={{ width: "60%", padding: "20px", display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--border-color)" }}>
+              <div style={{ flexShrink: 0 }}>
+                <h2 style={{ margin: "0 0 10px", fontSize: "18px", color: "var(--text-primary)" }}>{t("cashier.services")}</h2>
+                <button onClick={handleAddSelectedServices} disabled={selectedCount === 0} style={{ width: "100%", padding: "14px", backgroundColor: selectedCount === 0 ? "var(--border-color)" : "var(--color-primary)", color: selectedCount === 0 ? "var(--text-muted)" : "#fff", border: "none", borderRadius: "8px", fontSize: "16px", fontWeight: 700, cursor: selectedCount === 0 ? "not-allowed" : "pointer" }}>
+                  {t("cashier.addSelected")}{selectedCount > 0 ? ` (${selectedCount})` : ""}
+                </button>
+                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                  <button type="button" onClick={() => setShowServices(false)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", cursor: "pointer" }}>{t("cashier.hideServices")}</button>
+                </div>
+              </div>
+              <div style={{ overflowY: "auto", flex: 1, minHeight: 0, paddingRight: 20, marginTop: 12 }}>
+                {groupedServices.length === 0 ? (
+                  <p style={{ color: "var(--text-muted)" }}>{t("cashier.noServices")}</p>
+                ) : (
+                  sortedGroupedServices.map((group) => (
+                    <div key={group.category} style={{ marginBottom: "24px" }}>
+                      <div style={{ padding: "8px 12px", backgroundColor: "var(--color-primary)", color: "#fff", borderRadius: "6px", fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>{group.category}</div>
+                      <div style={{ background: "#fff", borderRadius: "6px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+                        {group.services.map((svc) => {
+                          const key = `${svc.category}|${svc.name}`;
+                          const sel = serviceSelections[key] || {};
+                          return (
+                            <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderBottom: "1px solid var(--border-color)", backgroundColor: sel.checked ? "var(--color-primary-light)" : "transparent" }}>
+                              <input type="checkbox" checked={!!sel.checked} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { ...prev[key], checked: e.target.checked } }))} style={{ width: "18px", height: "18px", flexShrink: 0 }} />
+                              <span style={{ flex: 1, fontSize: "14px", fontWeight: 500 }}>{svc.name}</span>
+                              <span style={{ width: "80px", textAlign: "right", fontSize: "14px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>{svc.price} Birr</span>
+                              <select value={sel.staff || ""} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { checked: prev[key]?.checked ?? true, staff: e.target.value } }))} style={{ width: "130px", padding: "5px 4px", borderRadius: "4px", border: "1px solid var(--border-color)", fontSize: "13px", flexShrink: 0 }}>
+                                <option value="">{t("cashier.staffSelect")}</option>
+                                {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <div style={{ width: "40%", padding: "20px", overflowY: "auto", height: "100%" }}>
+              <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.cart")}</h2>
+              <p style={{ color: "var(--text-primary)", margin: "0 0 12px" }}>{items.length} {t("cashier.services")} — {total} Birr</p>
+              {items.length > 0 && (
+                <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 12, border: "1px solid var(--border-color)", borderRadius: 6, padding: "4px 8px", background: "#fff" }}>
+                  {items.map((item, index) => (
+                    <div key={index} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: index < items.length - 1 ? "1px solid var(--border-color)" : "none" }}>
+                      <span style={{ flex: 1, fontSize: 13 }}>{item.name} <small style={{ color: "var(--text-secondary)" }}>({item.staff})</small></span>
+                      <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>{item.price} Birr</span>
+                      <button onClick={() => dispatch(removeFromCart(index))} style={{ fontSize: 11, padding: "2px 8px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>{t("cashier.remove")}</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} style={{ width: "100%", padding: "10px", marginBottom: "15px", border: "1px solid var(--border-color)", borderRadius: "6px", background: "#fff", color: "var(--text-primary)" }}>
+                <option value="cash">{t("cashier.paymentCash")}</option>
+                <option value="telebirr">{t("cashier.paymentTelebirr")}</option>
+                <option value="abysinya">{t("cashier.paymentAbysinya")}</option>
+                <option value="cbe">{t("cashier.paymentCBE")}</option>
+              </select>
+              <div style={{ marginBottom: "15px" }}>
+                <label style={{ display: "block", marginBottom: "5px", fontWeight: 600, color: "var(--text-primary)" }}>{t("cashier.tipLabel")}</label>
+                {tipEntries.map((entry, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
+                    <select value={entry.staff} onChange={(e) => { const next = [...tipEntries]; next[i] = { ...next[i], staff: e.target.value }; setTipEntries(next); }} style={{ flex: 1, padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)" }}>
+                      <option value="">{t("cashier.staffSelect")}</option>
+                      {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
+                    </select>
+                    <input type="text" inputMode="numeric" value={entry.amount} onChange={(e) => { const val = e.target.value.replace(/\D/g, ""); const next = [...tipEntries]; next[i] = { ...next[i], amount: val === "" ? 0 : Number(val) }; setTipEntries(next); }} style={{ width: "100px", padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)" }} />
+                    <button onClick={() => setTipEntries(tipEntries.filter((_, idx) => idx !== i))} style={{ padding: "6px 10px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>✕</button>
+                  </div>
+                ))}
+                <button onClick={() => setTipEntries([...tipEntries, { staff: "", amount: 0 }])} style={{ padding: "8px 12px", background: "#fff", color: "var(--text-primary)", border: "1px solid var(--border-color)", borderRadius: 6, cursor: "pointer", fontSize: 13, marginTop: 4 }}>+ {t("cashier.addStaff")}</button>
+              </div>
+              <button onClick={handleCompleteTransaction} disabled={savingTransaction} style={{ width: "100%", padding: "15px", background: savingTransaction ? "var(--text-muted)" : "var(--color-primary)", color: "#fff", border: "none", borderRadius: "8px", marginBottom: "10px" }}>
+                {savingTransaction ? t("cashier.saving") : t("cashier.completeTx")}
+              </button>
+              <button type="button" onClick={handleClearCart} style={{ width: "100%", padding: "15px", background: "var(--text-primary)", color: "#fff", border: "none", borderRadius: "8px" }}>
+                {t("cashier.clearCart")}
+              </button>
+              <div style={{ marginTop: "30px" }}>
+                <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.sessionSummary")}</h2>
+                {sessionTransactions.length === 0 ? (
+                  <p style={{ color: "var(--text-muted)" }}>{t("cashier.noTxYet")}</p>
+                ) : (
+                  <div>
+                    <p><strong>{sessionTransactions.length} {t("cashier.transactions")}</strong></p>
+                    <p>{t("cashier.cashLabel")} {sessionTransactions.filter((t) => t.paymentType === "cash").reduce((s, t) => s + t.total, 0)} Birr</p>
+                    <p>{t("cashier.telebirrLabel")} {sessionTransactions.filter((t) => t.paymentType === "telebirr").reduce((s, t) => s + t.total, 0)} Birr</p>
+                    <p>{t("cashier.abysinyaLabel")} {sessionTransactions.filter((t) => t.paymentType === "abysinya").reduce((s, t) => s + t.total, 0)} Birr</p>
+                    <p>{t("cashier.cbeLabel")} {sessionTransactions.filter((t) => t.paymentType === "cbe").reduce((s, t) => s + t.total, 0)} Birr</p>
+                    <p>{t("cashier.tipsLabel")} {sessionTransactions.reduce((s, t) => s + (t.tip || 0), 0)} Birr</p>
+                    {staffTips.length > 0 && (
+                      <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-primary)" }}>
+                        <strong>{t("cashier.tipsByStaff")}:</strong>
+                        {staffTips.map(([name, amount]) => (
+                          <div key={name} style={{ display: "flex", justifyContent: "space-between", paddingLeft: 8, marginTop: 2 }}><span>{name}</span><span>{Math.round(amount)} Birr</span></div>
+                        ))}
+                      </div>
+                    )}
+                    <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "10px 0" }} />
+                    <p><strong>{t("cashier.grandTotal")} {sessionTransactions.reduce((s, t) => s + t.total, 0)} Birr</strong></p>
+                  </div>
+                )}
+              </div>
+              <div style={{ marginTop: "30px" }}>
+                <h2 style={{ color: "var(--text-primary)" }}>{t("offline.title")}</h2>
+                <OfflineTransactionHistory />
+              </div>
+            </div>
           </div>
-
-          {/* LOCAL OFFLINE TRANSACTIONS */}
-
-          <div style={{ marginTop: "30px" }}>
-            <h2 style={{ color: "var(--text-primary)" }}>{t("offline.title")}</h2>
-            <OfflineTransactionHistory />
-          </div>
-
-        </div>
+        )}
 
       </div>
 
