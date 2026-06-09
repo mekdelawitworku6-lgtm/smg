@@ -15,7 +15,7 @@ import {
 import { logout } from "../auth/authSlice";
 import { fetchServices } from "../services/servicesSlice";
 import { fetchStaff } from "../staff/staffSlice";
-import { initSession, addTransaction, setTransactions, endSession } from "../session/sessionSlice";
+import { initSession, addTransaction, endSession } from "../session/sessionSlice";
 import { startDay, closeDay, pendUnclosedDay, reviewAndClose, autoCloseDay, refreshDay } from "../day/daySlice";
 import { useTranslation } from "../i18n/LanguageContext";
 
@@ -39,9 +39,6 @@ from "../components/OfflineTransactionHistory";
 
 import ExpenseManager
 from "../components/ExpenseManager";
-
-import { syncTransactions }
-from "../offline/sync";
 
 import servicesData from "../data/services";
 import staffData from "../data/staff";
@@ -119,17 +116,7 @@ export default function CashierDashboard() {
     if (!session.id) dispatch(initSession());
   }, []);
 
-  useEffect(() => {
-    if (!isOnline) return;
-    syncTransactions().then((synced) => {
-      if (synced.length === 0) return;
-      const txs = sessionTxsRef.current;
-      const existingIds = new Set(txs.map((t) => t.uuid));
-      const newOnes = synced.filter((t) => !existingIds.has(t.uuid));
-      if (newOnes.length === 0) return;
-      dispatch(setTransactions([...txs, ...newOnes]));
-    }).catch(() => {});
-  }, [isOnline]);
+  // auto-sync removed to avoid race with OfflineTransactionHistory "Sync All"
 
   const buildCatalogFromServices = (services) => {
     const map = {};

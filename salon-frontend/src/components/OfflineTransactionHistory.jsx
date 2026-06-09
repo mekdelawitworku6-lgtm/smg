@@ -49,8 +49,12 @@ export default function OfflineTransactionHistory() {
           dispatch(setTransactions([...sessionTransactions, ...newOnes]));
         }
         setFeedback("success");
-      } else if (pendingCount > 0) {
-        setFeedback("error");
+      } else {
+        const { db } = await import("../offline/db");
+        const remaining = await db.transactions.where("synced").equals(false).count();
+        if (remaining > 0) {
+          setFeedback("error");
+        }
       }
     } catch {
       setFeedback("error");
