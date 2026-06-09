@@ -39,35 +39,24 @@ export default function OfflineTransactionHistory() {
   const handleSyncAll = async () => {
     setSyncing(true);
     setFeedback(null);
-    try {
-      const synced = await syncTransactions();
-      setSyncedCount(synced.length);
-      if (synced.length > 0) {
-        const existingIds = new Set(sessionTransactions.map((t) => t.uuid));
-        const newOnes = synced.filter((t) => !existingIds.has(t.uuid));
-        if (newOnes.length > 0) {
-          dispatch(setTransactions([...sessionTransactions, ...newOnes]));
-        }
-        setFeedback("success");
-        window.alert(`✅ ${synced.length} ${t("offline.syncedSuccess")}`);
-      } else {
-        const { db } = await import("../offline/db");
-        const remaining = await db.transactions.where("synced").equals(false).count();
-        if (remaining > 0) {
-          setFeedback("error");
-          window.alert(`❌ ${t("offline.stillOffline")}. ${remaining} ${t("offline.pending")}`);
-        } else {
-          setSyncedCount(0);
-        }
+    const { synced, failed } = await syncTransactions();
+    setSyncedCount(synced.length);
+    if (synced.length > 0) {
+      const existingIds = new Set(sessionTransactions.map((t) => t.uuid));
+      const newOnes = synced.filter((t) => !existingIds.has(t.uuid));
+      if (newOnes.length > 0) {
+        dispatch(setTransactions([...sessionTransactions, ...newOnes]));
       }
-    } catch (err) {
+      setFeedback("success");
+    }
+    if (failed.length > 0) {
       setFeedback("error");
-      const isServerError = err.message?.includes("HTTP") || err.message?.includes("500") || err.message?.includes("400");
-      if (isServerError) {
-        window.alert(`❌ ${t("offline.syncError")}\n${err.message}`);
-      } else {
-        window.alert(`❌ ${t("offline.stillOffline")}`);
-      }
+      const msg = failed[0].error?.response?.data?.message || failed[0].error?.message || "";
+      window.alert(`❌ ${failed.length} failed\n${msg ? t("offline.syncError") + " " + msg : t("offline.stillOffline")}`);
+    } else if (synced.length === 0) {
+      window.alert(`✅ ${t("offline.syncedSuccess")} (0)`);
+    } else {
+      window.alert(`✅ ${synced.length} ${t("offline.syncedSuccess")}`);
     }
     setSyncing(false);
   };

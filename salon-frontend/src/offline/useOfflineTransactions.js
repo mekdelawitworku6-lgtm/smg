@@ -14,8 +14,8 @@ export default function useOfflineTransactions() {
     try {
       const data =
         await db.transactions
-          .orderBy("date")
-          .reverse()
+          .where("synced")
+          .equals(false)
           .toArray();
       setTransactions(data);
     } catch {
