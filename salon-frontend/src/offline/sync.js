@@ -30,10 +30,10 @@ async function syncOne(tx) {
       try {
         await db.transactions.delete(tx.id);
       } catch {
-        // item may already be deleted
       }
       return txData;
     }
+    console.error("Sync error for transaction", tx.uuid, err.response?.status || err.message);
     throw err;
   }
 }
@@ -56,16 +56,20 @@ export async function syncTransactions() {
 
     const results = [];
     let hasError = false;
+    let lastError = null;
     for (let tx of unsynced) {
       try {
         const data = await syncOne(tx);
         if (data) results.push(data);
-      } catch {
+      } catch (err) {
         hasError = true;
+        lastError = err;
       }
     }
     if (hasError && results.length === 0) {
-      throw new Error("Sync failed for all transactions");
+      const status = lastError?.response?.status || "unknown";
+      const msg = lastError?.response?.data?.message || lastError?.message || "Unknown error";
+      throw new Error(`Sync failed (HTTP ${status}): ${msg}`);
     }
     return results;
   } finally {

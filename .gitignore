@@ -36,3 +36,4 @@ Thumbs.db
 
 # Duplicate/backup directories
 salon-frontend copy/
+dev-dist/

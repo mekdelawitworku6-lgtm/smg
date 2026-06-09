@@ -2,6 +2,7 @@ import {
   useEffect,
   useMemo,
   useState,
+  useCallback,
   useRef,
 } from "react";
 
@@ -31,6 +32,8 @@ from "../offline/transactionOffline";
 import useOfflineTransactions
 from "../offline/useOfflineTransactions";
 
+import API from "../api/axios";
+
 import OfflineIndicator
 from "../components/OfflineIndicator";
 
@@ -49,17 +52,34 @@ export default function CashierDashboard() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const { t, toggleLang, lang } = useTranslation();
 
-  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [isOnline, setIsOnline] = useState(true);
+
+  const checkServer = useCallback(async () => {
+    if (!navigator.onLine) {
+      setIsOnline(false);
+      return;
+    }
+    try {
+      const res = await API.get("");
+      setIsOnline(res.data?.status === "ok");
+    } catch {
+      setIsOnline(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const handleStatus = () => setIsOnline(navigator.onLine);
-    window.addEventListener("online", handleStatus);
-    window.addEventListener("offline", handleStatus);
+    checkServer();
+    const onLine = () => { setIsOnline(true); setTimeout(checkServer, 1500); };
+    const offLine = () => setIsOnline(false);
+    window.addEventListener("online", onLine);
+    window.addEventListener("offline", offLine);
+    const interval = setInterval(checkServer, 30000);
     return () => {
-      window.removeEventListener("online", handleStatus);
-      window.removeEventListener("offline", handleStatus);
+      window.removeEventListener("online", onLine);
+      window.removeEventListener("offline", offLine);
+      clearInterval(interval);
     };
-  }, []);
+  }, [checkServer]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -680,7 +700,6 @@ export default function CashierDashboard() {
                 )}
               </div>
               <div style={{ marginTop: "30px" }}>
-                <h2 style={{ color: "var(--text-primary)" }}>{t("offline.title")}</h2>
                 <OfflineTransactionHistory />
               </div>
             </div>
@@ -792,7 +811,6 @@ export default function CashierDashboard() {
                 )}
               </div>
               <div style={{ marginTop: "30px" }}>
-                <h2 style={{ color: "var(--text-primary)" }}>{t("offline.title")}</h2>
                 <OfflineTransactionHistory />
               </div>
             </div>

@@ -23,6 +23,9 @@ app.use(express.json());
 app.get("/api", (req, res) => {
   res.json({ message: "API is running", status: "ok" });
 });
+app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
 app.use("/api/services", serviceRoutes);
