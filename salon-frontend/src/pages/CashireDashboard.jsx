@@ -37,9 +37,6 @@ from "../components/OfflineIndicator";
 import OfflineTransactionHistory
 from "../components/OfflineTransactionHistory";
 
-import ExpenseManager
-from "../components/ExpenseManager";
-
 import servicesData from "../data/services";
 import staffData from "../data/staff";
 
@@ -655,7 +652,6 @@ export default function CashierDashboard() {
               <button type="button" onClick={handleClearCart} style={{ width: "100%", padding: "15px", background: "var(--text-primary)", color: "#fff", border: "none", borderRadius: "8px" }}>
                 {t("cashier.clearCart")}
               </button>
-              <ExpenseManager />
               <div style={{ marginTop: "30px" }}>
                 <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.sessionSummary")}</h2>
                 {sessionTransactions.length === 0 ? (
@@ -770,7 +766,6 @@ export default function CashierDashboard() {
               <button type="button" onClick={handleClearCart} style={{ width: "100%", padding: "15px", background: "var(--text-primary)", color: "#fff", border: "none", borderRadius: "8px" }}>
                 {t("cashier.clearCart")}
               </button>
-              <ExpenseManager />
               <div style={{ marginTop: "30px" }}>
                 <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.sessionSummary")}</h2>
                 {sessionTransactions.length === 0 ? (

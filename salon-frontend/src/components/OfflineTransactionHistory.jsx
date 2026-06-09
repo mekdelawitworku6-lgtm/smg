@@ -22,6 +22,7 @@ export default function OfflineTransactionHistory() {
   const [syncing, setSyncing] = useState(false);
   const [hidden, setHidden] = useState(false);
   const [feedback, setFeedback] = useState(null);
+  const [syncedCount, setSyncedCount] = useState(0);
 
   const transactions =
     useOfflineTransactions();
@@ -42,6 +43,7 @@ export default function OfflineTransactionHistory() {
     setFeedback(null);
     try {
       const synced = await syncTransactions();
+      setSyncedCount(synced.length);
       if (synced.length > 0) {
         const existingIds = new Set(sessionTransactions.map((t) => t.uuid));
         const newOnes = synced.filter((t) => !existingIds.has(t.uuid));
@@ -49,15 +51,20 @@ export default function OfflineTransactionHistory() {
           dispatch(setTransactions([...sessionTransactions, ...newOnes]));
         }
         setFeedback("success");
+        window.alert(`✅ ${synced.length} ${t("offline.syncedSuccess")}`);
       } else {
         const { db } = await import("../offline/db");
         const remaining = await db.transactions.where("synced").equals(false).count();
         if (remaining > 0) {
           setFeedback("error");
+          window.alert(`❌ ${t("offline.stillOffline")}`);
+        } else {
+          setSyncedCount(0);
         }
       }
     } catch {
       setFeedback("error");
+      window.alert(`❌ ${t("offline.stillOffline")}`);
     }
     setSyncing(false);
   };
@@ -80,7 +87,7 @@ export default function OfflineTransactionHistory() {
 
       {feedback === "success" && (
         <div style={{ fontSize: 13, color: "var(--color-success)", fontWeight: 600, marginBottom: 8 }}>
-          {t("offline.syncedSuccess")}
+          {t("offline.syncedSuccess")} ({syncedCount})
         </div>
       )}
       {feedback === "error" && (
