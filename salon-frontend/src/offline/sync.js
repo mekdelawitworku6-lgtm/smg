@@ -38,25 +38,37 @@ async function syncOne(tx) {
   }
 }
 
-export async function syncTransactions() {
-  let unsynced;
-  try {
-    unsynced = await db.transactions
-      .where("synced")
-      .equals(false)
-      .toArray();
-  } catch {
-    return [];
-  }
+let syncing = false;
 
-  const results = [];
-  for (let tx of unsynced) {
+export async function syncTransactions() {
+  if (syncing) return [];
+  syncing = true;
+  try {
+    let unsynced;
     try {
-      const data = await syncOne(tx);
-      if (data) results.push(data);
+      unsynced = await db.transactions
+        .where("synced")
+        .equals(false)
+        .toArray();
     } catch {
-      // skip failed syncs
+      return [];
     }
+
+    const results = [];
+    let hasError = false;
+    for (let tx of unsynced) {
+      try {
+        const data = await syncOne(tx);
+        if (data) results.push(data);
+      } catch {
+        hasError = true;
+      }
+    }
+    if (hasError && results.length === 0) {
+      throw new Error("Sync failed for all transactions");
+    }
+    return results;
+  } finally {
+    syncing = false;
   }
-  return results;
 }

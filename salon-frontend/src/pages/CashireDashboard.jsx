@@ -16,6 +16,7 @@ import { logout } from "../auth/authSlice";
 import { fetchServices } from "../services/servicesSlice";
 import { fetchStaff } from "../staff/staffSlice";
 import { initSession, addTransaction, setTransactions, endSession } from "../session/sessionSlice";
+import { startDay, closeDay, pendUnclosedDay, reviewAndClose, autoCloseDay, refreshDay } from "../day/daySlice";
 import { useTranslation } from "../i18n/LanguageContext";
 
 import {
@@ -27,11 +28,17 @@ import {
 import { saveTransaction }
 from "../offline/transactionOffline";
 
+import useOfflineTransactions
+from "../offline/useOfflineTransactions";
+
 import OfflineIndicator
 from "../components/OfflineIndicator";
 
 import OfflineTransactionHistory
 from "../components/OfflineTransactionHistory";
+
+import ExpenseManager
+from "../components/ExpenseManager";
 
 import { syncTransactions }
 from "../offline/sync";
@@ -66,6 +73,9 @@ export default function CashierDashboard() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  const offlineTransactions = useOfflineTransactions();
+  const pendingOfflineCount = offlineTransactions.filter((tx) => !tx.synced).length;
+
   const { items, total } = useSelector(
     (state) => state.cart
   );
@@ -82,9 +92,26 @@ export default function CashierDashboard() {
   const sessionTxsRef = useRef(sessionTransactions);
   sessionTxsRef.current = sessionTransactions;
 
+  const dayState = useSelector((state) => state.day);
+  const currentDay = dayState.currentDay;
+  const lastDay = dayState.lastDay;
+
   const [showEndSummary, setShowEndSummary] =
     useState(false);
   const [endSummary, setEndSummary] = useState(null);
+  const [closingBalance, setClosingBalance] = useState("");
+
+  useEffect(() => {
+    dispatch(refreshDay());
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
+    const days = JSON.parse(localStorage.getItem("days") || "[]");
+    const unclosed = days.find((d) => d.date === yesterdayStr && d.status === "OPEN");
+    if (unclosed) {
+      dispatch(pendUnclosedDay());
+    }
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchServices());
@@ -300,6 +327,9 @@ export default function CashierDashboard() {
   };
 
   const handleEndDay = () => {
+    if (pendingOfflineCount > 0) {
+      return alert(`Please sync ${pendingOfflineCount} pending offline transaction(s) first before ending the day.`);
+    }
     const totalIncome = sessionTransactions.reduce(
       (sum, t) => sum + t.total,
       0
@@ -334,8 +364,10 @@ export default function CashierDashboard() {
       0
     );
 
+    const totalExpenses = currentDay?.expenses?.reduce((s, e) => s + e.amount, 0) || 0;
+
     const finalCashAmount =
-      totalIncome - asratMoney - totalTips;
+      cashPayments - asratMoney - totalTips;
 
     const summary = {
       sessionId,
@@ -345,6 +377,7 @@ export default function CashierDashboard() {
       transactionCount:
         sessionTransactions.length,
       totalIncome,
+      totalExpenses,
       cashPayments,
       telebirrPayments,
       abysinyaPayments,
@@ -359,10 +392,18 @@ export default function CashierDashboard() {
   };
 
   const confirmEndDay = () => {
+    const cb = Number(closingBalance) || 0;
+    const totalIncome = sessionTransactions.reduce((s, t) => s + t.total, 0);
+    dispatch(closeDay({
+      closingBalance: cb,
+      totalIncome,
+      transactionCount: sessionTransactions.length,
+    }));
     dispatch(endSession());
     dispatch(initSession());
     dispatch(clearCart());
     setTipEntries([]);
+    setClosingBalance("");
     setShowEndSummary(false);
     setEndSummary(null);
   };
@@ -371,6 +412,52 @@ export default function CashierDashboard() {
     setShowEndSummary(false);
     setEndSummary(null);
   };
+
+  const pendingClosureDay = lastDay && lastDay.status === "PENDING_CLOSURE" ? lastDay : null;
+
+  if (pendingClosureDay) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100dvh", padding: 20, background: "var(--bg-body)", textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+        <h2 style={{ color: "var(--text-primary)", margin: "0 0 8px" }}>{pendingClosureDay.date} {t("day.notClosed")}</h2>
+        <p style={{ color: "var(--text-secondary)", marginBottom: 24, maxWidth: 400 }}>
+          Please review and close the day before starting a new day.
+        </p>
+        <div style={{ display: "flex", gap: 12 }}>
+          <button onClick={() => { dispatch(reviewAndClose({ date: pendingClosureDay.date })); dispatch(refreshDay()); }} style={{ padding: "14px 28px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
+            {t("day.reviewClose")}
+          </button>
+          <button onClick={() => { dispatch(autoCloseDay({ date: pendingClosureDay.date })); dispatch(refreshDay()); }} style={{ padding: "14px 28px", background: "var(--border-color)", color: "var(--text-primary)", border: "none", borderRadius: 8, fontSize: 16, fontWeight: 600, cursor: "pointer" }}>
+            {t("day.autoClose")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentDay) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split("T")[0];
+    const prevDay = lastDay?.date === yesterdayStr ? lastDay : null;
+    const todayStr = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100dvh", padding: 20, background: "var(--bg-body)", textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 8 }}>☀️</div>
+        <h1 style={{ fontSize: 28, color: "var(--text-primary)", margin: "0 0 4px" }}>{t("day.greeting")}</h1>
+        <p style={{ color: "var(--text-secondary)", margin: "0 0 4px" }}>
+          {t("day.previousDay")} {prevDay ? (prevDay.status === "CLOSED" ? t("day.statusClosed") : prevDay.status) : t("day.statusClosed")}
+        </p>
+        <p style={{ color: "var(--text-secondary)", margin: "0 0 24px" }}>
+          {t("day.today")} {todayStr}
+        </p>
+        <button onClick={() => { dispatch(startDay()); if (!session.id) dispatch(initSession()); }} style={{ padding: "16px 48px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, fontSize: 18, fontWeight: 700, cursor: "pointer" }}>
+          {t("day.startDay")}
+        </button>
+      </div>
+    );
+  }
 
   return (
 
@@ -405,8 +492,7 @@ export default function CashierDashboard() {
         <div>
           <h1 style={{ margin: 0, fontSize: isMobile ? 18 : 24, color: "var(--text-primary)" }}>{t("cashier.title")}</h1>
           <small style={{ color: "var(--text-secondary)" }}>
-            {t("cashier.session")}{" "}
-            {formatDayName(sessionStart)}{" "}
+            {currentDay?.date || formatDayName(sessionStart)}{" "}
             | {sessionTransactions.length} {t("cashier.transactions")}
           </small>
         </div>
@@ -582,6 +668,7 @@ export default function CashierDashboard() {
               <button type="button" onClick={handleClearCart} style={{ width: "100%", padding: "15px", background: "var(--text-primary)", color: "#fff", border: "none", borderRadius: "8px" }}>
                 {t("cashier.clearCart")}
               </button>
+              <ExpenseManager />
               <div style={{ marginTop: "30px" }}>
                 <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.sessionSummary")}</h2>
                 {sessionTransactions.length === 0 ? (
@@ -696,6 +783,7 @@ export default function CashierDashboard() {
               <button type="button" onClick={handleClearCart} style={{ width: "100%", padding: "15px", background: "var(--text-primary)", color: "#fff", border: "none", borderRadius: "8px" }}>
                 {t("cashier.clearCart")}
               </button>
+              <ExpenseManager />
               <div style={{ marginTop: "30px" }}>
                 <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.sessionSummary")}</h2>
                 {sessionTransactions.length === 0 ? (
@@ -790,6 +878,10 @@ export default function CashierDashboard() {
               {endSummary.totalIncome} Birr</strong>
             </p>
             <p>
+              <strong>{t("day.totalExpenses")}{" "}
+              {endSummary.totalExpenses || 0} Birr</strong>
+            </p>
+            <p>
               {t("cashier.cashPayments")}{" "}
               {endSummary.cashPayments} Birr
             </p>
@@ -845,6 +937,20 @@ export default function CashierDashboard() {
                 {endSummary.finalCashAmount} Birr
               </strong>
             </p>
+
+            <div style={{ margin: "15px 0" }}>
+              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
+                {t("day.closingBalance")}
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={closingBalance}
+                onChange={(e) => setClosingBalance(e.target.value.replace(/\D/g, ""))}
+                placeholder={t("day.enterClosingBalance")}
+                style={{ width: "100%", padding: "10px", borderRadius: 6, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", fontSize: 14, boxSizing: "border-box" }}
+              />
+            </div>
 
             <div
               style={{

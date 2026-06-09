@@ -7,6 +7,7 @@ import servicesReducer from "../services/servicesSlice";
 import staffReducer from "../staff/staffSlice";
 import categoriesReducer from "../categories/categoriesSlice";
 import sessionReducer from "../session/sessionSlice";
+import dayReducer from "../day/daySlice";
 
 export const store = configureStore({
   reducer: {
@@ -17,5 +18,6 @@ export const store = configureStore({
     staff: staffReducer,
     categories: categoriesReducer,
     session: sessionReducer,
+    day: dayReducer,
   },
 });

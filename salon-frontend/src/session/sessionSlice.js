@@ -58,7 +58,7 @@ const sessionSlice = createSlice({
       const totalIncome = summary.totalIncome;
       const asratMoney = totalIncome > 5500 ? (totalIncome - 5500) * 0.1 : 0;
       summary.asratMoney = asratMoney;
-      summary.finalCashAmount = totalIncome - asratMoney - summary.totalTips;
+      summary.finalCashAmount = summary.cashPayments - asratMoney - summary.totalTips;
 
       const summaries = JSON.parse(localStorage.getItem("dailySummaries") || "[]");
       summaries.push(summary);

@@ -15,6 +15,8 @@ import TransactionsView from "./admin/TransactionsView";
 import CategoriesView from "./admin/CategoriesView";
 import ReportsView from "./admin/ReportsView";
 import SettingsView from "./admin/SettingsView";
+import AdminCashierView from "./admin/AdminCashierView";
+import useOfflineTransactions from "../offline/useOfflineTransactions";
 
 
 export default function AdminDashboard() {
@@ -28,6 +30,7 @@ export default function AdminDashboard() {
     ["staff", t("nav.staff")],
     ["transactions", t("nav.transactions")],
     ["reports", t("nav.reports")],
+    ["cashierpanel", t("nav.cashierPanel")],
     ["settings", t("nav.settings") || "Settings"],
   ], [lang]);
 
@@ -35,6 +38,9 @@ export default function AdminDashboard() {
   const services = useSelector((state) => state.services.apiList);
   const staffList = useSelector((state) => state.staff.apiList);
   const [activeView, setActiveView] = useState("dashboard");
+
+  const offlineTransactions = useOfflineTransactions();
+  const pendingOfflineCount = offlineTransactions.filter((tx) => !tx.synced).length;
   const [message, setMessage] = useState("");
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
@@ -95,6 +101,8 @@ export default function AdminDashboard() {
         return <TransactionsView transactions={validTransactions} services={services} />;
       case "reports":
         return <ReportsView transactions={validTransactions} />;
+      case "cashierpanel":
+        return <AdminCashierView />;
       case "settings":
         return <SettingsView />;
       default:
@@ -212,6 +220,12 @@ export default function AdminDashboard() {
           <div style={styles.header}>
             <h1 style={styles.title}>{navItems.find(([k]) => k === activeView)?.[1]}</h1>
           </div>
+          {pendingOfflineCount > 0 && (
+            <div style={{ background: "#FEF3C7", color: "#92400E", padding: "10px 16px", borderRadius: 8, marginBottom: 16, fontSize: 13, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontWeight: 700 }}>{pendingOfflineCount}</span>
+              <span>pending offline transactions not yet synced to server. Go to Cashier view to sync them.</span>
+            </div>
+          )}
           {message && <div style={styles.notice}>{message}</div>}
           {renderView()}
         </main>
