@@ -8,6 +8,32 @@ export default function SettingsView() {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [saving, setSaving] = useState(false);
 
+  const [delStartDate, setDelStartDate] = useState("");
+  const [delEndDate, setDelEndDate] = useState("");
+  const [delPassword, setDelPassword] = useState("");
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDeleteTransactions = async () => {
+    if (!delStartDate || !delEndDate) return showMsg("Select start and end date", "error");
+    if (!delPassword) return showMsg("Enter your password to confirm", "error");
+    const msg = `Delete ALL transactions from ${delStartDate} to ${delEndDate}?\n\nThis action cannot be undone!`;
+    if (!window.confirm(msg)) return;
+    setDeleting(true);
+    try {
+      const res = await API.post("/transactions/delete-by-date", {
+        startDate: delStartDate,
+        endDate: delEndDate,
+        password: delPassword,
+      });
+      showMsg(res.data.message || "Deleted successfully");
+      setDelPassword("");
+    } catch (err) {
+      showMsg(err.response?.data?.message || "Failed to delete transactions", "error");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const handleClearCache = () => {
     if (!window.confirm("Clear all cached data? This will reset offline services, staff, and categories.")) return;
     localStorage.removeItem("adminLocalServices");
@@ -232,6 +258,47 @@ export default function SettingsView() {
           }}
         >
           Clear Cache
+        </button>
+      </div>
+
+      <div style={{ ...card, marginTop: 24 }}>
+        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: "var(--color-danger)" }}>
+          Delete Transactions
+        </h3>
+        <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 }}>
+          Permanently delete all transactions within a date range. Requires your login password.
+        </p>
+
+        <div style={{ marginBottom: 16 }}>
+          <label style={label}>Start Date</label>
+          <input type="date" style={input} value={delStartDate} onChange={(e) => setDelStartDate(e.target.value)} />
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={label}>End Date</label>
+          <input type="date" style={input} value={delEndDate} onChange={(e) => setDelEndDate(e.target.value)} />
+        </div>
+        <div style={{ marginBottom: 16 }}>
+          <label style={label}>Confirm Password</label>
+          <input type="password" style={input} value={delPassword} onChange={(e) => setDelPassword(e.target.value)} placeholder="Enter your login password" />
+        </div>
+
+        <button
+          onClick={handleDeleteTransactions}
+          disabled={deleting}
+          style={{
+            width: "100%",
+            padding: "12px 28px",
+            fontSize: 15,
+            fontWeight: 600,
+            border: "none",
+            borderRadius: 8,
+            background: "var(--color-danger)",
+            color: "#fff",
+            cursor: deleting ? "not-allowed" : "pointer",
+            opacity: deleting ? 0.6 : 1,
+          }}
+        >
+          {deleting ? "Deleting..." : "Delete Transactions"}
         </button>
       </div>
     </div>
