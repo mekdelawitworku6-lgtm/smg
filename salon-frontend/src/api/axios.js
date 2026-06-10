@@ -12,7 +12,7 @@ function getBaseURL() {
   return "/api";
 }
 
-const API = axios.create({ baseURL: getBaseURL() });
+const API = axios.create({ baseURL: getBaseURL(), timeout: 15000 });
 
 API.interceptors.request.use((req) => {
   const token = localStorage.getItem("token");
