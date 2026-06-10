@@ -16,7 +16,7 @@ import {
 import { logout } from "../auth/authSlice";
 import { fetchServices } from "../services/servicesSlice";
 import { fetchStaff } from "../staff/staffSlice";
-import { initSession, addTransaction, endSession } from "../session/sessionSlice";
+import { initSession, addTransaction, endSession, setTransactions } from "../session/sessionSlice";
 import { startDay, closeDay, pendUnclosedDay, reviewAndClose, autoCloseDay, refreshDay } from "../day/daySlice";
 import { useTranslation } from "../i18n/LanguageContext";
 
@@ -28,6 +28,8 @@ import {
 
 import { saveTransaction }
 from "../offline/transactionOffline";
+
+import { db } from "../offline/db";
 
 import useOfflineTransactions
 from "../offline/useOfflineTransactions";
@@ -330,37 +332,62 @@ export default function CashierDashboard() {
     dispatch(clearCart());
   };
 
-  const handleEndDay = () => {
-    if (pendingOfflineCount > 0) {
-      return alert(`Please sync ${pendingOfflineCount} pending offline transaction(s) first before ending the day.`);
+  const buildSummaryTransactions = useCallback((baseTransactions = [], pendingTransactions = []) => {
+    const merged = [];
+    const seen = new Set();
+
+    for (const tx of [...baseTransactions, ...pendingTransactions]) {
+      const key = tx?.uuid || tx?.offlineId || tx?._id || tx?.id;
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      merged.push(tx);
     }
-    const totalIncome = sessionTransactions.reduce(
-      (sum, t) => sum + t.total,
+
+    return merged;
+  }, []);
+
+  const getPendingOfflineTransactions = useCallback(async () => {
+    try {
+      return await db.transactions.where("synced").equals(false).toArray();
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const handleEndDay = async () => {
+    const pendingOffline = await getPendingOfflineTransactions();
+    if (pendingOffline.length > 0) {
+      return alert(`Please sync ${pendingOffline.length} pending offline transaction(s) first before ending the day.`);
+    }
+
+    const summaryTransactions = buildSummaryTransactions(sessionTransactions);
+    const totalIncome = summaryTransactions.reduce(
+      (sum, t) => sum + (Number(t.total) || 0),
       0
     );
 
-    const cashPayments = sessionTransactions
+    const cashPayments = summaryTransactions
       .filter((t) => t.paymentType === "cash")
-      .reduce((sum, t) => sum + t.total, 0);
+      .reduce((sum, t) => sum + (Number(t.total) || 0), 0);
 
-    const telebirrPayments = sessionTransactions
+    const telebirrPayments = summaryTransactions
       .filter((t) => t.paymentType === "telebirr")
-      .reduce((sum, t) => sum + t.total, 0);
+      .reduce((sum, t) => sum + (Number(t.total) || 0), 0);
 
-    const abysinyaPayments = sessionTransactions
+    const abysinyaPayments = summaryTransactions
       .filter((t) => t.paymentType === "abysinya")
-      .reduce((sum, t) => sum + t.total, 0);
+      .reduce((sum, t) => sum + (Number(t.total) || 0), 0);
 
-    const cbePayments = sessionTransactions
+    const cbePayments = summaryTransactions
       .filter((t) => t.paymentType === "cbe")
-      .reduce((sum, t) => sum + t.total, 0);
+      .reduce((sum, t) => sum + (Number(t.total) || 0), 0);
 
     const asratMoney =
       totalIncome > 5500
         ? (totalIncome - 5500) * 0.1
         : 0;
 
-    const totalTips = sessionTransactions.reduce(
+    const totalTips = summaryTransactions.reduce(
       (sum, t) => {
         const txTips = t.tips || [];
         return sum + txTips.reduce((s, e) => s + (Number(e.amount) || 0), 0);
@@ -378,8 +405,7 @@ export default function CashierDashboard() {
       date: sessionStart.split("T")[0],
       startedAt: sessionStart,
       endedAt: new Date().toISOString(),
-      transactionCount:
-        sessionTransactions.length,
+      transactionCount: summaryTransactions.length,
       totalIncome,
       totalExpenses,
       cashPayments,
@@ -389,6 +415,7 @@ export default function CashierDashboard() {
       asratMoney,
       totalTips,
       finalCashAmount,
+      transactions: summaryTransactions,
     };
 
     setEndSummary(summary);
@@ -397,11 +424,13 @@ export default function CashierDashboard() {
 
   const confirmEndDay = () => {
     const cb = Number(closingBalance) || 0;
-    const totalIncome = sessionTransactions.reduce((s, t) => s + t.total, 0);
+    const summaryTransactions = endSummary?.transactions || sessionTransactions;
+    const totalIncome = summaryTransactions.reduce((s, t) => s + (Number(t.total) || 0), 0);
+    dispatch(setTransactions(summaryTransactions));
     dispatch(closeDay({
       closingBalance: cb,
       totalIncome,
-      transactionCount: sessionTransactions.length,
+      transactionCount: summaryTransactions.length,
     }));
     dispatch(endSession());
     dispatch(initSession());
