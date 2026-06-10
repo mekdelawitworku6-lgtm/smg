@@ -7,10 +7,8 @@ export async function syncTransactions() {
   if (syncing) return { synced: [], failed: [] };
   syncing = true;
   try {
-    const unsynced = await db.transactions
-      .where("synced")
-      .equals(false)
-      .toArray();
+    const all = await db.transactions.toArray();
+    const unsynced = all.filter((tx) => tx.synced === false);
 
     const synced = [];
     const failed = [];

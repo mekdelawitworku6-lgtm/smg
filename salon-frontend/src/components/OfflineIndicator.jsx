@@ -19,8 +19,8 @@ export default function OfflineIndicator({ isOnline: propOnline }) {
 
   const loadPending = async () => {
     try {
-      const pending = await db.transactions.where("synced").equals(false).count();
-      setPendingCount(pending);
+      const all = await db.transactions.toArray();
+      setPendingCount(all.filter((tx) => tx.synced === false).length);
     } catch {
       setPendingCount(0);
     }
