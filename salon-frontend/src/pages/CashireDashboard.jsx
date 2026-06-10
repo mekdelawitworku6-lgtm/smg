@@ -20,6 +20,8 @@ import { initSession, addTransaction, endSession, setTransactions } from "../ses
 import { startDay, closeDay, pendUnclosedDay, reviewAndClose, autoCloseDay, refreshDay } from "../day/daySlice";
 import { useTranslation } from "../i18n/LanguageContext";
 
+import { useToast } from "../components/Toast";
+
 import {
   addToCart,
   removeFromCart,
@@ -47,6 +49,7 @@ import staffData from "../data/staff";
 
 export default function CashierDashboard() {
 
+  const toast = useToast();
   const navigate = useNavigate();
 
   const dispatch = useDispatch();
@@ -213,7 +216,7 @@ export default function CashierDashboard() {
   const handleCompleteTransaction = async () => {
 
     if (items.length === 0) {
-      return alert(t("cashier.cartEmpty"));
+      return toast(t("cashier.cartEmpty"), "error");
     }
 
     const validTips = tipEntries.filter(
@@ -247,9 +250,9 @@ export default function CashierDashboard() {
     }));
 
     if (result.offline || !isOnline) {
-      alert(t("cashier.txSavedOffline"));
+      toast(t("cashier.txSavedOffline"), "success");
     } else {
-      alert(t("cashier.txCompleted"));
+      toast(t("cashier.txCompleted"), "success");
     }
   };
 
@@ -306,8 +309,9 @@ export default function CashierDashboard() {
       const sel = serviceSelections[key];
       if (sel?.checked) {
         if (!sel.staff) {
-          alert(
-            `${t("cashier.selectStaffFor")}"${svc.name}"`
+          toast(
+            `${t("cashier.selectStaffFor")}"${svc.name}"`,
+            "error"
           );
           return;
         }
@@ -357,7 +361,7 @@ export default function CashierDashboard() {
   const handleEndDay = async () => {
     const pendingOffline = await getPendingOfflineTransactions();
     if (pendingOffline.length > 0) {
-      return alert(`Please sync ${pendingOffline.length} pending offline transaction(s) first before ending the day.`);
+      return toast(`Sync ${pendingOffline.length} pending offline transaction(s) first`, "error");
     }
 
     const summaryTransactions = buildSummaryTransactions(sessionTransactions);

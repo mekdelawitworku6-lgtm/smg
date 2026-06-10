@@ -13,8 +13,12 @@ from "../session/sessionSlice";
 import { useTranslation }
 from "../i18n/LanguageContext";
 
+import { useToast }
+from "./Toast";
+
 export default function OfflineTransactionHistory() {
 
+  const toast = useToast();
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const sessionTransactions = useSelector((state) => state.session.transactions);
@@ -51,12 +55,12 @@ export default function OfflineTransactionHistory() {
     }
     if (failed.length > 0) {
       setFeedback("error");
-      const msg = failed[0].error?.response?.data?.message || failed[0].error?.message || "";
-      window.alert(`❌ ${failed.length} failed\n${msg ? t("offline.syncError") + " " + msg : t("offline.stillOffline")}`);
+      const msg = failed[0].error?.response?.data?.message || failed[0].error?.message || t("offline.stillOffline");
+      toast(`${t("offline.syncError")} ${msg}`, "error");
     } else if (synced.length === 0) {
-      window.alert(`✅ ${t("offline.syncedSuccess")} (0)`);
+      toast(`${t("offline.syncedSuccess")} (0)`, "success");
     } else {
-      window.alert(`✅ ${synced.length} ${t("offline.syncedSuccess")}`);
+      toast(`${synced.length} ${t("offline.syncedSuccess")}`, "success");
     }
     setSyncing(false);
   };

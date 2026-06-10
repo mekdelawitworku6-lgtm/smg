@@ -3,6 +3,7 @@ import { useDispatch } from "react-redux";
 import { addTransaction, getTransactions } from "../transactions/transactionSlice";
 import servicesData from "../data/services";
 import staff from "../data/staff";
+import { useToast } from "./Toast";
 
 const generateUuid = () =>
   window.crypto?.randomUUID?.() ??
@@ -31,6 +32,7 @@ const flattenServices = () => {
 const allServices = flattenServices();
 
 export default function TransactionForm() {
+  const toast = useToast();
   const dispatch = useDispatch();
 
   const [serviceName, setServiceName] = useState("");
@@ -46,7 +48,7 @@ export default function TransactionForm() {
     e.preventDefault();
 
     if (!selectedService || !staffName) {
-      alert("Please select service and staff");
+      toast("Please select service and staff", "error");
       return;
     }
 
@@ -74,7 +76,7 @@ export default function TransactionForm() {
     setServiceName("");
     setStaffName("");
     setPaymentType("Cash");
-    alert("Transaction completed!");
+    toast("Transaction completed!", "success");
   };
 
   return (

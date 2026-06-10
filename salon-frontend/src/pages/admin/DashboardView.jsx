@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "../../i18n/LanguageContext";
 
 const styles = {
-  chartGrid: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 },
+  chartGrid: { display: "flex", flexDirection: "column", gap: 16 },
   panel: { background: "var(--bg-card)", borderRadius: 10, padding: 20, border: "1px solid var(--border-color)" },
   panelTitle: { fontSize: 15, fontWeight: 600, margin: "0 0 16px", color: "var(--color-primary)" },
   row: { display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid var(--border-color)", fontSize: 13, color: "var(--text-primary)" },

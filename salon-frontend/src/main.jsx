@@ -16,6 +16,9 @@ from "./app/store";
 import { LanguageProvider }
 from "./i18n/LanguageContext";
 
+import { ToastProvider }
+from "./components/Toast";
+
 /* 🔥 PWA */
 import { registerSW }
 from "virtual:pwa-register";
@@ -33,7 +36,11 @@ ReactDOM.createRoot(
 
     <LanguageProvider>
 
-      <App />
+      <ToastProvider>
+
+        <App />
+
+      </ToastProvider>
 
     </LanguageProvider>
 

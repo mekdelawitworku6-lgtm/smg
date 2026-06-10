@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setStaffList, fetchStaff } from "../../staff/staffSlice";
 import { useTranslation } from "../../i18n/LanguageContext";
+import { useToast } from "../../components/Toast";
 
 const ROLE_OPTIONS = [
   "Hairdresser",
@@ -41,6 +42,7 @@ const styles = {
 const defaultPhoto = (name) => name?.charAt(0).toUpperCase() || "?";
 
 export default function StaffView({ transactions }) {
+  const toast = useToast();
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const staffList = useSelector((state) => state.staff.apiList);
@@ -83,7 +85,8 @@ export default function StaffView({ transactions }) {
       dispatch(fetchStaff());
       if (isCashier && formPhone.trim()) {
         if (!editingId && (!formPassword || formPassword.length < 4)) {
-          return alert(t("cashiers.invalidPassword"));
+          toast(t("cashiers.invalidPassword"), "error");
+          return;
         }
         if (editingId) {
           await API.put(`/auth/cashiers/by-phone/${formPhone.trim()}`, { name: formName.trim() });
