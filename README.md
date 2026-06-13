@@ -12,28 +12,6 @@ A modern salon management application for cashier and admin workflows. The syste
 - Progressive Web App (PWA) support for a mobile-friendly experience
 - Multi-language UI support
 - Admin dashboard for managing services, staff, and reports
-
-## Screenshots
-
-You can add screenshots of the dashboard, transaction form, and admin views to showcase the app experience.
-
-Example sections:
-- Dashboard overview
-- Cashier transaction flow
-- Admin reports and management view
-
-> Tip: Place image files in a folder such as assets/screenshots/ and reference them here.
-
-## Demo
-
-A live demo is planned for the project. In the meantime, you can run the app locally using the instructions below.
-
-### Demo Flow
-1. Start the backend server.
-2. Start the frontend development server.
-3. Log in with a cashier or admin account.
-4. Create a transaction, review the summary, and test offline behavior.
-
 ## Project Structure
 
 ```bash
@@ -59,7 +37,7 @@ salon-frontend/
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 
 - npm or yarn
 - MongoDB running locally or remotely
 
