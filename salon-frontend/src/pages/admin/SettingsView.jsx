@@ -8,25 +8,63 @@ export default function SettingsView() {
   const [message, setMessage] = useState({ text: "", type: "" });
   const [saving, setSaving] = useState(false);
 
-  const [delStartDate, setDelStartDate] = useState("");
-  const [delEndDate, setDelEndDate] = useState("");
+  const [delDatetime, setDelDatetime] = useState("");
   const [delPassword, setDelPassword] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [searching, setSearching] = useState(false);
+  const [foundTransactions, setFoundTransactions] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [searched, setSearched] = useState(false);
 
-  const handleDeleteTransactions = async () => {
-    if (!delStartDate || !delEndDate) return showMsg("Select start and end date", "error");
+  const handleSearchTransactions = async () => {
+    if (!delDatetime) return showMsg("Select a date and time first", "error");
+    setSearching(true);
+    setSearched(true);
+    setFoundTransactions([]);
+    setSelectedIds([]);
+    try {
+      const res = await API.get(`/transactions/by-datetime?datetime=${encodeURIComponent(delDatetime)}`);
+      setFoundTransactions(res.data || []);
+      if (!res.data || res.data.length === 0) {
+        showMsg("No transactions found at this time", "error");
+      }
+    } catch (err) {
+      showMsg(err.response?.data?.message || "Failed to search transactions", "error");
+    } finally {
+      setSearching(false);
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === foundTransactions.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(foundTransactions.map((t) => t._id));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return showMsg("Select at least one transaction", "error");
     if (!delPassword) return showMsg("Enter your password to confirm", "error");
-    const msg = `Delete ALL transactions from ${delStartDate} to ${delEndDate}?\n\nThis action cannot be undone!`;
+    const msg = `Delete ${selectedIds.length} selected transaction(s)?\n\nThis action cannot be undone!`;
     if (!window.confirm(msg)) return;
     setDeleting(true);
     try {
-      const res = await API.post("/transactions/delete-by-date", {
-        startDate: delStartDate,
-        endDate: delEndDate,
+      const res = await API.post("/transactions/delete-multiple", {
+        ids: selectedIds,
         password: delPassword,
       });
       showMsg(res.data.message || "Deleted successfully");
       setDelPassword("");
+      setFoundTransactions([]);
+      setSelectedIds([]);
+      setSearched(false);
     } catch (err) {
       showMsg(err.response?.data?.message || "Failed to delete transactions", "error");
     } finally {
@@ -57,7 +95,7 @@ export default function SettingsView() {
     setSaving(true);
     try {
       if (phone !== localStorage.getItem("phone")) {
-        const phoneRes = await API.put("/auth/me", { phone });
+        await API.put("/auth/me", { phone });
         localStorage.setItem("phone", phone);
       }
       if (currentPassword && newPassword) {
@@ -127,112 +165,54 @@ export default function SettingsView() {
     margin: "24px 0",
   };
 
+  const formatTime = (iso) => {
+    if (!iso) return "";
+    return new Date(iso).toLocaleString("en-US", {
+      month: "short", day: "numeric",
+      hour: "2-digit", minute: "2-digit",
+    });
+  };
+
   return (
     <div>
-      <h2
-        style={{
-          fontSize: 22,
-          fontWeight: 700,
-          marginBottom: 6,
-          textAlign: "center",
-        }}
-      >
+      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6, textAlign: "center" }}>
         Settings
       </h2>
-      <p
-        style={{
-          fontSize: 14,
-          color: "var(--text-secondary)",
-          marginBottom: 28,
-          textAlign: "center",
-        }}
-      >
+      <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 28, textAlign: "center" }}>
         Update your phone number or password
       </p>
 
       {message.text && (
-        <div
-          style={{
-            padding: "10px 16px",
-            borderRadius: 8,
-            marginBottom: 20,
-            maxWidth: 480,
-            marginLeft: "auto",
-            marginRight: "auto",
-            fontSize: 14,
-            fontWeight: 500,
-            textAlign: "center",
-            background:
-              message.type === "error"
-                ? "rgba(239,68,68,0.1)"
-                : "rgba(16,185,129,0.1)",
-            color:
-              message.type === "error"
-                ? "var(--red-danger)"
-                : "var(--teal-success)",
-          }}
-        >
+        <div style={{
+          padding: "10px 16px", borderRadius: 8, marginBottom: 20, maxWidth: 480,
+          marginLeft: "auto", marginRight: "auto", fontSize: 14, fontWeight: 500, textAlign: "center",
+          background: message.type === "error" ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)",
+          color: message.type === "error" ? "var(--red-danger)" : "var(--teal-success)",
+        }}>
           {message.text}
         </div>
       )}
 
       <form onSubmit={handleSave} style={card}>
-        <h3
-          style={{
-            fontSize: 16,
-            fontWeight: 600,
-            marginBottom: 20,
-          }}
-        >
-          Account
-        </h3>
+        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Account</h3>
 
         <label style={label}>Phone Number</label>
-        <input
-          style={input}
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-        />
+        <input style={input} value={phone} onChange={(e) => setPhone(e.target.value)} />
 
         <div style={divider} />
 
-        <h3
-          style={{
-            fontSize: 16,
-            fontWeight: 600,
-            marginBottom: 20,
-          }}
-        >
-          Password
-        </h3>
+        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Password</h3>
 
         <div style={{ marginBottom: 16 }}>
           <label style={label}>Current Password</label>
-          <input
-            type="password"
-            style={input}
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-          />
+          <input type="password" style={input} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
         </div>
         <div>
           <label style={label}>New Password</label>
-          <input
-            type="password"
-            style={input}
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
+          <input type="password" style={input} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
         </div>
 
-        <button
-          type="submit"
-          disabled={saving}
-          style={{
-            ...btn,
-            opacity: saving ? 0.6 : 1,
-          }}
-        >
+        <button type="submit" disabled={saving} style={{ ...btn, opacity: saving ? 0.6 : 1 }}>
           {saving ? "Updating..." : "Update"}
         </button>
       </form>
@@ -244,19 +224,10 @@ export default function SettingsView() {
         <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 }}>
           Clear locally cached services, staff, and categories data
         </p>
-        <button
-          onClick={handleClearCache}
-          style={{
-            padding: "12px 28px",
-            fontSize: 15,
-            fontWeight: 600,
-            border: "none",
-            borderRadius: 8,
-            background: "var(--color-danger)",
-            color: "#fff",
-            cursor: "pointer",
-          }}
-        >
+        <button onClick={handleClearCache} style={{
+          padding: "12px 28px", fontSize: 15, fontWeight: 600, border: "none", borderRadius: 8,
+          background: "var(--color-danger)", color: "#fff", cursor: "pointer",
+        }}>
           Clear Cache
         </button>
       </div>
@@ -266,40 +237,80 @@ export default function SettingsView() {
           Delete Transactions
         </h3>
         <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 }}>
-          Permanently delete all transactions within a date range. Requires your login password.
+          Search transactions by date & time, then select which ones to delete permanently.
         </p>
 
         <div style={{ marginBottom: 16 }}>
-          <label style={label}>Start Date</label>
-          <input type="date" style={input} value={delStartDate} onChange={(e) => setDelStartDate(e.target.value)} />
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={label}>End Date</label>
-          <input type="date" style={input} value={delEndDate} onChange={(e) => setDelEndDate(e.target.value)} />
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={label}>Confirm Password</label>
-          <input type="password" style={input} value={delPassword} onChange={(e) => setDelPassword(e.target.value)} placeholder="Enter your login password" />
+          <label style={label}>Date & Time</label>
+          <input type="datetime-local" style={input} value={delDatetime} onChange={(e) => { setDelDatetime(e.target.value); setSearched(false); setFoundTransactions([]); setSelectedIds([]); }} />
         </div>
 
-        <button
-          onClick={handleDeleteTransactions}
-          disabled={deleting}
-          style={{
-            width: "100%",
-            padding: "12px 28px",
-            fontSize: 15,
-            fontWeight: 600,
-            border: "none",
-            borderRadius: 8,
-            background: "var(--color-danger)",
-            color: "#fff",
-            cursor: deleting ? "not-allowed" : "pointer",
-            opacity: deleting ? 0.6 : 1,
-          }}
-        >
-          {deleting ? "Deleting..." : "Delete Transactions"}
+        <button onClick={handleSearchTransactions} disabled={searching || !delDatetime} style={{
+          width: "100%", padding: "12px 28px", fontSize: 15, fontWeight: 600, border: "none", borderRadius: 8,
+          background: !delDatetime ? "var(--border-color)" : "var(--color-primary)",
+          color: !delDatetime ? "var(--text-muted)" : "#fff",
+          cursor: !delDatetime ? "not-allowed" : "pointer",
+          opacity: searching ? 0.6 : 1,
+        }}>
+          {searching ? "Searching..." : "Search Transactions"}
         </button>
+
+        {foundTransactions.length > 0 && (
+          <div style={{ marginTop: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
+                {foundTransactions.length} transaction(s) found
+              </span>
+              <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: "var(--text-secondary)" }}>
+                <input type="checkbox" checked={selectedIds.length === foundTransactions.length} onChange={toggleSelectAll} />
+                Select All
+              </label>
+            </div>
+
+            <div style={{ maxHeight: 300, overflowY: "auto", border: "1px solid var(--border-color)", borderRadius: 8, marginBottom: 16 }}>
+              {foundTransactions.map((tx) => (
+                <div key={tx._id} style={{
+                  display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
+                  borderBottom: "1px solid var(--border-color)", fontSize: 13,
+                  background: selectedIds.includes(tx._id) ? "var(--color-primary-light)" : "transparent",
+                  cursor: "pointer",
+                }} onClick={() => toggleSelect(tx._id)}>
+                  <input type="checkbox" checked={selectedIds.includes(tx._id)} onChange={() => toggleSelect(tx._id)} />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
+                      {tx.total} Birr — {tx.paymentType}
+                    </div>
+                    <div style={{ color: "var(--text-secondary)", fontSize: 11 }}>
+                      {formatTime(tx.createdAt)}
+                      {(tx.services || []).map((s) => s.name).join(", ")}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={label}>Confirm Password</label>
+              <input type="password" style={input} value={delPassword} onChange={(e) => setDelPassword(e.target.value)} placeholder="Enter your login password" />
+            </div>
+
+            <button onClick={handleDeleteSelected} disabled={deleting || selectedIds.length === 0} style={{
+              width: "100%", padding: "12px 28px", fontSize: 15, fontWeight: 600, border: "none", borderRadius: 8,
+              background: selectedIds.length === 0 ? "var(--border-color)" : "var(--color-danger)",
+              color: selectedIds.length === 0 ? "var(--text-muted)" : "#fff",
+              cursor: selectedIds.length === 0 ? "not-allowed" : "pointer",
+              opacity: deleting ? 0.6 : 1,
+            }}>
+              {deleting ? "Deleting..." : `Delete Selected (${selectedIds.length})`}
+            </button>
+          </div>
+        )}
+
+        {searched && foundTransactions.length === 0 && !searching && (
+          <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 16, textAlign: "center" }}>
+            No transactions found at the specified date and time.
+          </p>
+        )}
       </div>
     </div>
   );
