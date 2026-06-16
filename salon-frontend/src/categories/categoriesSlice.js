@@ -1,6 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-const DEFAULT_CATEGORIES = ["ፀጉር", "ስቲም", "ቅንድብ", "እጅ እና እግር", "ጥፍር", "ቀለም", "ሹሩባ", "ስፌት", "ሜክአፕ", "ሌሎች", "ስፔሻል"];
+const DEFAULT_CATEGORIES = ["Spa", "Hair", "Nails", "Makeup"];
 
 const load = () => {
   try {

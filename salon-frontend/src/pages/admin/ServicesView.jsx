@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setLocalServices, fetchServices } from "../../services/servicesSlice";
 import { useTranslation } from "../../i18n/LanguageContext";
 
 const emptyForm = { name: "", category: "", price: "", nonAsrat: false };
-const CATEGORIES = ["ፀጉር", "ስቲም", "ቅንድብ", "እጅ እና እግር", "ጥፍር", "ቀለም", "ሹሩባ", "ስፌት", "ሜክአፕ", "ሌሎች", "ስፔሻል"];
 
 const styles = {
   panel: { background: "var(--bg-card)", borderRadius: 10, padding: 20, border: "1px solid var(--border-color)", marginBottom: 20 },
@@ -18,12 +17,14 @@ const styles = {
   btnSecondary: { background: "var(--border-color)", color: "var(--text-primary)" },
   listItem: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--border-color)", fontSize: 13 },
   actions: { display: "flex", gap: 6 },
+  catHeader: { padding: "8px 12px", background: "var(--color-primary)", color: "#fff", borderRadius: 6, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginTop: 16, marginBottom: 4 },
 };
 
 export default function ServicesView() {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const services = useSelector((state) => state.services.apiList);
+  const categories = useSelector((state) => state.categories.list);
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState(null);
 
@@ -64,6 +65,16 @@ export default function ServicesView() {
     dispatch(setLocalServices(services.filter((s) => s._id !== svc._id)));
   };
 
+  const groupedServices = useMemo(() => {
+    const map = new Map();
+    for (const svc of services) {
+      const cat = svc.category || "Other";
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat).push(svc);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [services]);
+
   return (
     <div>
       <div style={styles.panel}>
@@ -73,7 +84,7 @@ export default function ServicesView() {
             <input name="name" placeholder={t("services.serviceName")} value={form.name} onChange={handleChange} style={{ ...styles.input, flex: 1, minWidth: 160 }} />
             <select name="category" value={form.category} onChange={handleChange} style={styles.select}>
               <option value="">{t("services.category")}</option>
-              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+              {categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
             <input name="price" type="number" placeholder={t("services.price")} value={form.price} onChange={handleChange} style={{ ...styles.input, width: 100 }} />
             <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-secondary)", cursor: "pointer" }}>
@@ -91,18 +102,22 @@ export default function ServicesView() {
         {services.length === 0 ? (
           <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("services.noServices")}</div>
         ) : (
-          services.map((svc) => (
-            <div key={svc._id} style={styles.listItem}>
-              <div>
-                <span style={{ fontWeight: 600 }}>{svc.name}</span>
-                {svc.nonAsrat && <span style={{ background: "var(--color-primary-light)", color: "var(--color-primary)", fontSize: 10, padding: "1px 6px", borderRadius: 8, marginLeft: 6, fontWeight: 600 }}>Non-Asrat</span>}
-                <span style={{ color: "var(--text-secondary)", marginLeft: 8 }}>{svc.category}</span>
-                <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} {t("services.birr")}</span>
-              </div>
-              <div style={styles.actions}>
-                <button onClick={() => handleEdit(svc)} style={{ ...styles.btn, ...styles.btnSecondary }}>{t("services.edit")}</button>
-                <button onClick={() => handleDelete(svc)} style={{ ...styles.btn, ...styles.btnDanger }}>{t("services.delete")}</button>
-              </div>
+          groupedServices.map(([category, catServices]) => (
+            <div key={category}>
+              <div style={styles.catHeader}>{category}</div>
+              {catServices.map((svc) => (
+                <div key={svc._id} style={styles.listItem}>
+                  <div>
+                    <span style={{ fontWeight: 600 }}>{svc.name}</span>
+                    {svc.nonAsrat && <span style={{ background: "var(--color-primary-light)", color: "var(--color-primary)", fontSize: 10, padding: "1px 6px", borderRadius: 8, marginLeft: 6, fontWeight: 600 }}>Non-Asrat</span>}
+                    <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} {t("services.birr")}</span>
+                  </div>
+                  <div style={styles.actions}>
+                    <button onClick={() => handleEdit(svc)} style={{ ...styles.btn, ...styles.btnSecondary }}>{t("services.edit")}</button>
+                    <button onClick={() => handleDelete(svc)} style={{ ...styles.btn, ...styles.btnDanger }}>{t("services.delete")}</button>
+                  </div>
+                </div>
+              ))}
             </div>
           ))
         )}

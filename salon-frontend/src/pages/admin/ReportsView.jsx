@@ -39,7 +39,6 @@ export default function ReportsView({ transactions }) {
   const [showSummary, setShowSummary] = useState(false);
   const [showCalc, setShowCalc] = useState(false);
   const [showPayments, setShowPayments] = useState(false);
-  const [showStaffRevenue, setShowStaffRevenue] = useState(false);
   const [showTxList, setShowTxList] = useState(false);
 
   const dayTx = useMemo(() => {
@@ -62,17 +61,6 @@ export default function ReportsView({ transactions }) {
   const finalCashAmount = totalIncome - totalTips;
   const txCount = dayTx.length;
   const servicesCount = dayTx.reduce((s, t) => s + ((t.services || []).length), 0);
-
-  const staffRevenue = useMemo(() => {
-    const map = new Map();
-    for (const tx of dayTx) {
-      for (const svc of tx.services || []) {
-        const staff = svc.staff || "Unknown";
-        map.set(staff, (map.get(staff) || 0) + (svc.price || 0));
-      }
-    }
-    return Array.from(map.entries()).sort((a, b) => b[1] - a[1]);
-  }, [dayTx]);
 
   return (
     <div>
@@ -125,25 +113,6 @@ export default function ReportsView({ transactions }) {
         <div style={styles.row}><span>{t("cashier.paymentTelebirr")}</span><span>{telebirrTotal.toLocaleString()} Birr</span></div>
         <div style={styles.row}><span>{t("cashier.paymentAbysinya")}</span><span>{abysinyaTotal.toLocaleString()} Birr</span></div>
         <div style={styles.row}><span>{t("cashier.paymentCBE")}</span><span>{cbeTotal.toLocaleString()} Birr</span></div>
-      </ReportSection>
-
-      <ReportSection title="Staff Revenue" open={showStaffRevenue} onToggle={() => setShowStaffRevenue(!showStaffRevenue)}>
-        {staffRevenue.length === 0 ? (
-          <div style={{ fontSize: 13, color: "var(--text-muted)" }}>No staff revenue data</div>
-        ) : (
-          <div>
-            {staffRevenue.map(([name, amount]) => (
-              <div key={name} style={styles.row}>
-                <span>{name}</span>
-                <span style={{ fontWeight: 700 }}>{amount.toLocaleString()} Birr</span>
-              </div>
-            ))}
-            <div style={{ ...styles.totalRow, borderTop: "2px solid var(--color-primary)", marginTop: 8, paddingTop: 8 }}>
-              <span>Total</span>
-              <span>{staffRevenue.reduce((s, [, v]) => s + v, 0).toLocaleString()} Birr</span>
-            </div>
-          </div>
-        )}
       </ReportSection>
 
       <ReportSection title={t("report.transactions")} open={showTxList} onToggle={() => setShowTxList(!showTxList)}>

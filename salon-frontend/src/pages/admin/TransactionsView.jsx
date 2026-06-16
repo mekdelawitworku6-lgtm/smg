@@ -88,7 +88,8 @@ export default function TransactionsView({ transactions }) {
     const abysinya = filtered.filter((t) => t.paymentType === "abysinya").reduce((s, t) => s + (t.total || 0), 0);
     const cbe = filtered.filter((t) => t.paymentType === "cbe").reduce((s, t) => s + (t.total || 0), 0);
     const total = filtered.reduce((s, t) => s + (t.total || 0), 0);
-    return { cash, telebirr, abysinya, cbe, total };
+    const asrat = total > 5500 ? (total - 5500) * 0.1 : 0;
+    return { cash, telebirr, abysinya, cbe, total, asrat };
   }, [filtered]);
 
   return (
@@ -179,6 +180,10 @@ export default function TransactionsView({ transactions }) {
                   <div style={{ padding: "10px 14px", background: "var(--bg-card)", borderRadius: 8, border: "1px solid var(--border-color)" }}>
                     <div style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase" }}>CBE</div>
                     <div style={{ fontSize: 18, fontWeight: 700 }}>{totals.cbe.toLocaleString()} Birr</div>
+                  </div>
+                  <div style={{ padding: "10px 14px", background: "var(--bg-card)", borderRadius: 8, border: "1px solid var(--border-color)" }}>
+                    <div style={{ fontSize: 11, color: "var(--text-secondary)", textTransform: "uppercase" }}>Asrat</div>
+                    <div style={{ fontSize: 18, fontWeight: 700 }}>{totals.asrat.toLocaleString()} Birr</div>
                   </div>
                   <div style={{ padding: "10px 14px", background: "var(--color-primary)", borderRadius: 8, border: "none", color: "#fff" }}>
                     <div style={{ fontSize: 11, textTransform: "uppercase", opacity: 0.8 }}>Total</div>
