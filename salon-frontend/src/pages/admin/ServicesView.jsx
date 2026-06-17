@@ -44,6 +44,7 @@ export default function ServicesView() {
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState(null);
   const [openCats, setOpenCats] = useState({});
+  const [showAll, setShowAll] = useState(false);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -93,6 +94,13 @@ export default function ServicesView() {
   }, [services]);
 
   const toggleCat = (cat) => setOpenCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  const toggleAll = () => {
+    const next = !showAll;
+    const obj = {};
+    groupedServices.forEach(([cat]) => { obj[cat] = next; });
+    setOpenCats(obj);
+    setShowAll(next);
+  };
 
   return (
     <div>
@@ -117,7 +125,14 @@ export default function ServicesView() {
       </div>
 
       <div style={styles.panel}>
-        <h3 style={styles.panelTitle}>{t("services.allServices")}</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h3 style={{ ...styles.panelTitle, margin: 0 }}>{t("services.allServices")}</h3>
+          {services.length > 0 && (
+            <button onClick={toggleAll} style={{ padding: "6px 14px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer", background: "var(--color-primary)", color: "#fff" }}>
+              {showAll ? t("services.hideAll") : t("services.showAll")}
+            </button>
+          )}
+        </div>
         {services.length === 0 ? (
           <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("services.noServices")}</div>
         ) : (

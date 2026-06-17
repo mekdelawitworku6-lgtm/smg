@@ -53,6 +53,14 @@ export default function CategoriesView() {
     return flat;
   }, [apiServices, localServices]);
 
+  const activeCategories = useMemo(() => {
+    const set = new Set(categories);
+    for (const svc of services) {
+      if (svc.category) set.add(svc.category);
+    }
+    return Array.from(set);
+  }, [categories, services]);
+
   const staticSubcats = useMemo(() => {
     const map = {};
     for (const cat of servicesData) {
@@ -220,10 +228,10 @@ export default function CategoriesView() {
         </h3>
         {showActive && (
           <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {categories.length === 0 ? (
+            {activeCategories.length === 0 ? (
               <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("cat.noCategories")}</div>
             ) : (
-              categories.sort((a, b) => sortCategories(a, b)).map((cat) => {
+              activeCategories.sort((a, b) => sortCategories(a, b)).map((cat) => {
                 const catGroup = groupedBySubcat[cat] || {};
                 const subcatNames = Object.keys(catGroup);
                 if (subcatNames.length === 0 && !openCats[cat]) {
@@ -316,7 +324,7 @@ export default function CategoriesView() {
               }}
             >
               <option value="" disabled>{t("cat.selectCategory")}</option>
-              {categories.filter((c) => c !== moveSubcat.cat).map((c) => (
+              {activeCategories.filter((c) => c !== moveSubcat.cat).map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>

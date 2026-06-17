@@ -114,14 +114,6 @@ export default function ReportsView({ transactions }) {
             <div style={styles.fieldValue}>{servicesCount}</div>
           </div>
           <div style={styles.fieldBox}>
-            <div style={styles.fieldLabel}>{t("report.nonAsratSales")}</div>
-            <div style={styles.fieldValue}>{nonAsratSales.toLocaleString()} {t("cashier.birr")}</div>
-          </div>
-          <div style={styles.fieldBox}>
-            <div style={styles.fieldLabel}>{t("report.deductibleAmount")}</div>
-            <div style={styles.fieldValue}>{deductible.toLocaleString()} {t("cashier.birr")}</div>
-          </div>
-          <div style={styles.fieldBox}>
             <div style={styles.fieldLabel}>{t("report.asratMoney")}</div>
             <div style={{ ...styles.fieldValue, color: asratMoney > 0 ? "var(--color-danger)" : undefined }}>{asratMoney.toLocaleString()} {t("cashier.birr")}</div>
           </div>
