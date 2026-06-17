@@ -94,7 +94,10 @@ export default function ServicesView() {
   }, [services]);
 
   const toggleCat = (cat) => setOpenCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
-  const toggleAll = () => setShowAll((p) => !p);
+  const toggleAll = () => {
+    if (showAll) setOpenCats({});
+    setShowAll((p) => !p);
+  };
 
   return (
     <div>
