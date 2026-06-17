@@ -133,12 +133,12 @@ export default function ServicesView() {
         {services.length === 0 ? (
           <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("services.noServices")}</div>
         ) : showAll ? (
-          services.map((svc) => (
+          services.map((svc, idx) => (
             <div key={svc._id} style={styles.listItem}>
               <div>
-                <span style={{ fontWeight: 600 }}>{svc.name}</span>
+                <span style={{ fontWeight: 600 }}>{idx + 1}. {svc.name}</span>
                 {svc.nonAsrat && <span style={{ background: "var(--color-primary-light)", color: "var(--color-primary)", fontSize: 10, padding: "1px 6px", borderRadius: 8, marginLeft: 6, fontWeight: 600 }}>{t("cashier.nonAsrat")}</span>}
-                <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} {t("services.birr")}</span>
+                <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} ETB</span>
               </div>
             </div>
           ))

@@ -147,6 +147,7 @@ const translations = {
     "services.delete": "Delete",
     "services.deleteConfirm": "Delete \"{name}\"?",
     "services.birr": "Birr",
+    "services.count": "Services",
 
     "staff.editStaff": "Edit Staff",
     "staff.addStaff": "Add Staff",
@@ -408,6 +409,7 @@ const translations = {
     "services.delete": "ሰርዝ",
     "services.deleteConfirm": "\"{name}\"ን ሰርዝ?",
     "services.birr": "ብር",
+    "services.count": "አገልግሎቶች",
 
     "staff.editStaff": "ሰራተኛ አስተካክል",
     "staff.addStaff": "ሰራተኛ ጨምር",

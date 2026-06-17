@@ -77,6 +77,7 @@ export default function CategoriesView() {
   const [editVal, setEditVal] = useState("");
   const [showCategories, setShowCategories] = useState(false);
   const [showActive, setShowActive] = useState(false);
+  const [openCats, setOpenCats] = useState({});
   const [openSubcats, setOpenSubcats] = useState({});
   const [editingSubcat, setEditingSubcat] = useState(null);
   const [editSubcatVal, setEditSubcatVal] = useState("");
@@ -236,55 +237,63 @@ export default function CategoriesView() {
               activeCategories.sort((a, b) => sortCategories(a, b)).map((cat) => {
                 const catGroup = groupedBySubcat[cat] || {};
                 const subcatNames = Object.keys(catGroup);
+                const totalServices = Object.values(catGroup).reduce((s, svcs) => s + svcs.length, 0);
                 return (
-                  <div key={cat} style={styles.catCard}>
-                    <div style={styles.catName}>{cat}</div>
-                    {subcatNames.length === 0 ? (
-                      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("services.noServices")}</div>
-                    ) : (
-                      subcatNames.map((sub) => {
-                        const svcs = catGroup[sub] || [];
-                        return (
-                          <div key={sub}>
-                            <div style={styles.subCatHeader} onClick={() => setOpenSubcats((p) => ({ ...p, [`${cat}|${sub}`]: !p[`${cat}|${sub}`] }))}>
-                              <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                                <span style={{ fontSize: 11 }}>{openSubcats[`${cat}|${sub}`] ? "▼" : "▶"}</span>
-                                {editingSubcat?.cat === cat && editingSubcat?.sub === sub ? (
-                                  <input value={editSubcatVal} onChange={(e) => setEditSubcatVal(e.target.value)} style={{ padding: "4px 8px", borderRadius: 4, border: "1px solid var(--border-color)", fontSize: 13, width: 150 }} autoFocus />
-                                ) : (
-                                  sub
-                                )}
-                              </span>
-                              <div style={styles.subCatActions}>
-                                {editingSubcat?.cat === cat && editingSubcat?.sub === sub ? (
-                                  <>
-                                    <button onClick={handleSaveSubcat} style={{ ...styles.btnSmall, ...styles.btnPrimary }}>{t("cat.save")}</button>
-                                    <button onClick={() => setEditingSubcat(null)} style={{ ...styles.btnSmall, ...styles.btnSecondary }}>{t("cat.cancel")}</button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <button onClick={(e) => { e.stopPropagation(); handleEditSubcat(cat, sub); }} style={{ ...styles.btnSmall, ...styles.btnSecondary }}>{t("cat.edit")}</button>
-                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteSubcat(cat, sub); }} style={{ ...styles.btnSmall, ...styles.btnDanger }}>{t("cat.delete")}</button>
-                                    <button onClick={(e) => { e.stopPropagation(); setMoveSubcat({ cat, sub }); }} style={{ ...styles.btnSmall, background: "var(--color-primary)", color: "#fff" }}>{t("cat.move")}</button>
-                                  </>
+                  <div key={cat} style={{ ...styles.catCard, cursor: "pointer" }} onClick={() => setOpenCats((p) => ({ ...p, [cat]: !p[cat] }))}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div style={{ fontSize: 18, fontWeight: 700, color: "var(--color-primary)" }}>{cat}</div>
+                      <span style={{ fontSize: 12, color: "var(--text-secondary)", fontWeight: 600 }}>{totalServices} {t("services.count")}</span>
+                    </div>
+                    {openCats[cat] && (
+                      <div style={{ marginTop: 12, borderTop: "1px solid var(--border-color)", paddingTop: 8 }}>
+                        {subcatNames.length === 0 ? (
+                          <div style={{ fontSize: 12, color: "var(--text-muted)", padding: "8px 0" }}>{t("services.noServices")}</div>
+                        ) : (
+                          subcatNames.map((sub) => {
+                            const svcs = catGroup[sub] || [];
+                            return (
+                              <div key={sub}>
+                                <div style={styles.subCatHeader} onClick={(e) => { e.stopPropagation(); setOpenSubcats((p) => ({ ...p, [`${cat}|${sub}`]: !p[`${cat}|${sub}`] })); }}>
+                                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    <span style={{ fontSize: 11 }}>{openSubcats[`${cat}|${sub}`] ? "▼" : "▶"}</span>
+                                    {editingSubcat?.cat === cat && editingSubcat?.sub === sub ? (
+                                      <input value={editSubcatVal} onChange={(e) => setEditSubcatVal(e.target.value)} style={{ padding: "4px 8px", borderRadius: 4, border: "1px solid var(--border-color)", fontSize: 13, width: 150 }} autoFocus onClick={(e) => e.stopPropagation()} />
+                                    ) : (
+                                      sub
+                                    )}
+                                  </span>
+                                  <div style={styles.subCatActions}>
+                                    {editingSubcat?.cat === cat && editingSubcat?.sub === sub ? (
+                                      <>
+                                        <button onClick={(e) => { e.stopPropagation(); handleSaveSubcat(); }} style={{ ...styles.btnSmall, ...styles.btnPrimary }}>{t("cat.save")}</button>
+                                        <button onClick={(e) => { e.stopPropagation(); setEditingSubcat(null); }} style={{ ...styles.btnSmall, ...styles.btnSecondary }}>{t("cat.cancel")}</button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <button onClick={(e) => { e.stopPropagation(); handleEditSubcat(cat, sub); }} style={{ ...styles.btnSmall, ...styles.btnSecondary }}>{t("cat.edit")}</button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteSubcat(cat, sub); }} style={{ ...styles.btnSmall, ...styles.btnDanger }}>{t("cat.delete")}</button>
+                                        <button onClick={(e) => { e.stopPropagation(); setMoveSubcat({ cat, sub }); }} style={{ ...styles.btnSmall, background: "var(--color-primary)", color: "#fff" }}>{t("cat.move")}</button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                                {openSubcats[`${cat}|${sub}`] && (
+                                  <div>
+                                    {svcs.map((svc, i) => (
+                                      <div key={svc._id} style={styles.subItem}>
+                                        <div>
+                                          <span style={{ fontWeight: 500 }}>{i + 1}. {svc.name}</span>
+                                          <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} ETB</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
                                 )}
                               </div>
-                            </div>
-                            {openSubcats[`${cat}|${sub}`] && (
-                              <>
-                                {svcs.map((svc) => (
-                                  <div key={svc._id} style={styles.subItem}>
-                                    <div>
-                                      <span style={{ fontWeight: 500 }}>{svc.name}</span>
-                                      <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} {t("services.birr")}</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </>
-                            )}
-                          </div>
-                        );
-                      })
+                            );
+                          })
+                        )}
+                      </div>
                     )}
                   </div>
                 );
