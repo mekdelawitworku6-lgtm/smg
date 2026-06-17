@@ -12,15 +12,26 @@ const styles = {
   info: { fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 },
   grid: { display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 12 },
   catCard: { background: "var(--bg-card)", borderRadius: 8, padding: "16px 20px", border: "1px solid var(--border-color)" },
-  catName: { fontSize: 18, fontWeight: 700, color: "var(--color-primary)", marginBottom: 8 },
+  catName: { fontSize: 18, fontWeight: 700, color: "var(--color-primary)", marginBottom: 8, cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 8 },
+  subCatHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px 8px 24px", fontSize: 14, fontWeight: 600, color: "var(--text-primary)", cursor: "pointer", userSelect: "none", borderBottom: "1px solid var(--border-color)" },
+  subCatActions: { display: "flex", gap: 4 },
   formRow: { display: "flex", gap: 10, marginBottom: 12, flexWrap: "wrap", alignItems: "flex-end" },
   input: { padding: "8px 12px", borderRadius: 6, border: "1px solid var(--border-color)", background: "var(--bg-card)", color: "var(--text-primary)", fontSize: 13, flex: 1, minWidth: 160 },
   btn: { padding: "8px 16px", borderRadius: 6, border: "none", fontSize: 13, fontWeight: 600, cursor: "pointer" },
+  btnSmall: { padding: "4px 10px", borderRadius: 4, border: "none", fontSize: 11, fontWeight: 600, cursor: "pointer" },
   btnPrimary: { background: "var(--color-primary)", color: "#fff" },
   btnDanger: { background: "var(--color-danger)", color: "#fff" },
-  listItem: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--border-color)", fontSize: 13 },
-  subItem: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0 6px 16px", fontSize: 13, borderBottom: "1px dashed var(--border-color)" },
+  btnSecondary: { background: "var(--border-color)", color: "var(--text-primary)" },
+  listItem: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0 10px 36px", borderBottom: "1px solid var(--border-color)", fontSize: 13 },
+  subItem: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0 6px 48px", fontSize: 13, borderBottom: "1px dashed var(--border-color)" },
 };
+
+function loadSubcatMap() {
+  try { return JSON.parse(localStorage.getItem("subcatMap")) || {}; } catch { return {}; }
+}
+function saveSubcatMap(map) {
+  localStorage.setItem("subcatMap", JSON.stringify(map));
+}
 
 export default function CategoriesView() {
   const dispatch = useDispatch();
@@ -41,14 +52,55 @@ export default function CategoriesView() {
     }
     return flat;
   }, [apiServices, localServices]);
+
+  const staticSubcats = useMemo(() => {
+    const map = {};
+    for (const cat of servicesData) {
+      map[cat.category] = cat.subcategories.map((s) => s.name);
+    }
+    return map;
+  }, []);
+
   const [newCat, setNewCat] = useState("");
   const [editCat, setEditCat] = useState("");
   const [editVal, setEditVal] = useState("");
   const [showCategories, setShowCategories] = useState(false);
   const [showActive, setShowActive] = useState(false);
+  const [openCats, setOpenCats] = useState({});
+  const [openSubcats, setOpenSubcats] = useState({});
+  const [editingSubcat, setEditingSubcat] = useState(null);
+  const [editSubcatVal, setEditSubcatVal] = useState("");
+  const [moveSubcat, setMoveSubcat] = useState(null);
+  const [subcatMap, setSubcatMap] = useState(loadSubcatMap);
 
-  const [editingService, setEditingService] = useState(null);
-  const [editSvcForm, setEditSvcForm] = useState({ name: "", price: "", category: "" });
+  const persistSubcatMap = (map) => { setSubcatMap(map); saveSubcatMap(map); };
+
+  const getSubcats = (cat) => {
+    if (subcatMap[cat]) return subcatMap[cat];
+    return staticSubcats[cat] || ["Other"];
+  };
+
+  const getSvcSubcat = (svc) => {
+    const cat = svc.category;
+    const subs = getSubcats(cat);
+    const name = svc.name;
+    for (const sub of subs) {
+      if (name.includes(sub)) return sub;
+    }
+    return subs[0] || "Other";
+  };
+
+  const groupedBySubcat = useMemo(() => {
+    const result = {};
+    for (const svc of services) {
+      const cat = svc.category;
+      if (!result[cat]) result[cat] = {};
+      const sub = getSvcSubcat(svc);
+      if (!result[cat][sub]) result[cat][sub] = [];
+      result[cat][sub].push(svc);
+    }
+    return result;
+  }, [services, subcatMap, staticSubcats]);
 
   const handleAdd = (e) => {
     e.preventDefault();
@@ -60,41 +112,60 @@ export default function CategoriesView() {
     const next = editVal.trim();
     if (!next || next === oldName) { setEditCat(""); return; }
     dispatch(renameCategory({ oldName, newName: next }));
+    if (subcatMap[oldName]) {
+      const m = { ...subcatMap, [next]: subcatMap[oldName] };
+      delete m[oldName];
+      persistSubcatMap(m);
+    }
     setEditCat("");
   };
 
   const handleDelete = (name) => {
     if (!window.confirm(t("cat.deleteConfirm", { name }))) return;
     dispatch(deleteCategory(name));
+    const m = { ...subcatMap };
+    delete m[name];
+    persistSubcatMap(m);
   };
 
-  const handleEditService = (svc) => {
-    setEditingService(svc._id);
-    setEditSvcForm({ name: svc.name, price: svc.price, category: svc.category });
+  const handleEditSubcat = (cat, sub) => {
+    setEditingSubcat({ cat, sub });
+    setEditSubcatVal(sub);
   };
 
-  const handleSaveService = async (svc) => {
-    if (!editSvcForm.name || !editSvcForm.price) return;
-    const payload = { name: editSvcForm.name.trim(), price: Number(editSvcForm.price), category: editSvcForm.category };
-    try {
-      const API = (await import("../../api/axios")).default;
-      await API.put(`/services/${svc._id}`, payload);
-      dispatch(fetchServices());
-    } catch {
-      const updated = services.map((s) => (s._id === svc._id ? { ...s, ...payload } : s));
-      dispatch(setLocalServices(updated));
-    }
-    setEditingService(null);
-    setEditSvcForm({ name: "", price: "", category: "" });
+  const handleSaveSubcat = () => {
+    if (!editingSubcat || !editSubcatVal.trim()) return;
+    const { cat, sub } = editingSubcat;
+    const subs = [...getSubcats(cat)];
+    const idx = subs.indexOf(sub);
+    if (idx !== -1) subs[idx] = editSubcatVal.trim();
+    persistSubcatMap({ ...subcatMap, [cat]: subs });
+    setEditingSubcat(null);
+    setEditSubcatVal("");
   };
 
-  const handleDeleteService = async (svc) => {
-    if (!window.confirm(t("services.deleteConfirm", { name: svc.name }))) return;
-    try {
-      const API = (await import("../../api/axios")).default;
-      await API.delete(`/services/${svc._id}`);
-    } catch { /* offline */ }
-    dispatch(setLocalServices(services.filter((s) => s._id !== svc._id)));
+  const handleDeleteSubcat = (cat, sub) => {
+    if (!window.confirm(t("cat.deleteSubcatConfirm", { name: sub }))) return;
+    const subs = getSubcats(cat).filter((s) => s !== sub);
+    const remaining = services.filter((svc) => {
+      const svcSub = getSvcSubcat(svc);
+      return !(svc.category === cat && svcSub === sub);
+    });
+    persistSubcatMap({ ...subcatMap, [cat]: subs });
+    dispatch(setLocalServices(remaining));
+  };
+
+  const handleMoveSubcat = (cat, sub, targetCat) => {
+    if (!targetCat || targetCat === cat) { setMoveSubcat(null); return; }
+    const updated = services.map((svc) => {
+      const svcSub = getSvcSubcat(svc);
+      if (svc.category === cat && svcSub === sub) {
+        return { ...svc, category: targetCat };
+      }
+      return svc;
+    });
+    dispatch(setLocalServices(updated));
+    setMoveSubcat(null);
   };
 
   return (
@@ -152,40 +223,76 @@ export default function CategoriesView() {
             {categories.length === 0 ? (
               <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("cat.noCategories")}</div>
             ) : (
-              categories.map((cat) => {
-                const catServices = services.filter((s) => s.category === cat);
+              categories.sort((a, b) => sortCategories(a, b)).map((cat) => {
+                const catGroup = groupedBySubcat[cat] || {};
+                const subcatNames = Object.keys(catGroup);
+                if (subcatNames.length === 0 && !openCats[cat]) {
+                  return (
+                    <div key={cat} style={styles.catCard}>
+                      <div style={styles.catName} onClick={() => setOpenCats((p) => ({ ...p, [cat]: !p[cat] }))}>
+                        <span style={{ fontSize: 14 }}>{openCats[cat] ? "▼" : "▶"}</span>
+                        {cat}
+                      </div>
+                      {openCats[cat] && <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("services.noServices")}</div>}
+                    </div>
+                  );
+                }
                 return (
                   <div key={cat} style={styles.catCard}>
-                    <div style={styles.catName}>{cat}</div>
-                    {catServices.length === 0 ? (
-                      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("services.noServices")}</div>
-                    ) : (
-                      catServices.map((svc) => (
-                        editingService === svc._id ? (
-                          <div key={svc._id} style={{ ...styles.subItem, flexDirection: "column", gap: 6, alignItems: "stretch" }}>
-                            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                              <input value={editSvcForm.name} onChange={(e) => setEditSvcForm({ ...editSvcForm, name: e.target.value })} style={{ flex: 1, padding: "6px 8px", borderRadius: 4, border: "1px solid var(--border-color)", fontSize: 13 }} placeholder="Name" />
-                              <input type="number" value={editSvcForm.price} onChange={(e) => setEditSvcForm({ ...editSvcForm, price: e.target.value })} style={{ width: 80, padding: "6px 8px", borderRadius: 4, border: "1px solid var(--border-color)", fontSize: 13 }} placeholder="Price" />
-                              <select value={editSvcForm.category} onChange={(e) => setEditSvcForm({ ...editSvcForm, category: e.target.value })} style={{ padding: "6px 8px", borderRadius: 4, border: "1px solid var(--border-color)", fontSize: 13 }}>
-                                {categories.map((c) => <option key={c} value={c}>{c}</option>)}
-                              </select>
-                              <button onClick={() => handleSaveService(svc)} style={{ ...styles.btn, ...styles.btnPrimary, padding: "6px 10px", fontSize: 11 }}>{t("cat.save")}</button>
-                              <button onClick={() => setEditingService(null)} style={{ ...styles.btn, background: "var(--border-color)", color: "var(--text-primary)", padding: "6px 10px", fontSize: 11 }}>{t("services.cancel")}</button>
-                            </div>
-                          </div>
+                    <div style={styles.catName} onClick={() => setOpenCats((p) => ({ ...p, [cat]: !p[cat] }))}>
+                      <span style={{ fontSize: 14 }}>{openCats[cat] ? "▼" : "▶"}</span>
+                      {cat}
+                    </div>
+                    {openCats[cat] && (
+                      <div>
+                        {subcatNames.length === 0 ? (
+                          <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("services.noServices")}</div>
                         ) : (
-                          <div key={svc._id} style={styles.subItem}>
-                            <div>
-                              <span style={{ fontWeight: 500 }}>{svc.name}</span>
-                              <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} {t("services.birr")}</span>
-                            </div>
-                            <div style={{ display: "flex", gap: 4 }}>
-                              <button onClick={() => handleEditService(svc)} style={{ background: "none", border: "1px solid var(--border-color)", borderRadius: 4, padding: "3px 8px", fontSize: 11, cursor: "pointer", color: "var(--text-primary)" }}>{t("services.edit")}</button>
-                              <button onClick={() => handleDeleteService(svc)} style={{ background: "none", border: "1px solid var(--color-danger)", borderRadius: 4, padding: "3px 8px", fontSize: 11, cursor: "pointer", color: "var(--color-danger)" }}>{t("services.delete")}</button>
-                            </div>
-                          </div>
-                        )
-                      ))
+                          subcatNames.map((sub) => {
+                            const svcs = catGroup[sub] || [];
+                            return (
+                              <div key={sub}>
+                                <div style={styles.subCatHeader} onClick={() => setOpenSubcats((p) => ({ ...p, [`${cat}|${sub}`]: !p[`${cat}|${sub}`] }))}>
+                                  <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                    <span style={{ fontSize: 11 }}>{openSubcats[`${cat}|${sub}`] ? "▼" : "▶"}</span>
+                                    {editingSubcat?.cat === cat && editingSubcat?.sub === sub ? (
+                                      <input value={editSubcatVal} onChange={(e) => setEditSubcatVal(e.target.value)} style={{ padding: "4px 8px", borderRadius: 4, border: "1px solid var(--border-color)", fontSize: 13, width: 150 }} autoFocus />
+                                    ) : (
+                                      sub
+                                    )}
+                                  </span>
+                                  <div style={styles.subCatActions}>
+                                    {editingSubcat?.cat === cat && editingSubcat?.sub === sub ? (
+                                      <>
+                                        <button onClick={handleSaveSubcat} style={{ ...styles.btnSmall, ...styles.btnPrimary }}>{t("cat.save")}</button>
+                                        <button onClick={() => setEditingSubcat(null)} style={{ ...styles.btnSmall, ...styles.btnSecondary }}>{t("cat.cancel")}</button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <button onClick={(e) => { e.stopPropagation(); handleEditSubcat(cat, sub); }} style={{ ...styles.btnSmall, ...styles.btnSecondary }}>{t("cat.edit")}</button>
+                                        <button onClick={(e) => { e.stopPropagation(); handleDeleteSubcat(cat, sub); }} style={{ ...styles.btnSmall, ...styles.btnDanger }}>{t("cat.delete")}</button>
+                                        <button onClick={(e) => { e.stopPropagation(); setMoveSubcat({ cat, sub }); }} style={{ ...styles.btnSmall, background: "var(--color-primary)", color: "#fff" }}>{t("cat.move")}</button>
+                                      </>
+                                    )}
+                                  </div>
+                                </div>
+                                {openSubcats[`${cat}|${sub}`] && (
+                                  <>
+                                    {svcs.map((svc) => (
+                                      <div key={svc._id} style={styles.subItem}>
+                                        <div>
+                                          <span style={{ fontWeight: 500 }}>{svc.name}</span>
+                                          <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} {t("services.birr")}</span>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
                     )}
                   </div>
                 );
@@ -194,6 +301,29 @@ export default function CategoriesView() {
           </div>
         )}
       </div>
+
+      {moveSubcat && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "#fff", padding: 24, borderRadius: 12, minWidth: 300, color: "var(--text-primary)" }}>
+            <h3 style={{ margin: "0 0 16px", fontSize: 16 }}>{t("cat.moveSubcat", { name: moveSubcat.sub })}</h3>
+            <select
+              style={{ width: "100%", padding: "10px", borderRadius: 6, border: "1px solid var(--border-color)", fontSize: 14, marginBottom: 16 }}
+              defaultValue=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleMoveSubcat(moveSubcat.cat, moveSubcat.sub, e.target.value);
+                }
+              }}
+            >
+              <option value="" disabled>{t("cat.selectCategory")}</option>
+              {categories.filter((c) => c !== moveSubcat.cat).map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <button onClick={() => setMoveSubcat(null)} style={{ padding: "8px 16px", background: "var(--border-color)", color: "var(--text-primary)", border: "none", borderRadius: 6, cursor: "pointer" }}>{t("cat.cancel")}</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

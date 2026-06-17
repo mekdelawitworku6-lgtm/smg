@@ -1,6 +1,12 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "../../i18n/LanguageContext";
 
+function fmt(d) {
+  if (!d) return "";
+  const [y, m, day] = d.split("-");
+  return `${day}-${m}-${y}`;
+}
+
 const styles = {
   filterRow: { display: "flex", gap: 12, alignItems: "flex-end", marginBottom: 24, flexWrap: "wrap" },
   filterGroup: { display: "flex", flexDirection: "column", gap: 4 },
@@ -58,7 +64,13 @@ export default function ReportsView({ transactions }) {
     const txTips = t.tips || [];
     return s + txTips.reduce((ss, e) => ss + (Number(e.amount) || 0), 0);
   }, 0);
-  const finalCashAmount = totalIncome - totalTips;
+  const nonAsratSales = dayTx.reduce((s, t) => {
+    const svcs = t.services || [];
+    return s + svcs.filter((svc) => svc.nonAsrat).reduce((ss, svc) => ss + Number(svc.price || 0), 0);
+  }, 0);
+  const deductible = totalIncome - nonAsratSales;
+  const asratMoney = deductible > 5500 ? (deductible - 5500) * 0.1 : 0;
+  const finalCashAmount = cashTotal - asratMoney - totalTips;
   const txCount = dayTx.length;
   const servicesCount = dayTx.reduce((s, t) => s + ((t.services || []).length), 0);
 
@@ -75,23 +87,23 @@ export default function ReportsView({ transactions }) {
         </div>
       </div>
 
-      <ReportSection title={t("report.reportRange", { from: dateFrom, to: dateTo })} open={showSummary} onToggle={() => setShowSummary(!showSummary)}>
+      <ReportSection title={t("report.reportRange", { from: fmt(dateFrom), to: fmt(dateTo) })} open={showSummary} onToggle={() => setShowSummary(!showSummary)}>
         <div style={styles.grid2}>
           <div style={styles.fieldBox}>
             <div style={styles.fieldLabel}>{t("report.totalIncome")}</div>
-            <div style={styles.fieldValue}>{totalIncome.toLocaleString()} Birr</div>
+            <div style={styles.fieldValue}>{totalIncome.toLocaleString()} {t("cashier.birr")}</div>
           </div>
           <div style={styles.fieldBox}>
             <div style={styles.fieldLabel}>{t("report.cashTotal")}</div>
-            <div style={styles.fieldValue}>{cashTotal.toLocaleString()} Birr</div>
+            <div style={styles.fieldValue}>{cashTotal.toLocaleString()} {t("cashier.birr")}</div>
           </div>
           <div style={styles.fieldBox}>
             <div style={styles.fieldLabel}>{t("report.transferTotal")}</div>
-            <div style={styles.fieldValue}>{transferTotal.toLocaleString()} Birr</div>
+            <div style={styles.fieldValue}>{transferTotal.toLocaleString()} {t("cashier.birr")}</div>
           </div>
           <div style={styles.fieldBox}>
             <div style={styles.fieldLabel}>{t("report.totalTips")}</div>
-            <div style={styles.fieldValue}>{totalTips.toLocaleString()} Birr</div>
+            <div style={styles.fieldValue}>{totalTips.toLocaleString()} {t("cashier.birr")}</div>
           </div>
           <div style={styles.fieldBox}>
             <div style={styles.fieldLabel}>{t("report.txCount")}</div>
@@ -101,18 +113,49 @@ export default function ReportsView({ transactions }) {
             <div style={styles.fieldLabel}>{t("report.servicesCount")}</div>
             <div style={styles.fieldValue}>{servicesCount}</div>
           </div>
+          <div style={styles.fieldBox}>
+            <div style={styles.fieldLabel}>{t("report.nonAsratSales")}</div>
+            <div style={styles.fieldValue}>{nonAsratSales.toLocaleString()} {t("cashier.birr")}</div>
+          </div>
+          <div style={styles.fieldBox}>
+            <div style={styles.fieldLabel}>{t("report.deductibleAmount")}</div>
+            <div style={styles.fieldValue}>{deductible.toLocaleString()} {t("cashier.birr")}</div>
+          </div>
+          <div style={styles.fieldBox}>
+            <div style={styles.fieldLabel}>{t("report.asratMoney")}</div>
+            <div style={{ ...styles.fieldValue, color: asratMoney > 0 ? "var(--color-danger)" : undefined }}>{asratMoney.toLocaleString()} {t("cashier.birr")}</div>
+          </div>
           <div style={{ ...styles.fieldBox, gridColumn: "1/-1" }}>
             <div style={styles.fieldLabel}>{t("report.finalCashAmount")}</div>
-            <div style={{ ...styles.fieldValue, fontSize: 28 }}>{finalCashAmount.toLocaleString()} Birr</div>
+            <div style={{ ...styles.fieldValue, fontSize: 28 }}>{finalCashAmount.toLocaleString()} {t("cashier.birr")}</div>
           </div>
         </div>
       </ReportSection>
 
+      <ReportSection title={t("report.asratCalc")} open={showCalc} onToggle={() => setShowCalc(!showCalc)}>
+        <div style={styles.formulaBox}>
+          <div>{t("report.formula")}</div>
+          <div style={{ marginTop: 8 }}>{t("report.nonAsratSales")}: {nonAsratSales.toLocaleString()} {t("cashier.birr")}</div>
+          <div>{t("report.totalIncome")}: {totalIncome.toLocaleString()} {t("cashier.birr")}</div>
+          <div style={{ fontWeight: 700, marginTop: 4 }}>{t("report.deductibleAmount")}: {deductible.toLocaleString()} {t("cashier.birr")}</div>
+          <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "12px 0" }} />
+          {deductible > 5500 ? (
+            <>
+              <div>{t("report.sinceGt")}</div>
+              <div style={{ marginTop: 4 }}>{t("report.asratBase", { deductible: deductible.toLocaleString(), base: (deductible - 5500).toLocaleString() })}</div>
+              <div style={{ marginTop: 4, fontWeight: 700, color: "var(--color-danger)" }}>{t("report.asratMoneyEq", { base: (deductible - 5500).toLocaleString(), asrat: asratMoney.toLocaleString() })}</div>
+            </>
+          ) : (
+            <div style={{ fontWeight: 700 }}>{t("report.sinceLte")}</div>
+          )}
+        </div>
+      </ReportSection>
+
       <ReportSection title={t("report.paymentBreakdown")} open={showPayments} onToggle={() => setShowPayments(!showPayments)}>
-        <div style={styles.row}><span>{t("cashier.paymentCash")}</span><span>{cashTotal.toLocaleString()} Birr</span></div>
-        <div style={styles.row}><span>{t("cashier.paymentTelebirr")}</span><span>{telebirrTotal.toLocaleString()} Birr</span></div>
-        <div style={styles.row}><span>{t("cashier.paymentAbysinya")}</span><span>{abysinyaTotal.toLocaleString()} Birr</span></div>
-        <div style={styles.row}><span>{t("cashier.paymentCBE")}</span><span>{cbeTotal.toLocaleString()} Birr</span></div>
+        <div style={styles.row}><span>{t("cashier.paymentCash")}</span><span>{cashTotal.toLocaleString()} {t("cashier.birr")}</span></div>
+        <div style={styles.row}><span>{t("cashier.paymentTelebirr")}</span><span>{telebirrTotal.toLocaleString()} {t("cashier.birr")}</span></div>
+        <div style={styles.row}><span>{t("cashier.paymentAbysinya")}</span><span>{abysinyaTotal.toLocaleString()} {t("cashier.birr")}</span></div>
+        <div style={styles.row}><span>{t("cashier.paymentCBE")}</span><span>{cbeTotal.toLocaleString()} {t("cashier.birr")}</span></div>
       </ReportSection>
 
       <ReportSection title={t("report.transactions")} open={showTxList} onToggle={() => setShowTxList(!showTxList)}>
@@ -140,8 +183,8 @@ export default function ReportsView({ transactions }) {
                       <td style={{ padding: "8px 12px" }}>—</td>
                       <td style={{ padding: "8px 12px" }}>—</td>
                       <td style={{ padding: "8px 12px" }}><span style={{ background: "var(--border-color)", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600 }}>{tx.paymentType}</span></td>
-                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700 }}>{tx.total} Birr</td>
-                      <td style={{ padding: "8px 12px", textAlign: "right" }}>{tx.tip > 0 ? `${tx.tip} Birr` : "—"}</td>
+                      <td style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700 }}>{tx.total} {t("cashier.birr")}</td>
+                      <td style={{ padding: "8px 12px", textAlign: "right" }}>{tx.tip > 0 ? `${tx.tip} ${t("cashier.birr")}` : "—"}</td>
                     </tr>
                   ) : svcs.map((svc, i) => (
                     <tr key={`${tx._id || tx.uuid}-${i}`} style={{ borderBottom: "1px solid var(--border-color)" }}>
@@ -149,8 +192,8 @@ export default function ReportsView({ transactions }) {
                       <td style={{ padding: "8px 12px" }}>{svc.name}</td>
                       <td style={{ padding: "8px 12px", color: "var(--text-secondary)" }}>{svc.staff}</td>
                       {i === 0 && <td rowSpan={svcs.length} style={{ padding: "8px 12px", verticalAlign: "top" }}><span style={{ background: "var(--border-color)", padding: "2px 8px", borderRadius: 10, fontSize: 11, fontWeight: 600 }}>{tx.paymentType}</span></td>}
-                      {i === 0 && <td rowSpan={svcs.length} style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, verticalAlign: "top" }}>{tx.total} Birr</td>}
-                      {i === 0 && <td rowSpan={svcs.length} style={{ padding: "8px 12px", textAlign: "right", verticalAlign: "top" }}>{tx.tip > 0 ? `${tx.tip} Birr` : "—"}</td>}
+                      {i === 0 && <td rowSpan={svcs.length} style={{ padding: "8px 12px", textAlign: "right", fontWeight: 700, verticalAlign: "top" }}>{tx.total} {t("cashier.birr")}</td>}
+                      {i === 0 && <td rowSpan={svcs.length} style={{ padding: "8px 12px", textAlign: "right", verticalAlign: "top" }}>{tx.tip > 0 ? `${tx.tip} ${t("cashier.birr")}` : "—"}</td>}
                     </tr>
                   ));
                 })}

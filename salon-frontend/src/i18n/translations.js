@@ -223,6 +223,10 @@ const translations = {
     "cat.activeCategories": "Active Categories",
     "cat.mainCategory": "Main Category",
     "cat.deleteConfirm": "Delete category \"{name}\"?",
+    "cat.move": "Move",
+    "cat.moveSubcat": "Move \"{name}\" to category:",
+    "cat.selectCategory": "Select category",
+    "cat.deleteSubcatConfirm": "Delete subcategory \"{name}\" and all its services?",
 
     "report.reportDate": "Report Date",
     "report.totalIncome": "Total Income",
@@ -478,6 +482,10 @@ const translations = {
     "cat.activeCategories": "ንቁ ምድቦች",
     "cat.mainCategory": "ዋና ምድብ",
     "cat.deleteConfirm": "\"{name}\" የተባለውን ምድብ ይሰርዙ?",
+    "cat.move": "አንቀሳቅስ",
+    "cat.moveSubcat": "\"{name}\"ን ወደ ምድብ አንቀሳቅስ:",
+    "cat.selectCategory": "ምድብ ምረጥ",
+    "cat.deleteSubcatConfirm": "\"{name}\" የተባለውን ንዑስ ምድብ እና ሁሉንም አገልግሎቶቹን ይሰርዙ?",
 
     "report.reportDate": "የሪፖርት ቀን",
     "report.totalIncome": "ጠቅላላ ገቢ",

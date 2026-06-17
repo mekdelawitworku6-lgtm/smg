@@ -19,7 +19,7 @@ const styles = {
   btnSecondary: { background: "var(--border-color)", color: "var(--text-primary)" },
   listItem: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--border-color)", fontSize: 13 },
   actions: { display: "flex", gap: 6 },
-  catHeader: { padding: "8px 12px", background: "var(--color-primary)", color: "#fff", borderRadius: 6, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginTop: 16, marginBottom: 4 },
+  catHeader: { padding: "8px 12px", background: "var(--color-primary)", color: "#fff", borderRadius: 6, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginTop: 16, marginBottom: 4, cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 8 },
 };
 
 export default function ServicesView() {
@@ -43,6 +43,7 @@ export default function ServicesView() {
   }, [apiServices, localServices]);
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState(null);
+  const [openCats, setOpenCats] = useState({});
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -91,6 +92,8 @@ export default function ServicesView() {
     return Array.from(map.entries()).sort(([a], [b]) => sortCategories(a, b));
   }, [services]);
 
+  const toggleCat = (cat) => setOpenCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
+
   return (
     <div>
       <div style={styles.panel}>
@@ -105,7 +108,7 @@ export default function ServicesView() {
             <input name="price" type="number" placeholder={t("services.price")} value={form.price} onChange={handleChange} style={{ ...styles.input, width: 100 }} />
             <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "var(--text-secondary)", cursor: "pointer" }}>
               <input type="checkbox" checked={form.nonAsrat} onChange={(e) => setForm({ ...form, nonAsrat: e.target.checked })} />
-              Non-Asrat
+              {t("cashier.nonAsrat")}
             </label>
             <button type="submit" style={{ ...styles.btn, ...styles.btnPrimary }}>{editing ? t("services.update") : t("services.add")}</button>
             {editing && <button type="button" onClick={resetForm} style={{ ...styles.btn, ...styles.btnSecondary }}>{t("services.cancel")}</button>}
@@ -120,17 +123,16 @@ export default function ServicesView() {
         ) : (
           groupedServices.map(([category, catServices]) => (
             <div key={category}>
-              <div style={styles.catHeader}>{category}</div>
-              {catServices.map((svc) => (
+              <div style={styles.catHeader} onClick={() => toggleCat(category)}>
+                <span style={{ fontSize: 12 }}>{openCats[category] ? "▼" : "▶"}</span>
+                {category}
+              </div>
+              {openCats[category] && catServices.map((svc) => (
                 <div key={svc._id} style={styles.listItem}>
                   <div>
                     <span style={{ fontWeight: 600 }}>{svc.name}</span>
-                    {svc.nonAsrat && <span style={{ background: "var(--color-primary-light)", color: "var(--color-primary)", fontSize: 10, padding: "1px 6px", borderRadius: 8, marginLeft: 6, fontWeight: 600 }}>Non-Asrat</span>}
+                    {svc.nonAsrat && <span style={{ background: "var(--color-primary-light)", color: "var(--color-primary)", fontSize: 10, padding: "1px 6px", borderRadius: 8, marginLeft: 6, fontWeight: 600 }}>{t("cashier.nonAsrat")}</span>}
                     <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} {t("services.birr")}</span>
-                  </div>
-                  <div style={styles.actions}>
-                    <button onClick={() => handleEdit(svc)} style={{ ...styles.btn, ...styles.btnSecondary }}>{t("services.edit")}</button>
-                    <button onClick={() => handleDelete(svc)} style={{ ...styles.btn, ...styles.btnDanger }}>{t("services.delete")}</button>
                   </div>
                 </div>
               ))}
