@@ -132,24 +132,7 @@ export default function ReportsView({ transactions }) {
         </div>
       </ReportSection>
 
-      <ReportSection title={t("report.asratCalc")} open={showCalc} onToggle={() => setShowCalc(!showCalc)}>
-        <div style={styles.formulaBox}>
-          <div>{t("report.formula")}</div>
-          <div style={{ marginTop: 8 }}>{t("report.nonAsratSales")}: {nonAsratSales.toLocaleString()} {t("cashier.birr")}</div>
-          <div>{t("report.totalIncome")}: {totalIncome.toLocaleString()} {t("cashier.birr")}</div>
-          <div style={{ fontWeight: 700, marginTop: 4 }}>{t("report.deductibleAmount")}: {deductible.toLocaleString()} {t("cashier.birr")}</div>
-          <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "12px 0" }} />
-          {deductible > 5500 ? (
-            <>
-              <div>{t("report.sinceGt")}</div>
-              <div style={{ marginTop: 4 }}>{t("report.asratBase", { deductible: deductible.toLocaleString(), base: (deductible - 5500).toLocaleString() })}</div>
-              <div style={{ marginTop: 4, fontWeight: 700, color: "var(--color-danger)" }}>{t("report.asratMoneyEq", { base: (deductible - 5500).toLocaleString(), asrat: asratMoney.toLocaleString() })}</div>
-            </>
-          ) : (
-            <div style={{ fontWeight: 700 }}>{t("report.sinceLte")}</div>
-          )}
-        </div>
-      </ReportSection>
+
 
       <ReportSection title={t("report.paymentBreakdown")} open={showPayments} onToggle={() => setShowPayments(!showPayments)}>
         <div style={styles.row}><span>{t("cashier.paymentCash")}</span><span>{cashTotal.toLocaleString()} {t("cashier.birr")}</span></div>
