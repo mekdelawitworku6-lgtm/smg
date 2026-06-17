@@ -35,73 +35,6 @@ const servicesData = [
     ],
   },
   {
-    category: "ስቲም",
-    subcategories: [
-      {
-        name: "ቅቤ",
-        services: [
-          { name: "ቅቤ ስቲም", price: 300 },
-          { name: "ቅቤ መታጠቢያ", price: 200 },
-        ],
-      },
-      {
-        name: "መደበኛ",
-        services: [
-          { name: "ስቲም መታጠቢያ (ሻምፖ እና ካንዲት)", price: 300 },
-          { name: "ሻምፖ እና ካንዲት", price: 100 },
-        ],
-      },
-    ],
-  },
-  {
-    category: "ቅንድብ",
-    subcategories: [
-      {
-        name: "ቅንድብ",
-        services: [
-          { name: "ቅንድብ ዋክስ", price: 200 },
-          { name: "ቅንድብ ክር", price: 100 },
-          { name: "ቅንድብ በምላጭ", price: 100 },
-          { name: "ቅንድብ በሂና", price: 300 },
-        ],
-      },
-    ],
-  },
-  {
-    category: "እጅ እና እግር",
-    subcategories: [
-      {
-        name: "ቀለም",
-        services: [
-          { name: "እጅ እና እግር ትሞርዶ መቀባት", price: 200 },
-          { name: "እጅ ተዘፍዝፎ መቀባት", price: 350 },
-          { name: "እግር ተዘፍዝፎ መቀባት", price: 700 },
-        ],
-      },
-    ],
-  },
-  {
-    category: "ጥፍር",
-    subcategories: [
-      {
-        name: "ጄል",
-        services: [
-          { name: "ጥፍር ለመለጠፍ", price: 600 },
-          { name: "ጄል ሪፊል", price: 900 },
-          { name: "ጄል ሙሌት", price: 1300 },
-          { name: "ጄል አንድ ጣት", price: 150 },
-        ],
-      },
-      {
-        name: "ሌሎች",
-        services: [
-          { name: "ልጥፍ አንድ ጣት", price: 100 },
-          { name: "ሽላክ መቀባት", price: 400 },
-        ],
-      },
-    ],
-  },
-  {
     category: "ቀለም",
     subcategories: [
       {
@@ -151,6 +84,54 @@ const servicesData = [
     ],
   },
   {
+    category: "ስቲም",
+    subcategories: [
+      {
+        name: "ቅቤ",
+        services: [
+          { name: "ቅቤ ስቲም", price: 300 },
+          { name: "ቅቤ መታጠቢያ", price: 200 },
+        ],
+      },
+      {
+        name: "መደበኛ",
+        services: [
+          { name: "ስቲም መታጠቢያ (ሻምፖ እና ካንዲሽነር)", price: 300 },
+          { name: "ሻምፖ እና ካንዲሽነር", price: 100 },
+        ],
+      },
+    ],
+  },
+  {
+    category: "ጥፍር",
+    subcategories: [
+      {
+        name: "ጄል",
+        services: [
+          { name: "ጥፍር ለመለጠፍ", price: 600 },
+          { name: "ጄል ሪፊል", price: 900 },
+          { name: "ጄል ሙሌት", price: 1300 },
+          { name: "ጄል አንድ ጣት", price: 150 },
+        ],
+      },
+      {
+        name: "ሌሎች",
+        services: [
+          { name: "ልጥፍ አንድ ጣት", price: 100 },
+          { name: "ሽላክ መቀባት", price: 400 },
+        ],
+      },
+      {
+        name: "እጅ እና እግር",
+        services: [
+          { name: "እጅ እና እግር ትሞርዶ መቀባት", price: 200 },
+          { name: "እጅ ተዘፍዝፎ መቀባት", price: 350 },
+          { name: "እግር ተዘፍዝፎ መቀባት", price: 700 },
+        ],
+      },
+    ],
+  },
+  {
     category: "ሜክአፕ",
     subcategories: [
       {
@@ -163,13 +144,27 @@ const servicesData = [
     ],
   },
   {
+    category: "ቅንድብ",
+    subcategories: [
+      {
+        name: "ቅንድብ",
+        services: [
+          { name: "ቅንድብ ዋክስ", price: 200 },
+          { name: "ቅንድብ ክር", price: 100 },
+          { name: "ቅንድብ በምላጭ", price: 100 },
+          { name: "ቅንድብ በሂና", price: 300 },
+        ],
+      },
+    ],
+  },
+  {
     category: "ሌሎች",
     subcategories: [
       {
         name: "ሌሎች",
         services: [
           { name: "የፊት ስክራብ", price: 150 },
-          { name: "ካንዲት", price: 500 },
+          { name: "ካንዲሽነር", price: 500 },
           { name: "ፕላሴንታ", price: 100, nonAsrat: true },
           { name: "ቅቤ", price: 250, nonAsrat: true },
         ],
@@ -185,13 +180,13 @@ const servicesData = [
           { name: "ወይባ ስፔሻል 1 (ፀጉር መስራት ከእግር መዘፍዘፍ ጋር)", price: 3000 },
           { name: "ወይባ ስፔሻል 2 (ከቦዲ ስቲም ጋር)", price: 2600 },
           { name: "ወይባ ስፔሻል 3 (አብሽ፣ ሽንብራ፣ ቡና በቅቤ)", price: 2300 },
-          { name: "ስፔሻል ሞሮኮ የቤቱ (ሞሮኮ አፈርና ሳውና፣ የፊት እና የፀጉር ትሪትመንት፣ ቡና በማር ለገላ፣ ተልባ ጁስ፣ 1/2 ሊትር ውሃ)", price: 3000 },
+          { name: "ስፔሻል ሞሮኮ የቤቱ", price: 3000 },
           { name: "ሞሮኮ የጥንዶች", price: 5000 },
           { name: "ማሳጅ (የሴቶች ብቻ)", price: 1000 },
           { name: "ስቲም የጥንዶች ኖርማል", price: 1400 },
-          { name: "ስፔሻል ሞሮኮ (ሞሮኮ አፈርና ሳውና፣ የፊት ትሪትመንት፣ ማሳጅ በኦይል፣ 1/2 ሊትር ውሃ)", price: 2600 },
-          { name: "ስቲም ኖርማል (አንድ የገላ ሳውና፣ 1/2 ሊትር ውሃ)", price: 600 },
-          { name: "ስቲም ስፔሻል (የፊት ትሪትመንት፣ የገላ ማሳጅ፣ አንድ የገላ ሳውና፣ 1/2 ሊትር ውሃ)", price: 700 },
+          { name: "ስፔሻል ሞሮኮ", price: 2600 },
+          { name: "ስቲም ኖርማል", price: 600 },
+          { name: "ስቲም ስፔሻል", price: 700 },
         ],
       },
     ],

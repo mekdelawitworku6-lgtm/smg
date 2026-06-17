@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addCategory, renameCategory, deleteCategory } from "../../categories/categoriesSlice";
 import { setLocalServices, fetchServices } from "../../services/servicesSlice";
 import { useTranslation } from "../../i18n/LanguageContext";
+import servicesData from "../../data/services";
+import { sortCategories } from "../../data/categoryOrder";
 
 const styles = {
   panel: { background: "var(--bg-card)", borderRadius: 10, padding: 20, border: "1px solid var(--border-color)", marginBottom: 20 },
@@ -24,7 +26,21 @@ export default function CategoriesView() {
   const dispatch = useDispatch();
   const { t } = useTranslation();
   const categories = useSelector((state) => state.categories.list);
-  const services = useSelector((state) => state.services.apiList);
+  const apiServices = useSelector((state) => state.services.apiList);
+  const localServices = useSelector((state) => state.services.localList);
+  const services = useMemo(() => {
+    const merged = [...apiServices, ...localServices];
+    if (merged.length > 0) return merged;
+    const flat = [];
+    for (const cat of servicesData) {
+      for (const sub of cat.subcategories) {
+        for (const svc of sub.services) {
+          flat.push({ ...svc, _id: svc.name, category: cat.category });
+        }
+      }
+    }
+    return flat;
+  }, [apiServices, localServices]);
   const [newCat, setNewCat] = useState("");
   const [editCat, setEditCat] = useState("");
   const [editVal, setEditVal] = useState("");
@@ -73,7 +89,7 @@ export default function CategoriesView() {
   };
 
   const handleDeleteService = async (svc) => {
-    if (!window.confirm(`Delete "${svc.name}"?`)) return;
+    if (!window.confirm(t("services.deleteConfirm", { name: svc.name }))) return;
     try {
       const API = (await import("../../api/axios")).default;
       await API.delete(`/services/${svc._id}`);
@@ -142,7 +158,7 @@ export default function CategoriesView() {
                   <div key={cat} style={styles.catCard}>
                     <div style={styles.catName}>{cat}</div>
                     {catServices.length === 0 ? (
-                      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>No services</div>
+                      <div style={{ fontSize: 12, color: "var(--text-muted)" }}>{t("services.noServices")}</div>
                     ) : (
                       catServices.map((svc) => (
                         editingService === svc._id ? (
@@ -153,19 +169,19 @@ export default function CategoriesView() {
                               <select value={editSvcForm.category} onChange={(e) => setEditSvcForm({ ...editSvcForm, category: e.target.value })} style={{ padding: "6px 8px", borderRadius: 4, border: "1px solid var(--border-color)", fontSize: 13 }}>
                                 {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                               </select>
-                              <button onClick={() => handleSaveService(svc)} style={{ ...styles.btn, ...styles.btnPrimary, padding: "6px 10px", fontSize: 11 }}>Save</button>
-                              <button onClick={() => setEditingService(null)} style={{ ...styles.btn, background: "var(--border-color)", color: "var(--text-primary)", padding: "6px 10px", fontSize: 11 }}>Cancel</button>
+                              <button onClick={() => handleSaveService(svc)} style={{ ...styles.btn, ...styles.btnPrimary, padding: "6px 10px", fontSize: 11 }}>{t("cat.save")}</button>
+                              <button onClick={() => setEditingService(null)} style={{ ...styles.btn, background: "var(--border-color)", color: "var(--text-primary)", padding: "6px 10px", fontSize: 11 }}>{t("services.cancel")}</button>
                             </div>
                           </div>
                         ) : (
                           <div key={svc._id} style={styles.subItem}>
                             <div>
                               <span style={{ fontWeight: 500 }}>{svc.name}</span>
-                              <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} Birr</span>
+                              <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} {t("services.birr")}</span>
                             </div>
                             <div style={{ display: "flex", gap: 4 }}>
-                              <button onClick={() => handleEditService(svc)} style={{ background: "none", border: "1px solid var(--border-color)", borderRadius: 4, padding: "3px 8px", fontSize: 11, cursor: "pointer", color: "var(--text-primary)" }}>Edit</button>
-                              <button onClick={() => handleDeleteService(svc)} style={{ background: "none", border: "1px solid var(--color-danger)", borderRadius: 4, padding: "3px 8px", fontSize: 11, cursor: "pointer", color: "var(--color-danger)" }}>Delete</button>
+                              <button onClick={() => handleEditService(svc)} style={{ background: "none", border: "1px solid var(--border-color)", borderRadius: 4, padding: "3px 8px", fontSize: 11, cursor: "pointer", color: "var(--text-primary)" }}>{t("services.edit")}</button>
+                              <button onClick={() => handleDeleteService(svc)} style={{ background: "none", border: "1px solid var(--color-danger)", borderRadius: 4, padding: "3px 8px", fontSize: 11, cursor: "pointer", color: "var(--color-danger)" }}>{t("services.delete")}</button>
                             </div>
                           </div>
                         )

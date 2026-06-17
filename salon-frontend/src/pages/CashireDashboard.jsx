@@ -46,6 +46,7 @@ from "../components/OfflineTransactionHistory";
 
 import servicesData from "../data/services";
 import staffData from "../data/staff";
+import { sortCategories } from "../data/categoryOrder";
 
 export default function CashierDashboard() {
 
@@ -267,7 +268,7 @@ export default function CashierDashboard() {
       }
       map.get(svc.category).services.push(svc);
     }
-    return Array.from(map.values());
+    return Array.from(map.values()).sort((a, b) => sortCategories(a.category, b.category));
   }, [allServicesFlat]);
 
   const sortedGroupedServices = useMemo(() => {
@@ -361,7 +362,7 @@ export default function CashierDashboard() {
   const handleEndDay = async () => {
     const pendingOffline = await getPendingOfflineTransactions();
     if (pendingOffline.length > 0) {
-      return toast(`Sync ${pendingOffline.length} pending offline transaction(s) first`, "error");
+      return toast(t("cashier.syncPendingFirst", { count: pendingOffline.length }), "error");
     }
 
     const summaryTransactions = buildSummaryTransactions(sessionTransactions);
@@ -458,7 +459,7 @@ export default function CashierDashboard() {
         <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
         <h2 style={{ color: "var(--text-primary)", margin: "0 0 8px" }}>{pendingClosureDay.date} {t("day.notClosed")}</h2>
         <p style={{ color: "var(--text-secondary)", marginBottom: 24, maxWidth: 400 }}>
-          Please review and close the day before starting a new day.
+          {t("cashier.pendingClosureMsg")}
         </p>
         <div style={{ display: "flex", gap: 12 }}>
           <button onClick={() => { dispatch(reviewAndClose({ date: pendingClosureDay.date })); dispatch(refreshDay()); }} style={{ padding: "14px 28px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, fontSize: 16, fontWeight: 700, cursor: "pointer" }}>
@@ -638,7 +639,7 @@ export default function CashierDashboard() {
                             <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderBottom: "1px solid var(--border-color)", backgroundColor: sel.checked ? "var(--color-primary-light)" : "transparent" }}>
                               <input type="checkbox" checked={!!sel.checked} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { ...prev[key], checked: e.target.checked } }))} style={{ width: "18px", height: "18px", flexShrink: 0 }} />
                               <span style={{ flex: 1, fontSize: "14px", fontWeight: 500 }}>{svc.name}</span>
-                              <span style={{ width: "80px", textAlign: "right", fontSize: "14px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>{svc.price} Birr</span>
+                              <span style={{ width: "80px", textAlign: "right", fontSize: "14px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>{svc.price} {t("cashier.birr")}</span>
                               <select value={sel.staff || ""} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { checked: prev[key]?.checked ?? true, staff: e.target.value } }))} style={{ width: "130px", padding: "5px 4px", borderRadius: "4px", border: "1px solid var(--border-color)", fontSize: "13px", flexShrink: 0 }}>
                                 <option value="">{t("cashier.staffSelect")}</option>
                                 {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
@@ -662,7 +663,7 @@ export default function CashierDashboard() {
               </button>
               <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.cart")}</h2>
               <p style={{ color: "var(--text-primary)", margin: "0 0 12px" }}>
-                {items.length} {t("cashier.services")} — {total} Birr
+                {items.length} {t("cashier.services")} — {total} {t("cashier.birr")}
               </p>
               {items.length > 0 && (
                 <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 12, border: "1px solid var(--border-color)", borderRadius: 6, padding: "4px 8px", background: "#fff" }}>
@@ -671,7 +672,7 @@ export default function CashierDashboard() {
                       <span style={{ flex: 1, fontSize: 13 }}>
                         {item.name} <small style={{ color: "var(--text-secondary)" }}>({item.staff})</small>
                       </span>
-                      <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>{item.price} Birr</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>{item.price} {t("cashier.birr")}</span>
                       <button onClick={() => dispatch(removeFromCart(index))} style={{ fontSize: 11, padding: "2px 8px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
                         {t("cashier.remove")}
                       </button>
@@ -712,23 +713,23 @@ export default function CashierDashboard() {
                 ) : (
                   <div>
                     <p><strong>{sessionTransactions.length} {t("cashier.transactions")}</strong></p>
-                    <p>{t("cashier.cashLabel")} {sessionTransactions.filter((t) => t.paymentType === "cash").reduce((s, t) => s + t.total, 0)} Birr</p>
-                    <p>{t("cashier.telebirrLabel")} {sessionTransactions.filter((t) => t.paymentType === "telebirr").reduce((s, t) => s + t.total, 0)} Birr</p>
-                    <p>{t("cashier.abysinyaLabel")} {sessionTransactions.filter((t) => t.paymentType === "abysinya").reduce((s, t) => s + t.total, 0)} Birr</p>
-                    <p>{t("cashier.cbeLabel")} {sessionTransactions.filter((t) => t.paymentType === "cbe").reduce((s, t) => s + t.total, 0)} Birr</p>
-                    <p>{t("cashier.tipsLabel")} {sessionTransactions.reduce((s, t) => s + (t.tip || 0), 0)} Birr</p>
+                    <p>{t("cashier.cashLabel")} {sessionTransactions.filter((t) => t.paymentType === "cash").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
+                    <p>{t("cashier.telebirrLabel")} {sessionTransactions.filter((t) => t.paymentType === "telebirr").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
+                    <p>{t("cashier.abysinyaLabel")} {sessionTransactions.filter((t) => t.paymentType === "abysinya").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
+                    <p>{t("cashier.cbeLabel")} {sessionTransactions.filter((t) => t.paymentType === "cbe").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
+                    <p>{t("cashier.tipsLabel")} {sessionTransactions.reduce((s, t) => s + (t.tip || 0), 0)} {t("cashier.birr")}</p>
                     {staffTips.length > 0 && (
                       <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-primary)" }}>
                         <strong>{t("cashier.tipsByStaff")}:</strong>
                         {staffTips.map(([name, amount]) => (
                           <div key={name} style={{ display: "flex", justifyContent: "space-between", paddingLeft: 8, marginTop: 2 }}>
-                            <span>{name}</span><span>{Math.round(amount)} Birr</span>
+                            <span>{name}</span><span>{Math.round(amount)} {t("cashier.birr")}</span>
                           </div>
                         ))}
                       </div>
                     )}
                     <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "10px 0" }} />
-                    <p><strong>{t("cashier.grandTotal")} {sessionTransactions.reduce((s, t) => s + t.total, 0)} Birr</strong></p>
+                    <p><strong>{t("cashier.grandTotal")} {sessionTransactions.reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</strong></p>
                   </div>
                 )}
               </div>
@@ -764,7 +765,7 @@ export default function CashierDashboard() {
                             <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderBottom: "1px solid var(--border-color)", backgroundColor: sel.checked ? "var(--color-primary-light)" : "transparent" }}>
                               <input type="checkbox" checked={!!sel.checked} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { ...prev[key], checked: e.target.checked } }))} style={{ width: "18px", height: "18px", flexShrink: 0 }} />
                               <span style={{ flex: 1, fontSize: "14px", fontWeight: 500 }}>{svc.name}</span>
-                              <span style={{ width: "80px", textAlign: "right", fontSize: "14px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>{svc.price} Birr</span>
+                              <span style={{ width: "80px", textAlign: "right", fontSize: "14px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>{svc.price} {t("cashier.birr")}</span>
                               <select value={sel.staff || ""} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { checked: prev[key]?.checked ?? true, staff: e.target.value } }))} style={{ width: "130px", padding: "5px 4px", borderRadius: "4px", border: "1px solid var(--border-color)", fontSize: "13px", flexShrink: 0 }}>
                                 <option value="">{t("cashier.staffSelect")}</option>
                                 {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
@@ -780,13 +781,13 @@ export default function CashierDashboard() {
             </div>
             <div style={{ width: "40%", padding: "20px", overflowY: "auto", height: "100%" }}>
               <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.cart")}</h2>
-              <p style={{ color: "var(--text-primary)", margin: "0 0 12px" }}>{items.length} {t("cashier.services")} — {total} Birr</p>
+              <p style={{ color: "var(--text-primary)", margin: "0 0 12px" }}>{items.length} {t("cashier.services")} — {total} {t("cashier.birr")}</p>
               {items.length > 0 && (
                 <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 12, border: "1px solid var(--border-color)", borderRadius: 6, padding: "4px 8px", background: "#fff" }}>
                   {items.map((item, index) => (
                     <div key={index} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: index < items.length - 1 ? "1px solid var(--border-color)" : "none" }}>
                       <span style={{ flex: 1, fontSize: 13 }}>{item.name} <small style={{ color: "var(--text-secondary)" }}>({item.staff})</small></span>
-                      <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>{item.price} Birr</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>{item.price} {t("cashier.birr")}</span>
                       <button onClick={() => dispatch(removeFromCart(index))} style={{ fontSize: 11, padding: "2px 8px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>{t("cashier.remove")}</button>
                     </div>
                   ))}
@@ -825,21 +826,21 @@ export default function CashierDashboard() {
                 ) : (
                   <div>
                     <p><strong>{sessionTransactions.length} {t("cashier.transactions")}</strong></p>
-                    <p>{t("cashier.cashLabel")} {sessionTransactions.filter((t) => t.paymentType === "cash").reduce((s, t) => s + t.total, 0)} Birr</p>
-                    <p>{t("cashier.telebirrLabel")} {sessionTransactions.filter((t) => t.paymentType === "telebirr").reduce((s, t) => s + t.total, 0)} Birr</p>
-                    <p>{t("cashier.abysinyaLabel")} {sessionTransactions.filter((t) => t.paymentType === "abysinya").reduce((s, t) => s + t.total, 0)} Birr</p>
-                    <p>{t("cashier.cbeLabel")} {sessionTransactions.filter((t) => t.paymentType === "cbe").reduce((s, t) => s + t.total, 0)} Birr</p>
-                    <p>{t("cashier.tipsLabel")} {sessionTransactions.reduce((s, t) => s + (t.tip || 0), 0)} Birr</p>
+                    <p>{t("cashier.cashLabel")} {sessionTransactions.filter((t) => t.paymentType === "cash").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
+                    <p>{t("cashier.telebirrLabel")} {sessionTransactions.filter((t) => t.paymentType === "telebirr").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
+                    <p>{t("cashier.abysinyaLabel")} {sessionTransactions.filter((t) => t.paymentType === "abysinya").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
+                    <p>{t("cashier.cbeLabel")} {sessionTransactions.filter((t) => t.paymentType === "cbe").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
+                    <p>{t("cashier.tipsLabel")} {sessionTransactions.reduce((s, t) => s + (t.tip || 0), 0)} {t("cashier.birr")}</p>
                     {staffTips.length > 0 && (
                       <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-primary)" }}>
                         <strong>{t("cashier.tipsByStaff")}:</strong>
                         {staffTips.map(([name, amount]) => (
-                          <div key={name} style={{ display: "flex", justifyContent: "space-between", paddingLeft: 8, marginTop: 2 }}><span>{name}</span><span>{Math.round(amount)} Birr</span></div>
+                          <div key={name} style={{ display: "flex", justifyContent: "space-between", paddingLeft: 8, marginTop: 2 }}><span>{name}</span><span>{Math.round(amount)} {t("cashier.birr")}</span></div>
                         ))}
                       </div>
                     )}
                     <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "10px 0" }} />
-                    <p><strong>{t("cashier.grandTotal")} {sessionTransactions.reduce((s, t) => s + t.total, 0)} Birr</strong></p>
+                    <p><strong>{t("cashier.grandTotal")} {sessionTransactions.reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</strong></p>
                   </div>
                 )}
               </div>
@@ -908,27 +909,27 @@ export default function CashierDashboard() {
 
             <p>
               <strong>{t("cashier.totalIncome")}{" "}
-              {endSummary.totalIncome} Birr</strong>
+              {endSummary.totalIncome} {t("cashier.birr")}</strong>
             </p>
             <p>
               <strong>{t("day.totalExpenses")}{" "}
-              {endSummary.totalExpenses || 0} Birr</strong>
+              {endSummary.totalExpenses || 0} {t("cashier.birr")}</strong>
             </p>
             <p>
               {t("cashier.cashPayments")}{" "}
-              {endSummary.cashPayments} Birr
+              {endSummary.cashPayments} {t("cashier.birr")}
             </p>
             <p>
               {t("cashier.paymentTelebirr")}{" "}
-              {endSummary.telebirrPayments} Birr
+              {endSummary.telebirrPayments} {t("cashier.birr")}
             </p>
             <p>
               {t("cashier.paymentAbysinya")}{" "}
-              {endSummary.abysinyaPayments} Birr
+              {endSummary.abysinyaPayments} {t("cashier.birr")}
             </p>
             <p>
               {t("cashier.paymentCBE")}{" "}
-              {endSummary.cbePayments} Birr
+              {endSummary.cbePayments} {t("cashier.birr")}
             </p>
 
             <hr
@@ -943,12 +944,12 @@ export default function CashierDashboard() {
             <p>
               {t("cashier.asratMoney")}{" "}
               <strong>
-                {endSummary.asratMoney} Birr
+                {endSummary.asratMoney} {t("cashier.birr")}
               </strong>
             </p>
             <p>
               {t("cashier.totalTips")}{" "}
-              {endSummary.totalTips} Birr
+              {endSummary.totalTips} {t("cashier.birr")}
             </p>
 
             <hr
@@ -967,7 +968,7 @@ export default function CashierDashboard() {
             >
               <strong>
                 {t("cashier.finalCash")}{" "}
-                {endSummary.finalCashAmount} Birr
+                {endSummary.finalCashAmount} {t("cashier.birr")}
               </strong>
             </p>
 

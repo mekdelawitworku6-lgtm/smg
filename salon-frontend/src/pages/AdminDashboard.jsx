@@ -38,6 +38,7 @@ export default function AdminDashboard() {
   const services = useSelector((state) => state.services.apiList);
   const staffList = useSelector((state) => state.staff.apiList);
   const [activeView, setActiveView] = useState("dashboard");
+  const [serviceFilterStaff, setServiceFilterStaff] = useState("");
 
   const offlineTransactions = useOfflineTransactions();
   const pendingOfflineCount = offlineTransactions.filter((tx) => !tx.synced).length;
@@ -90,13 +91,20 @@ export default function AdminDashboard() {
         return <DashboardView transactions={validTransactions} services={services} />;
       case "services":
         return <>
-          <ServicesView />
+          <ServicesView
+            transactions={validTransactions}
+            filterStaffName={serviceFilterStaff}
+            onClearFilter={() => setServiceFilterStaff("")}
+          />
           <div style={{ marginTop: 32 }}>
             <CategoriesView />
           </div>
         </>;
       case "staff":
-        return <StaffView transactions={validTransactions} />;
+        return <StaffView transactions={validTransactions} onCashierSelect={(name) => {
+          setServiceFilterStaff(name);
+          setActiveView("services");
+        }} />;
       case "transactions":
         return <TransactionsView transactions={validTransactions} services={services} />;
       case "reports":

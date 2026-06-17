@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setLocalServices, fetchServices } from "../../services/servicesSlice";
 import { useTranslation } from "../../i18n/LanguageContext";
+import { sortCategories } from "../../data/categoryOrder";
+import servicesData from "../../data/services";
 
 const emptyForm = { name: "", category: "", price: "", nonAsrat: false };
 
@@ -23,8 +25,22 @@ const styles = {
 export default function ServicesView() {
   const dispatch = useDispatch();
   const { t } = useTranslation();
-  const services = useSelector((state) => state.services.apiList);
+  const apiServices = useSelector((state) => state.services.apiList);
+  const localServices = useSelector((state) => state.services.localList);
   const categories = useSelector((state) => state.categories.list);
+  const services = useMemo(() => {
+    const merged = [...apiServices, ...localServices];
+    if (merged.length > 0) return merged;
+    const flat = [];
+    for (const cat of servicesData) {
+      for (const sub of cat.subcategories) {
+        for (const svc of sub.services) {
+          flat.push({ ...svc, _id: svc.name, category: cat.category });
+        }
+      }
+    }
+    return flat;
+  }, [apiServices, localServices]);
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState(null);
 
@@ -72,7 +88,7 @@ export default function ServicesView() {
       if (!map.has(cat)) map.set(cat, []);
       map.get(cat).push(svc);
     }
-    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+    return Array.from(map.entries()).sort(([a], [b]) => sortCategories(a, b));
   }, [services]);
 
   return (
