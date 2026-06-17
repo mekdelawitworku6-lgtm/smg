@@ -58,6 +58,9 @@ export default function CategoriesView() {
     for (const svc of services) {
       if (svc.category) set.add(svc.category);
     }
+    for (const cat of servicesData) {
+      set.add(cat.category);
+    }
     return Array.from(set);
   }, [categories, services]);
 

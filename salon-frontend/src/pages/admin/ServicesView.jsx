@@ -94,13 +94,7 @@ export default function ServicesView() {
   }, [services]);
 
   const toggleCat = (cat) => setOpenCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
-  const toggleAll = () => {
-    const next = !showAll;
-    const obj = {};
-    groupedServices.forEach(([cat]) => { obj[cat] = next; });
-    setOpenCats(obj);
-    setShowAll(next);
-  };
+  const toggleAll = () => setShowAll((p) => !p);
 
   return (
     <div>
@@ -135,6 +129,17 @@ export default function ServicesView() {
         </div>
         {services.length === 0 ? (
           <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("services.noServices")}</div>
+        ) : showAll ? (
+          services.map((svc) => (
+            <div key={svc._id} style={styles.listItem}>
+              <div>
+                <span style={{ fontWeight: 600 }}>{svc.name}</span>
+                <span style={{ fontSize: 11, color: "var(--text-secondary)", marginLeft: 8 }}>{svc.category}</span>
+                {svc.nonAsrat && <span style={{ background: "var(--color-primary-light)", color: "var(--color-primary)", fontSize: 10, padding: "1px 6px", borderRadius: 8, marginLeft: 6, fontWeight: 600 }}>{t("cashier.nonAsrat")}</span>}
+                <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} {t("services.birr")}</span>
+              </div>
+            </div>
+          ))
         ) : (
           groupedServices.map(([category, catServices]) => (
             <div key={category}>
