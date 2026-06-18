@@ -1,4 +1,13 @@
-const categoryOrder = ["SPA", "NAILS", "MAKEUP", "EYEBROW", "OTHERS"];
+const categoryOrder = [
+  "HAIR",
+  "ቀለም",
+  "ሹሩባ",
+  "ስፌት",
+  "SPA",
+  "NAILS",
+  "MAKEUP",
+  "OTHERS",
+];
 
 export function sortCategories(a, b) {
   const ia = categoryOrder.indexOf(a);

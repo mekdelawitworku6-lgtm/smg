@@ -54,14 +54,17 @@ export default function CategoriesView() {
   }, [apiServices, localServices]);
 
   const activeCategories = useMemo(() => {
-    const set = new Set(categories);
+    const map = new Map();
+    for (const cat of categories) {
+      map.set(cat.toLowerCase(), cat);
+    }
     for (const svc of services) {
-      if (svc.category) set.add(svc.category);
+      if (svc.category) map.set(svc.category.toLowerCase(), svc.category);
     }
     for (const cat of servicesData) {
-      set.add(cat.category);
+      map.set(cat.category.toLowerCase(), cat.category);
     }
-    return Array.from(set);
+    return Array.from(map.values());
   }, [categories, services]);
 
   const staticSubcats = useMemo(() => {

@@ -1,5 +1,89 @@
 const servicesData = [
   {
+    category: "HAIR",
+    subcategories: [
+      {
+        name: "ፒያስትራ",
+        services: [
+          { name: "ፒያስትራ ፀጉር", price: 400 },
+          { name: "ፒያስትራ ቡዊግ", price: 400 },
+        ],
+      },
+      {
+        name: "ዌቭ",
+        services: [
+          { name: "ዌቭ ፒቤሊስ ክሊፕ", price: 400 },
+          { name: "ሲንተቲክ ዌቭ ፒቤሊስ", price: 600 },
+        ],
+      },
+      {
+        name: "ቁርጥ",
+        services: [
+          { name: "ፀጉር ቁርጥ", price: 300 },
+          { name: "ጫፍ ቁርጥ", price: 100 },
+          { name: "ፀጉር ትሪትመንት", price: 350 },
+        ],
+      },
+      {
+        name: "ሌሎች",
+        services: [
+          { name: "ካከስ", price: 250 },
+          { name: "ቤቤ ሄር", price: 200 },
+          { name: "የፀጉር ጄል (ፖኒቴል)", price: 700 },
+        ],
+      },
+    ],
+  },
+  {
+    category: "ቀለም",
+    subcategories: [
+      {
+        name: "ቀለም",
+        services: [
+          { name: "ቀለም መቀቢያ ከራሶ", price: 500 },
+          { name: "ቀለም ስርስሩን", price: 500 },
+          { name: "ቀለም ፊት ፊቱን", price: 300 },
+          { name: "ፀጉር ቀለም", price: 5000 },
+          { name: "ፀጉር ሃይላይት", price: 5500 },
+          { name: "ሁማን ቀለም", price: 5500 },
+        ],
+      },
+    ],
+  },
+  {
+    category: "ሹሩባ",
+    subcategories: [
+      {
+        name: "ሹሩባ",
+        services: [
+          { name: "ሹሩባ ቡዊግ", price: 350 },
+          { name: "የልጆች ሹሩባ በፀጉር", price: 300 },
+        ],
+      },
+      {
+        name: "ትዊስት",
+        services: [
+          { name: "ትዊስት በፀጉር", price: 300 },
+          { name: "ትዊስት ቡዊግ", price: 400 },
+        ],
+      },
+    ],
+  },
+  {
+    category: "ስፌት",
+    subcategories: [
+      {
+        name: "ስፌት",
+        services: [
+          { name: "ስፌት ኖርማል", price: 450 },
+          { name: "ስፌት ስግስግ", price: 500 },
+          { name: "ስፌት መፍቻ", price: 100 },
+          { name: "ዊግ መፍቻ በ1 ዊግ", price: 10 },
+        ],
+      },
+    ],
+  },
+  {
     category: "SPA",
     subcategories: [
       {
@@ -68,11 +152,6 @@ const servicesData = [
           { name: "የሙሽራ ሜክአፕ", price: 500 },
         ],
       },
-    ],
-  },
-  {
-    category: "EYEBROW",
-    subcategories: [
       {
         name: "Eyebrow Services",
         services: [

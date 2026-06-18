@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setLocalServices, fetchServices } from "../../services/servicesSlice";
 import { useTranslation } from "../../i18n/LanguageContext";
+import { sortCategories } from "../../data/categoryOrder";
 import servicesData from "../../data/services";
 
 const emptyForm = { name: "", category: "", price: "", nonAsrat: false };
@@ -18,6 +19,7 @@ const styles = {
   btnSecondary: { background: "var(--border-color)", color: "var(--text-primary)" },
   listItem: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: "1px solid var(--border-color)", fontSize: 13 },
   actions: { display: "flex", gap: 6 },
+  catHeader: { padding: "8px 12px", background: "var(--color-primary)", color: "#fff", borderRadius: 6, fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginTop: 16, marginBottom: 4, cursor: "pointer", userSelect: "none", display: "flex", alignItems: "center", gap: 8 },
 };
 
 export default function ServicesView() {
@@ -41,6 +43,8 @@ export default function ServicesView() {
   }, [apiServices, localServices]);
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState(null);
+  const [openCats, setOpenCats] = useState({});
+  const [showAll, setShowAll] = useState(false);
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -79,6 +83,22 @@ export default function ServicesView() {
     dispatch(setLocalServices(services.filter((s) => s._id !== svc._id)));
   };
 
+  const groupedServices = useMemo(() => {
+    const map = new Map();
+    for (const svc of services) {
+      const cat = svc.category || "Other";
+      if (!map.has(cat)) map.set(cat, []);
+      map.get(cat).push(svc);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => sortCategories(a, b));
+  }, [services]);
+
+  const toggleCat = (cat) => setOpenCats((prev) => ({ ...prev, [cat]: !prev[cat] }));
+  const toggleAll = () => {
+    if (showAll) setOpenCats({});
+    setShowAll((p) => !p);
+  };
+
   return (
     <div>
       <div style={styles.panel}>
@@ -102,10 +122,17 @@ export default function ServicesView() {
       </div>
 
       <div style={styles.panel}>
-        <h3 style={styles.panelTitle}>{t("services.allServices")}</h3>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h3 style={{ ...styles.panelTitle, margin: 0 }}>{t("services.allServices")}</h3>
+          {services.length > 0 && (
+            <button onClick={toggleAll} style={{ padding: "6px 14px", borderRadius: 6, border: "none", fontSize: 12, fontWeight: 600, cursor: "pointer", background: "var(--color-primary)", color: "#fff" }}>
+              {showAll ? t("services.hideAll") : t("services.showAll")}
+            </button>
+          )}
+        </div>
         {services.length === 0 ? (
           <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{t("services.noServices")}</div>
-        ) : (
+        ) : showAll ? (
           services.map((svc, idx) => (
             <div key={svc._id} style={styles.listItem}>
               <div>
@@ -113,6 +140,24 @@ export default function ServicesView() {
                 {svc.nonAsrat && <span style={{ background: "var(--color-primary-light)", color: "var(--color-primary)", fontSize: 10, padding: "1px 6px", borderRadius: 8, marginLeft: 6, fontWeight: 600 }}>{t("cashier.nonAsrat")}</span>}
                 <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} ETB</span>
               </div>
+            </div>
+          ))
+        ) : (
+          groupedServices.map(([category, catServices]) => (
+            <div key={category}>
+              <div style={styles.catHeader} onClick={() => toggleCat(category)}>
+                <span style={{ fontSize: 12 }}>{openCats[category] ? "▼" : "▶"}</span>
+                {category}
+              </div>
+              {openCats[category] && catServices.map((svc) => (
+                <div key={svc._id} style={styles.listItem}>
+                  <div>
+                    <span style={{ fontWeight: 600 }}>{svc.name}</span>
+                    {svc.nonAsrat && <span style={{ background: "var(--color-primary-light)", color: "var(--color-primary)", fontSize: 10, padding: "1px 6px", borderRadius: 8, marginLeft: 6, fontWeight: 600 }}>{t("cashier.nonAsrat")}</span>}
+                    <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} ETB</span>
+                  </div>
+                </div>
+              ))}
             </div>
           ))
         )}
