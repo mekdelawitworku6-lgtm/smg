@@ -32,11 +32,6 @@ const servicesData = [
           { name: "የፀጉር ጄል (ፖኒቴል)", price: 700 },
         ],
       },
-    ],
-  },
-  {
-    category: "ቀለም",
-    subcategories: [
       {
         name: "ቀለም",
         services: [
@@ -48,11 +43,6 @@ const servicesData = [
           { name: "ሁማን ቀለም", price: 5500 },
         ],
       },
-    ],
-  },
-  {
-    category: "ሹሩባ",
-    subcategories: [
       {
         name: "ሹሩባ",
         services: [
@@ -67,11 +57,6 @@ const servicesData = [
           { name: "ትዊስት ቡዊግ", price: 400 },
         ],
       },
-    ],
-  },
-  {
-    category: "ስፌት",
-    subcategories: [
       {
         name: "ስፌት",
         services: [
