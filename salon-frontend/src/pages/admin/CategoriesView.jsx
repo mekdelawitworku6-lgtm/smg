@@ -85,6 +85,10 @@ export default function CategoriesView() {
   const [editingSubcat, setEditingSubcat] = useState(null);
   const [editSubcatVal, setEditSubcatVal] = useState("");
   const [moveSubcat, setMoveSubcat] = useState(null);
+  const [editingSvc, setEditingSvc] = useState(null);
+  const [editSvcName, setEditSvcName] = useState("");
+  const [editSvcPrice, setEditSvcPrice] = useState("");
+  const [moveSvc, setMoveSvc] = useState(null);
   const [subcatMap, setSubcatMap] = useState(loadSubcatMap);
 
   const persistSubcatMap = (map) => { setSubcatMap(map); saveSubcatMap(map); };
@@ -181,6 +185,42 @@ export default function CategoriesView() {
     });
     dispatch(setLocalServices(updated));
     setMoveSubcat(null);
+  };
+
+  const handleEditSvc = (svc) => {
+    setEditingSvc(svc);
+    setEditSvcName(svc.name);
+    setEditSvcPrice(String(svc.price));
+  };
+
+  const handleSaveSvc = async () => {
+    if (!editingSvc || !editSvcName.trim() || !editSvcPrice.trim()) return;
+    const payload = { name: editSvcName.trim(), category: editingSvc.category, price: Number(editSvcPrice), nonAsrat: !!editingSvc.nonAsrat };
+    try {
+      const API = (await import("../../api/axios")).default;
+      await API.put(`/services/${editingSvc._id}`, payload);
+      dispatch(fetchServices());
+    } catch {
+      const updated = services.map((s) => (s._id === editingSvc._id ? { ...s, ...payload } : s));
+      dispatch(setLocalServices(updated));
+    }
+    setEditingSvc(null);
+  };
+
+  const handleDeleteSvc = async (svc) => {
+    if (!window.confirm(t("services.deleteConfirm", { name: svc.name }))) return;
+    try {
+      const API = (await import("../../api/axios")).default;
+      await API.delete(`/services/${svc._id}`);
+    } catch { /* fail silently */ }
+    dispatch(setLocalServices(services.filter((s) => s._id !== svc._id)));
+  };
+
+  const handleMoveSvc = (svc, targetCat) => {
+    if (!targetCat || targetCat === svc.category) { setMoveSvc(null); return; }
+    const updated = services.map((s) => (s._id === svc._id ? { ...s, category: targetCat } : s));
+    dispatch(setLocalServices(updated));
+    setMoveSvc(null);
   };
 
   return (
@@ -283,12 +323,29 @@ export default function CategoriesView() {
                                 </div>
                                 {openSubcats[`${cat}|${sub}`] && (
                                   <div>
-                                    {svcs.map((svc, i) => (
+                                    {svcs.map((svc) => (
                                       <div key={svc._id} style={styles.subItem}>
-                                        <div>
-                                          <span style={{ fontWeight: 500 }}>{i + 1}. {svc.name}</span>
-                                          <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} ETB</span>
-                                        </div>
+                                        {editingSvc?._id === svc._id ? (
+                                          <div style={{ display: "flex", gap: 8, flex: 1, alignItems: "center" }}>
+                                            <input value={editSvcName} onChange={(e) => setEditSvcName(e.target.value)} style={{ ...styles.input, flex: 1, minWidth: 100, padding: "4px 8px", fontSize: 12 }} onClick={(e) => e.stopPropagation()} />
+                                            <input value={editSvcPrice} onChange={(e) => setEditSvcPrice(e.target.value)} style={{ ...styles.input, width: 70, padding: "4px 8px", fontSize: 12 }} type="number" onClick={(e) => e.stopPropagation()} />
+                                            <button onClick={(e) => { e.stopPropagation(); handleSaveSvc(); }} style={{ ...styles.btnSmall, ...styles.btnPrimary }}>{t("cat.save")}</button>
+                                            <button onClick={(e) => { e.stopPropagation(); setEditingSvc(null); }} style={{ ...styles.btnSmall, ...styles.btnSecondary }}>{t("cat.cancel")}</button>
+                                          </div>
+                                        ) : (
+                                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flex: 1 }}>
+                                            <div>
+                                              <span style={{ fontWeight: 500 }}>{svc.name}</span>
+                                              <span style={{ color: "var(--color-primary)", marginLeft: 8, fontWeight: 600 }}>{svc.price} ETB</span>
+                                              {svc.nonAsrat && <span style={{ background: "var(--color-primary-light)", color: "var(--color-primary)", fontSize: 10, padding: "1px 6px", borderRadius: 8, marginLeft: 6, fontWeight: 600 }}>{t("cashier.nonAsrat")}</span>}
+                                            </div>
+                                            <div style={{ display: "flex", gap: 4 }}>
+                                              <button onClick={(e) => { e.stopPropagation(); handleEditSvc(svc); }} style={{ ...styles.btnSmall, ...styles.btnSecondary }}>{t("cat.edit")}</button>
+                                              <button onClick={(e) => { e.stopPropagation(); handleDeleteSvc(svc); }} style={{ ...styles.btnSmall, ...styles.btnDanger }}>{t("cat.delete")}</button>
+                                              <button onClick={(e) => { e.stopPropagation(); setMoveSvc(svc); }} style={{ ...styles.btnSmall, background: "var(--color-primary)", color: "#fff" }}>{t("cat.move")}</button>
+                                            </div>
+                                          </div>
+                                        )}
                                       </div>
                                     ))}
                                   </div>
@@ -326,6 +383,29 @@ export default function CategoriesView() {
               ))}
             </select>
             <button onClick={() => setMoveSubcat(null)} style={{ padding: "8px 16px", background: "var(--border-color)", color: "var(--text-primary)", border: "none", borderRadius: 6, cursor: "pointer" }}>{t("cat.cancel")}</button>
+          </div>
+        </div>
+      )}
+
+      {moveSvc && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
+          <div style={{ background: "#fff", padding: 24, borderRadius: 12, minWidth: 300, color: "var(--text-primary)" }}>
+            <h3 style={{ margin: "0 0 16px", fontSize: 16 }}>{t("cat.moveSubcat", { name: moveSvc.name })}</h3>
+            <select
+              style={{ width: "100%", padding: "10px", borderRadius: 6, border: "1px solid var(--border-color)", fontSize: 14, marginBottom: 16 }}
+              defaultValue=""
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleMoveSvc(moveSvc, e.target.value);
+                }
+              }}
+            >
+              <option value="" disabled>{t("cat.selectCategory")}</option>
+              {activeCategories.filter((c) => c !== moveSvc.category).map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+            <button onClick={() => setMoveSvc(null)} style={{ padding: "8px 16px", background: "var(--border-color)", color: "var(--text-primary)", border: "none", borderRadius: 6, cursor: "pointer" }}>{t("cat.cancel")}</button>
           </div>
         </div>
       )}
