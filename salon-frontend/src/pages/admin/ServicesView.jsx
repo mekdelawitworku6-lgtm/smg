@@ -33,7 +33,7 @@ export default function ServicesView() {
     for (const cat of servicesData) {
       for (const sub of cat.subcategories) {
         for (const svc of sub.services) {
-          flat.push({ ...svc, _id: svc.name, category: cat.category });
+          flat.push({ ...svc, _id: svc.name, category: cat.category, subcategory: sub.name });
         }
       }
     }
