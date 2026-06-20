@@ -14,6 +14,14 @@ const connectDB = async () => {
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+
+    // Drop problematic uuid_1 index that blocks user creation
+    try {
+      await conn.connection.db.collection("users").dropIndex("uuid_1");
+      console.log("Dropped uuid_1 index from users collection");
+    } catch {
+      // Index may not exist, that's fine
+    }
   } catch (error) {
     console.error("DB connection failed:", error.message);
     process.exit(1);
