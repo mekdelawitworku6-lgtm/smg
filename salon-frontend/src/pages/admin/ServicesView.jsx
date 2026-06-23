@@ -58,12 +58,12 @@ export default function ServicesView() {
       } else {
         await API.post("/services", payload);
       }
-      dispatch(fetchServices());
+      await dispatch(fetchServices());
       resetForm();
     } catch {
       const id = editing?._id || `local-${Date.now()}`;
-      const entry = { ...payload, _id: id };
-      const updated = editing ? services.map((s) => (s._id === id ? entry : s)) : [...services, entry];
+      const entry = { ...payload, _id: id, active: true };
+      const updated = editing ? localServices.map((s) => (s._id === id ? entry : s)) : [...localServices, entry];
       dispatch(setLocalServices(updated));
       resetForm();
     }
@@ -76,8 +76,11 @@ export default function ServicesView() {
     try {
       const API = (await import("../../api/axios")).default;
       await API.delete(`/services/${svc._id}`);
-    } catch { /* online delete failed, remove locally */ }
-    dispatch(setLocalServices(services.filter((s) => s._id !== svc._id)));
+      dispatch(fetchServices());
+    } catch {
+      const filtered = localServices.filter((s) => s._id !== svc._id);
+      dispatch(setLocalServices(filtered));
+    }
   };
 
   const toggleAll = () => setShowAll((p) => !p);
