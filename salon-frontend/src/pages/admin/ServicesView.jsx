@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { setLocalServices, fetchServices } from "../../services/servicesSlice";
 import { useTranslation } from "../../i18n/LanguageContext";
 import servicesData from "../../data/services";
+import API from "../../api/axios";
 
 const emptyForm = { name: "", category: "", price: "", nonAsrat: false };
 
@@ -52,7 +53,6 @@ export default function ServicesView() {
     if (!form.name || !form.category || form.price === "") return;
     const payload = { name: form.name.trim(), category: form.category, price: Number(form.price), nonAsrat: form.nonAsrat };
     try {
-      const API = (await import("../../api/axios")).default;
       if (editing) {
         await API.put(`/services/${editing._id}`, payload);
       } else {
@@ -62,8 +62,8 @@ export default function ServicesView() {
       resetForm();
     } catch {
       const id = editing?._id || `local-${Date.now()}`;
-      const entry = { ...payload, _id: id };
-      const updated = editing ? services.map((s) => (s._id === id ? entry : s)) : [...services, entry];
+      const entry = { ...payload, _id: id, active: true };
+      const updated = editing ? localServices.map((s) => (s._id === id ? entry : s)) : [...localServices, entry];
       dispatch(setLocalServices(updated));
       resetForm();
     }
@@ -74,10 +74,11 @@ export default function ServicesView() {
   const handleDelete = async (svc) => {
     if (!window.confirm(t("services.deleteConfirm", { name: svc.name }))) return;
     try {
-      const API = (await import("../../api/axios")).default;
       await API.delete(`/services/${svc._id}`);
-    } catch { /* online delete failed, remove locally */ }
-    dispatch(setLocalServices(services.filter((s) => s._id !== svc._id)));
+      dispatch(fetchServices());
+    } catch {
+      dispatch(setLocalServices(localServices.filter((s) => s._id !== svc._id)));
+    }
   };
 
   const toggleAll = () => setShowAll((p) => !p);

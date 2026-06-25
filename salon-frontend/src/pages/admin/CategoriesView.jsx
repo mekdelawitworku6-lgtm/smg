@@ -62,7 +62,9 @@ export default function CategoriesView() {
       if (svc.category) map.set(svc.category.toLowerCase(), svc.category);
     }
     for (const cat of servicesData) {
-      map.set(cat.category.toLowerCase(), cat.category);
+      if (!map.has(cat.category.toLowerCase())) {
+        map.set(cat.category.toLowerCase(), cat.category);
+      }
     }
     return Array.from(map.values());
   }, [categories, services]);

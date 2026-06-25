@@ -1,4 +1,4 @@
-const categoryOrder = ["HAIR", "SPA", "NAILS", "MAKEUP", "OTHERS"];
+const categoryOrder = ["Hair", "Spa", "Nails", "Makeup", "Others"];
 
 export function sortCategories(a, b) {
   const ia = categoryOrder.indexOf(a);

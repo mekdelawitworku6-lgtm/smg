@@ -1,6 +1,6 @@
 const servicesData = [
   {
-    category: "HAIR",
+    category: "Hair",
     subcategories: [
       {
         name: "ፒያስትራ",
@@ -69,7 +69,7 @@ const servicesData = [
     ],
   },
   {
-    category: "SPA",
+    category: "Spa",
     subcategories: [
       {
         name: "Special Packages",
@@ -99,7 +99,7 @@ const servicesData = [
     ],
   },
   {
-    category: "NAILS",
+    category: "Nails",
     subcategories: [
       {
         name: "Gel Nails",
@@ -128,7 +128,7 @@ const servicesData = [
     ],
   },
   {
-    category: "MAKEUP",
+    category: "Makeup",
     subcategories: [
       {
         name: "Makeup Services",
@@ -149,7 +149,7 @@ const servicesData = [
     ],
   },
   {
-    category: "OTHERS",
+    category: "Others",
     subcategories: [
       {
         name: "Facial & Extras",
