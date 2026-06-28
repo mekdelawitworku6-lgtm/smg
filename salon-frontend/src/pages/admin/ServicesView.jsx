@@ -52,19 +52,22 @@ export default function ServicesView() {
     e.preventDefault();
     if (!form.name || !form.category || form.price === "") return;
     const payload = { name: form.name.trim(), category: form.category, price: Number(form.price), nonAsrat: form.nonAsrat };
+    const id = editing?._id || `local-${Date.now()}`;
+    const localEntry = { ...payload, _id: id, active: true };
+    const optimistic = editing
+      ? [...localServices.filter((s) => s._id !== id), localEntry]
+      : [...localServices, localEntry];
+    dispatch(setLocalServices(optimistic));
     try {
       if (editing) {
         await API.put(`/services/${editing._id}`, payload);
       } else {
         await API.post("/services", payload);
       }
-      dispatch(fetchServices());
+      await dispatch(fetchServices()).unwrap();
+      dispatch(setLocalServices(optimistic.filter((s) => s._id !== id)));
       resetForm();
     } catch {
-      const id = editing?._id || `local-${Date.now()}`;
-      const entry = { ...payload, _id: id, active: true };
-      const updated = editing ? localServices.map((s) => (s._id === id ? entry : s)) : [...localServices, entry];
-      dispatch(setLocalServices(updated));
       resetForm();
     }
   };
@@ -73,12 +76,12 @@ export default function ServicesView() {
 
   const handleDelete = async (svc) => {
     if (!window.confirm(t("services.deleteConfirm", { name: svc.name }))) return;
+    const optimistic = localServices.filter((s) => s._id !== svc._id);
+    dispatch(setLocalServices(optimistic));
     try {
       await API.delete(`/services/${svc._id}`);
-      dispatch(fetchServices());
-    } catch {
-      dispatch(setLocalServices(localServices.filter((s) => s._id !== svc._id)));
-    }
+      await dispatch(fetchServices()).unwrap();
+    } catch { /* fallback already applied optimistically */ }
   };
 
   const toggleAll = () => setShowAll((p) => !p);

@@ -168,7 +168,7 @@ export default function CategoriesView() {
   const handleDeleteSubcat = (cat, sub) => {
     if (!window.confirm(t("cat.deleteSubcatConfirm", { name: sub }))) return;
     const subs = getSubcats(cat).filter((s) => s !== sub);
-    const remaining = services.filter((svc) => {
+    const remaining = localServices.filter((svc) => {
       const svcSub = getSvcSubcat(svc);
       return !(svc.category === cat && svcSub === sub);
     });
@@ -178,7 +178,7 @@ export default function CategoriesView() {
 
   const handleMoveSubcat = (cat, sub, targetCat) => {
     if (!targetCat || targetCat === cat) { setMoveSubcat(null); return; }
-    const updated = services.map((svc) => {
+    const updated = localServices.map((svc) => {
       const svcSub = getSvcSubcat(svc);
       if (svc.category === cat && svcSub === sub) {
         return { ...svc, category: targetCat };
@@ -198,29 +198,31 @@ export default function CategoriesView() {
   const handleSaveSvc = async () => {
     if (!editingSvc || !editSvcName.trim() || !editSvcPrice.trim()) return;
     const payload = { name: editSvcName.trim(), category: editingSvc.category, price: Number(editSvcPrice), nonAsrat: !!editingSvc.nonAsrat };
+    const optimistic = localServices.map((s) => (s._id === editingSvc._id ? { ...s, ...payload } : s));
+    dispatch(setLocalServices(optimistic));
     try {
       const API = (await import("../../api/axios")).default;
       await API.put(`/services/${editingSvc._id}`, payload);
-      dispatch(fetchServices());
-    } catch {
-      const updated = services.map((s) => (s._id === editingSvc._id ? { ...s, ...payload } : s));
-      dispatch(setLocalServices(updated));
-    }
+      await dispatch(fetchServices()).unwrap();
+      dispatch(setLocalServices(optimistic.filter((s) => s._id !== editingSvc._id)));
+    } catch { /* fallback already applied optimistically */ }
     setEditingSvc(null);
   };
 
   const handleDeleteSvc = async (svc) => {
     if (!window.confirm(t("services.deleteConfirm", { name: svc.name }))) return;
+    const optimistic = localServices.filter((s) => s._id !== svc._id);
+    dispatch(setLocalServices(optimistic));
     try {
       const API = (await import("../../api/axios")).default;
       await API.delete(`/services/${svc._id}`);
-    } catch { /* fail silently */ }
-    dispatch(setLocalServices(services.filter((s) => s._id !== svc._id)));
+      await dispatch(fetchServices()).unwrap();
+    } catch { /* fallback already applied optimistically */ }
   };
 
   const handleMoveSvc = (svc, targetCat) => {
     if (!targetCat || targetCat === svc.category) { setMoveSvc(null); return; }
-    const updated = services.map((s) => (s._id === svc._id ? { ...s, category: targetCat } : s));
+    const updated = localServices.map((s) => (s._id === svc._id ? { ...s, category: targetCat } : s));
     dispatch(setLocalServices(updated));
     setMoveSvc(null);
   };
