@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addCategory, renameCategory, deleteCategory } from "../../categories/categoriesSlice";
 import { setLocalServices, fetchServices } from "../../services/servicesSlice";
@@ -68,6 +68,20 @@ export default function CategoriesView() {
     }
     return Array.from(map.values());
   }, [categories, services]);
+
+  useEffect(() => {
+    if (apiServices.length === 0 && localServices.length === 0) {
+      const flat = [];
+      for (const cat of servicesData) {
+        for (const sub of cat.subcategories) {
+          for (const svc of sub.services) {
+            flat.push({ ...svc, _id: `static-${svc.name}-${cat.category}`, category: cat.category, subcategory: sub.name });
+          }
+        }
+      }
+      dispatch(setLocalServices(flat));
+    }
+  }, [apiServices.length, localServices.length, dispatch]);
 
   const staticSubcats = useMemo(() => {
     const map = {};
@@ -204,7 +218,6 @@ export default function CategoriesView() {
       const API = (await import("../../api/axios")).default;
       await API.put(`/services/${editingSvc._id}`, payload);
       await dispatch(fetchServices()).unwrap();
-      dispatch(setLocalServices(optimistic.filter((s) => s._id !== editingSvc._id)));
     } catch { /* fallback already applied optimistically */ }
     setEditingSvc(null);
   };
