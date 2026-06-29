@@ -42,7 +42,7 @@ export default function ServicesView() {
   }, [apiServices, localServices]);
 
   useEffect(() => {
-    if (apiServices.length === 0 && localServices.length === 0) {
+    if (apiServices.length === 0) {
       const flat = [];
       for (const cat of servicesData) {
         for (const sub of cat.subcategories) {
@@ -53,7 +53,7 @@ export default function ServicesView() {
       }
       dispatch(setLocalServices(flat));
     }
-  }, [apiServices.length, localServices.length, dispatch]);
+  }, [apiServices.length, dispatch]);
 
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState(null);

@@ -70,7 +70,7 @@ export default function CategoriesView() {
   }, [categories, services]);
 
   useEffect(() => {
-    if (apiServices.length === 0 && localServices.length === 0) {
+    if (apiServices.length === 0) {
       const flat = [];
       for (const cat of servicesData) {
         for (const sub of cat.subcategories) {
@@ -81,7 +81,7 @@ export default function CategoriesView() {
       }
       dispatch(setLocalServices(flat));
     }
-  }, [apiServices.length, localServices.length, dispatch]);
+  }, [apiServices.length, dispatch]);
 
   const staticSubcats = useMemo(() => {
     const map = {};
