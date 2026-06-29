@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setLocalServices, fetchServices } from "../../services/servicesSlice";
 import { useTranslation } from "../../i18n/LanguageContext";
@@ -41,19 +41,20 @@ export default function ServicesView() {
     return flat;
   }, [apiServices, localServices]);
 
+  const initRef = useRef(false);
   useEffect(() => {
-    if (apiServices.length === 0) {
-      const flat = [];
-      for (const cat of servicesData) {
-        for (const sub of cat.subcategories) {
-          for (const svc of sub.services) {
-            flat.push({ ...svc, _id: `static-${svc.name}-${cat.category}`, category: cat.category, subcategory: sub.name });
-          }
+    if (initRef.current) return;
+    initRef.current = true;
+    const flat = [];
+    for (const cat of servicesData) {
+      for (const sub of cat.subcategories) {
+        for (const svc of sub.services) {
+          flat.push({ ...svc, _id: `static-${svc.name}-${cat.category}`, category: cat.category, subcategory: sub.name });
         }
       }
-      dispatch(setLocalServices(flat));
     }
-  }, [apiServices.length, dispatch]);
+    dispatch(setLocalServices(flat));
+  }, [dispatch]);
 
   const [form, setForm] = useState(emptyForm);
   const [editing, setEditing] = useState(null);

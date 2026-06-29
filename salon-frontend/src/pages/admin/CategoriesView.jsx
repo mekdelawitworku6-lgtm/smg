@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { addCategory, renameCategory, deleteCategory } from "../../categories/categoriesSlice";
 import { setLocalServices, fetchServices } from "../../services/servicesSlice";
@@ -69,19 +69,20 @@ export default function CategoriesView() {
     return Array.from(map.values());
   }, [categories, services]);
 
+  const initRef = useRef(false);
   useEffect(() => {
-    if (apiServices.length === 0) {
-      const flat = [];
-      for (const cat of servicesData) {
-        for (const sub of cat.subcategories) {
-          for (const svc of sub.services) {
-            flat.push({ ...svc, _id: `static-${svc.name}-${cat.category}`, category: cat.category, subcategory: sub.name });
-          }
+    if (initRef.current) return;
+    initRef.current = true;
+    const flat = [];
+    for (const cat of servicesData) {
+      for (const sub of cat.subcategories) {
+        for (const svc of sub.services) {
+          flat.push({ ...svc, _id: `static-${svc.name}-${cat.category}`, category: cat.category, subcategory: sub.name });
         }
       }
-      dispatch(setLocalServices(flat));
     }
-  }, [apiServices.length, dispatch]);
+    dispatch(setLocalServices(flat));
+  }, [dispatch]);
 
   const staticSubcats = useMemo(() => {
     const map = {};
