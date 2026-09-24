@@ -12,7 +12,6 @@ services:
     rootDir: salon-backend
     buildCommand: npm ci
     startCommand: npm start
-    preDeployCommand: npm run seed
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
@@ -29,7 +28,6 @@ services:
   - type: web
     name: smg-frontend
     runtime: static
-    plan: free
     rootDir: salon-frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist

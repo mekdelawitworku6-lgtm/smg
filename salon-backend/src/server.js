@@ -43,7 +43,13 @@ const PORT = process.env.PORT || 10000;
 
 // Start server only after DB is connected
 connectDB()
-  .then(() => {
+  .then(async () => {
+    try {
+      const { seedData } = await import("../seed.js");
+      await seedData();
+    } catch (seedErr) {
+      console.error("Auto-seed skipped:", seedErr.message);
+    }
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

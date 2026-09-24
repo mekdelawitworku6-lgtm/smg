@@ -1,4 +1,5 @@
 import bcrypt from "bcryptjs";
+import { pathToFileURL } from "url";
 import { sequelize } from "./src/config/db.js";
 import User from "./src/models/User.model.js";
 import Service from "./src/models/service.js";
@@ -101,66 +102,73 @@ const users = [
 ];
 
 /* =======================
-   SEED FUNCTION
+   SEED FUNCTION (idempotent)
+   - Exported so the server can auto-seed on boot (Render free
+     plan cannot run pre-deploy commands).
+   - Does NOT close the connection or exit the process.
 ======================= */
 
-const seedData = async () => {
-    try {
-        await sequelize.authenticate();
-        console.log("PostgreSQL Connected for seed");
+export const seedData = async () => {
+    await sequelize.authenticate();
+    console.log("PostgreSQL Connected for seed");
 
-        await sequelize.sync();
-        console.log("Tables ensured");
+    await sequelize.sync();
+    console.log("Tables ensured");
 
-        const [svcCount, staffCount, expCount, userCount] = await Promise.all([
-            Service.count(),
-            Staff.count(),
-            Expense.count(),
-            User.count(),
-        ]);
+    const [svcCount, staffCount, expCount, userCount] = await Promise.all([
+        Service.count(),
+        Staff.count(),
+        Expense.count(),
+        User.count(),
+    ]);
 
-        if (svcCount === 0) {
-            await Service.bulkCreate(services);
-            console.log("Services seeded");
-        } else {
-            console.log("Services already present, skipped");
-        }
-
-        if (staffCount === 0) {
-            await Staff.bulkCreate(staff);
-            console.log("Staff seeded");
-        } else {
-            console.log("Staff already present, skipped");
-        }
-
-        if (expCount === 0) {
-            await Expense.bulkCreate(expenses);
-            console.log("Expenses seeded");
-        } else {
-            console.log("Expenses already present, skipped");
-        }
-
-        if (userCount === 0) {
-            for (const u of users) {
-                const hashed = await bcrypt.hash(u.password, 10);
-                await User.create({ ...u, password: hashed });
-            }
-            console.log("Users seeded (admin + cashier)");
-        } else {
-            console.log("Users already present, skipped");
-        }
-
-        console.log("\n== DEFAULT LOGIN ==");
-        console.log("Admin phone:    0911000000  password: admin123");
-        console.log("Cashier phone:  0911222333  password: cashier123");
-
-        await sequelize.close();
-
-        process.exit(0);
-    } catch (error) {
-        console.error("Seeding Error:", error);
-        process.exit(1);
+    if (svcCount === 0) {
+        await Service.bulkCreate(services);
+        console.log("Services seeded");
+    } else {
+        console.log("Services already present, skipped");
     }
+
+    if (staffCount === 0) {
+        await Staff.bulkCreate(staff);
+        console.log("Staff seeded");
+    } else {
+        console.log("Staff already present, skipped");
+    }
+
+    if (expCount === 0) {
+        await Expense.bulkCreate(expenses);
+        console.log("Expenses seeded");
+    } else {
+        console.log("Expenses already present, skipped");
+    }
+
+    if (userCount === 0) {
+        for (const u of users) {
+            const hashed = await bcrypt.hash(u.password, 10);
+            await User.create({ ...u, password: hashed });
+        }
+        console.log("Users seeded (admin + cashier)");
+    } else {
+        console.log("Users already present, skipped");
+    }
+
+    console.log("\n== DEFAULT LOGIN ==");
+    console.log("Admin phone:    0911000000  password: admin123");
+    console.log("Cashier phone:  0911222333  password: cashier123");
 };
 
-seedData();
+/* Run directly ONLY when executed as `node seed.js` */
+const isMain = import.meta.url === pathToFileURL(process.argv[1] || "").href;
+if (isMain) {
+    seedData()
+        .then(async () => {
+            await sequelize.close();
+            process.exit(0);
+        })
+        .catch(async (error) => {
+            console.error("Seeding Error:", error);
+            await sequelize.close().catch(() => {});
+            process.exit(1);
+        });
+}
