@@ -28,7 +28,12 @@ const staffSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchStaff.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchStaff.fulfilled, (state, action) => { state.loading = false; state.apiList = action.payload; })
+      .addCase(fetchStaff.fulfilled, (state, action) => {
+        state.loading = false;
+        state.apiList = action.payload;
+        state.localList = action.payload;
+        localStorage.setItem("adminStaffList", JSON.stringify(action.payload));
+      })
       .addCase(fetchStaff.rejected, (state, action) => { state.loading = false; state.error = action.payload; });
   },
 });

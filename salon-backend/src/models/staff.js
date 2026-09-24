@@ -1,16 +1,23 @@
-import mongoose from "mongoose";
+import { DataTypes } from "sequelize";
+import { sequelize } from "../config/db.js";
 
-const staffSchema = new mongoose.Schema(
+const Staff = sequelize.define(
+  "Staff",
   {
-    name: { type: String, required: true, trim: true },
-    role: { type: String, default: "" },
-    photo: { type: String, default: "" },
-    phone: { type: String, default: "" },
-    accountNumber: { type: String, default: "" },
-    salary: { type: Number, default: 0 },
-    active: { type: Boolean, default: true },
+    _id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    name: { type: DataTypes.STRING, allowNull: false },
+    role: { type: DataTypes.STRING, defaultValue: "" },
+    photo: { type: DataTypes.STRING, defaultValue: "" },
+    phone: { type: DataTypes.STRING, defaultValue: "" },
+    accountNumber: { type: DataTypes.STRING, defaultValue: "" },
+    salary: { type: DataTypes.DOUBLE, defaultValue: 0 },
+    active: { type: DataTypes.BOOLEAN, defaultValue: true },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.Staff || mongoose.model("Staff", staffSchema);
+export default Staff;

@@ -45,7 +45,8 @@ export default function StaffView({ transactions }) {
   const toast = useToast();
   const dispatch = useDispatch();
   const { t } = useTranslation();
-  const staffList = useSelector((state) => state.staff.apiList);
+  const { apiList, localList, error } = useSelector((state) => state.staff);
+  const staffList = error && localList.length ? localList : apiList;
   const [selectedStaff, setSelectedStaff] = useState(null);
   const [formName, setFormName] = useState("");
   const [formRole, setFormRole] = useState("");
@@ -73,7 +74,14 @@ export default function StaffView({ transactions }) {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!formName.trim()) return;
+    if (!formName.trim()) {
+      toast(t("staff.err"), "error");
+      return;
+    }
+    if (isCashier && formPhone.trim() && !editingId && (!formPassword || formPassword.length < 4)) {
+      toast(t("cashiers.invalidPassword"), "error");
+      return;
+    }
     const payload = { name: formName.trim(), role: formRole, phone: formPhone, accountNumber: formAccount.trim(), salary: Number(formSalary) || 0 };
     try {
       const API = (await import("../../api/axios")).default;
@@ -82,26 +90,24 @@ export default function StaffView({ transactions }) {
       } else {
         await API.post("/staff", payload);
       }
-      dispatch(fetchStaff());
       if (isCashier && formPhone.trim()) {
-        if (!editingId && (!formPassword || formPassword.length < 4)) {
-          toast(t("cashiers.invalidPassword"), "error");
-          return;
-        }
         if (editingId) {
-          await API.put(`/auth/cashiers/by-phone/${formPhone.trim()}`, { name: formName.trim() });
+          await API.put(`/auth/cashiers/by-phone/${formPhone.trim()}`, { name: formName.trim() }).catch(() => {});
         } else {
           await API.post("/auth/cashiers", {
             name: formName.trim(),
             phone: formPhone.trim(),
             password: formPassword,
-          });
+          }).catch(() => {});
         }
       }
+      dispatch(fetchStaff());
+      toast(t(editingId ? "staff.updated" : "staff.added"), "success");
     } catch {
       const id = editingId || `local-${Date.now()}`;
       const entry = { ...payload, _id: id };
       dispatch(setStaffList(editingId ? staffList.map((s) => (s._id === id ? entry : s)) : [...staffList, entry]));
+      toast(t("staff.savedLocally"), "error");
     }
     setFormName(""); setFormRole(""); setFormPhone(""); setFormAccount(""); setFormSalary(""); setFormPassword(""); setEditingId(null);
   };

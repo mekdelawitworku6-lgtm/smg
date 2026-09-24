@@ -1,39 +1,21 @@
-import mongoose from "mongoose";
+import { DataTypes } from "sequelize";
+import { sequelize } from "../config/db.js";
 
-const serviceSchema = new mongoose.Schema(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-
-    category: {
-      type: String,
-      required: true,
-    },
-
-    price: {
-      type: Number,
-      required: true,
-    },
-
-    nonAsrat: {
-      type: Boolean,
-      default: false,
-    },
-
-    active: {
-      type: Boolean,
-      default: true,
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
-
-export default mongoose.model(
+const Service = sequelize.define(
   "Service",
-  serviceSchema
+  {
+    _id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    name: { type: DataTypes.STRING, allowNull: false },
+    category: { type: DataTypes.STRING, allowNull: false },
+    price: { type: DataTypes.DOUBLE, allowNull: false },
+    nonAsrat: { type: DataTypes.BOOLEAN, defaultValue: false },
+    active: { type: DataTypes.BOOLEAN, defaultValue: true },
+  },
+  { timestamps: true }
 );
+
+export default Service;

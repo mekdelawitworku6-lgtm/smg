@@ -1,14 +1,20 @@
-import mongoose from "mongoose";
+import { DataTypes } from "sequelize";
+import { sequelize } from "../config/db.js";
 
-const expenseSchema = new mongoose.Schema(
+const Expense = sequelize.define(
+  "Expense",
   {
-    name: String,
-    amount: Number,
-    paymentType: String,
-    createdBy: String,
+    _id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
+    },
+    name: DataTypes.STRING,
+    amount: DataTypes.DOUBLE,
+    paymentType: DataTypes.STRING,
+    createdBy: DataTypes.STRING,
   },
   { timestamps: true }
 );
 
-// Safe pattern to prevent OverwriteModelError
-export default mongoose.models.Expense || mongoose.model("Expense", expenseSchema);
+export default Expense;

@@ -1,33 +1,10 @@
-import mongoose from "mongoose";
-import dotenv from "dotenv";
-
-dotenv.config();
-
-/* =======================
-   CONNECT TO DATABASE
-======================= */
-const connectDB = async () => {
-    try {
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log("MongoDB Connected for Seeding");
-    } catch (error) {
-        console.error("DB Connection Failed:", error.message);
-        process.exit(1);
-    }
-};
-
-/* =======================
-   SCHEMAS (simple version for seeding)
-   (You can replace with real models later)
-======================= */
-
-const serviceSchema = new mongoose.Schema({}, { strict: false });
-const staffSchema = new mongoose.Schema({}, { strict: false });
-const expenseSchema = new mongoose.Schema({}, { strict: false });
-
-const Service = mongoose.model("Service", serviceSchema);
-const Staff = mongoose.model("Staff", staffSchema);
-const Expense = mongoose.model("Expense", expenseSchema);
+import bcrypt from "bcryptjs";
+import { sequelize } from "./src/config/db.js";
+import User from "./src/models/User.model.js";
+import Service from "./src/models/service.js";
+import Staff from "./src/models/staff.js";
+import Expense from "./src/models/expense.js";
+import Transaction from "./src/models/Transaction.js";
 
 /* =======================
    SEED DATA
@@ -100,16 +77,27 @@ const staff = [
 ];
 
 const expenses = [
+    { name: "Towels", amount: 500, paymentType: "Cash" },
+    { name: "Hair Products", amount: 1500, paymentType: "Transfer" }
+];
+
+/* =======================
+   USERS: DEFAULT LOGIN ACCOUNTS
+======================= */
+
+const users = [
     {
-        title: "Towels",
-        amount: 500,
-        paymentType: "Cash"
+        name: "Admin",
+        phone: "0911000000",
+        password: "admin123",
+        role: "admin",
     },
     {
-        title: "Hair Products",
-        amount: 1500,
-        paymentType: "Transfer"
-    }
+        name: "Sara",
+        phone: "0911222333",
+        password: "cashier123",
+        role: "cashier",
+    },
 ];
 
 /* =======================
@@ -118,21 +106,57 @@ const expenses = [
 
 const seedData = async () => {
     try {
-        await connectDB();
+        await sequelize.authenticate();
+        console.log("PostgreSQL Connected for seed");
 
-        // Clear old data
-        await Service.deleteMany();
-        await Staff.deleteMany();
-        await Expense.deleteMany();
+        await sequelize.sync();
+        console.log("Tables ensured");
 
-        // Insert new data
-        await Service.insertMany(services);
-        await Staff.insertMany(staff);
-        await Expense.insertMany(expenses);
+        const [svcCount, staffCount, expCount, userCount] = await Promise.all([
+            Service.count(),
+            Staff.count(),
+            Expense.count(),
+            User.count(),
+        ]);
 
-        console.log("Seed Data Inserted Successfully 🚀");
+        if (svcCount === 0) {
+            await Service.bulkCreate(services);
+            console.log("Services seeded");
+        } else {
+            console.log("Services already present, skipped");
+        }
 
-        process.exit();
+        if (staffCount === 0) {
+            await Staff.bulkCreate(staff);
+            console.log("Staff seeded");
+        } else {
+            console.log("Staff already present, skipped");
+        }
+
+        if (expCount === 0) {
+            await Expense.bulkCreate(expenses);
+            console.log("Expenses seeded");
+        } else {
+            console.log("Expenses already present, skipped");
+        }
+
+        if (userCount === 0) {
+            for (const u of users) {
+                const hashed = await bcrypt.hash(u.password, 10);
+                await User.create({ ...u, password: hashed });
+            }
+            console.log("Users seeded (admin + cashier)");
+        } else {
+            console.log("Users already present, skipped");
+        }
+
+        console.log("\n== DEFAULT LOGIN ==");
+        console.log("Admin phone:    0911000000  password: admin123");
+        console.log("Cashier phone:  0911222333  password: cashier123");
+
+        await sequelize.close();
+
+        process.exit(0);
     } catch (error) {
         console.error("Seeding Error:", error);
         process.exit(1);

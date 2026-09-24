@@ -1,0 +1,41 @@
+databases:
+  - name: salon-postgres
+    databaseName: salonDB
+    user: salon
+    plan: free
+
+services:
+  - type: web
+    name: smg-backend
+    runtime: node
+    plan: free
+    rootDir: salon-backend
+    buildCommand: npm ci
+    startCommand: npm start
+    preDeployCommand: npm run seed
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: salon-postgres
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: NODE_VERSION
+        value: 24
+
+  - type: web
+    name: smg-frontend
+    runtime: static
+    plan: free
+    rootDir: salon-frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: smg-backend
+          type: web
+          envVarKey: RENDER_EXTERNAL_HOSTNAME

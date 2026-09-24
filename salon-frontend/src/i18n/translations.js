@@ -195,6 +195,10 @@ const translations = {
     "staff.delete": "Delete",
     "staff.close": "Close",
     "staff.deleteConfirm": "Remove \"{name}\"?",
+    "staff.added": "Staff added",
+    "staff.updated": "Staff updated",
+    "staff.savedLocally": "Saved locally — will sync when online",
+    "staff.err": "Please enter a name",
 
     "cashiers.title": "Cashier Management",
     "cashiers.add": "Add Cashier",
@@ -480,6 +484,10 @@ const translations = {
     "staff.delete": "ሰርዝ",
     "staff.close": "ዝጋ",
     "staff.deleteConfirm": "\"{name}\"ን ያስወግዱ?",
+    "staff.added": "ሰራተኛ ተጨምሯል",
+    "staff.updated": "ሰራተኛ ተዘምኗል",
+    "staff.savedLocally": "በሀገር ውስጥ ተቀምጧል — ከመስመር ጋር ሲገናኝ ይመሳሰላል",
+    "staff.err": "እባክዎ ስም ያስገቡ",
 
     "cashiers.title": "ካሼር አስተዳደር",
     "cashiers.add": "ካሼር ጨምር",

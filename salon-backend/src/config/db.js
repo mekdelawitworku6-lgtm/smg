@@ -1,27 +1,22 @@
-import mongoose from "mongoose";
+import dotenv from "dotenv";
+import { Sequelize } from "sequelize";
+
+dotenv.config();
+
+const databaseUrl = process.env.DATABASE_URL || "postgres://salon:salonpass@localhost:5433/salonDB";
+
+export const sequelize = new Sequelize(databaseUrl, {
+  dialect: "postgres",
+  logging: false,
+  pool: { max: 10, min: 0, idle: 10000 },
+});
 
 const connectDB = async () => {
-  const mongoUri = process.env.MONGO_URI;
-
-  if (!mongoUri) {
-    console.error("MONGO_URI is not set in environment variables.");
-    process.exit(1);
-  }
-
   try {
-    const conn = await mongoose.connect(mongoUri, {
-      serverSelectionTimeoutMS: 10000,
-    });
-
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-
-    // Drop problematic uuid_1 index that blocks user creation
-    try {
-      await conn.connection.db.collection("users").dropIndex("uuid_1");
-      console.log("Dropped uuid_1 index from users collection");
-    } catch {
-      // Index may not exist, that's fine
-    }
+    await sequelize.authenticate();
+    console.log("PostgreSQL Connected");
+    await sequelize.sync();
+    console.log("Tables synced");
   } catch (error) {
     console.error("DB connection failed:", error.message);
     process.exit(1);

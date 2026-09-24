@@ -1,20 +1,29 @@
-import mongoose from "mongoose";
-import { v4 as uuidv4 } from "uuid";
+import { DataTypes } from "sequelize";
+import { sequelize } from "../config/db.js";
 
-const userSchema = new mongoose.Schema(
+const User = sequelize.define(
+  "User",
   {
-    uuid: { type: String, default: uuidv4, unique: true },
-    name: String,
-    phone: { type: String, unique: true },
-    password: String,
-    role: {
-      type: String,
-      enum: ["admin", "cashier"],
-      default: "cashier",
+    _id: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      primaryKey: true,
     },
-    active: { type: Boolean, default: true },
+    uuid: {
+      type: DataTypes.UUID,
+      defaultValue: DataTypes.UUIDV4,
+      unique: true,
+    },
+    name: DataTypes.STRING,
+    phone: { type: DataTypes.STRING, unique: true },
+    password: DataTypes.STRING,
+    role: {
+      type: DataTypes.ENUM("admin", "cashier"),
+      defaultValue: "cashier",
+    },
+    active: { type: DataTypes.BOOLEAN, defaultValue: true },
   },
   { timestamps: true }
 );
 
-export default mongoose.models.User || mongoose.model("User", userSchema);
+export default User;

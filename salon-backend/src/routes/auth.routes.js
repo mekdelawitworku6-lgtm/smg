@@ -3,8 +3,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.model.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
+import { Op } from "sequelize";
 
 const router = express.Router();
+
+const WITHOUT_PASSWORD = { attributes: { exclude: ["password"] } };
 
 /* =========================
    REGISTER (TEST ONLY)
@@ -49,7 +52,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const user = await User.findOne({ phone });
+    const user = await User.findOne({ where: { phone } });
 
     if (!user) {
       return res.status(400).json({
@@ -63,10 +66,7 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const isMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
       return res.status(400).json({
@@ -104,7 +104,11 @@ router.get("/cashiers", authMiddleware, async (req, res) => {
     if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Admin only" });
     }
-    const cashiers = await User.find({ role: "cashier" }).select("-password").sort({ createdAt: -1 });
+    const cashiers = await User.findAll({
+      where: { role: "cashier" },
+      ...WITHOUT_PASSWORD,
+      order: [["createdAt", "DESC"]],
+    });
     res.json(cashiers);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -121,7 +125,7 @@ router.post("/cashiers", authMiddleware, async (req, res) => {
     if (!name || !phone || !password) {
       return res.status(400).json({ message: "Name, phone, and password required" });
     }
-    const existing = await User.findOne({ phone });
+    const existing = await User.findOne({ where: { phone } });
     if (existing) {
       return res.status(400).json({ message: "Phone number already exists" });
     }
@@ -143,12 +147,13 @@ router.put("/cashiers/:id", authMiddleware, async (req, res) => {
     const update = {};
     if (name) update.name = name;
     if (phone) {
-      const dup = await User.findOne({ phone, _id: { $ne: req.params.id } });
+      const dup = await User.findOne({ where: { phone, _id: { [Op.ne]: req.params.id } } });
       if (dup) return res.status(400).json({ message: "Phone number already in use" });
       update.phone = phone;
     }
-    const cashier = await User.findByIdAndUpdate(req.params.id, update, { new: true }).select("-password");
-    if (!cashier) return res.status(404).json({ message: "Cashier not found" });
+    const [count] = await User.update(update, { where: { _id: req.params.id } });
+    if (!count) return res.status(404).json({ message: "Cashier not found" });
+    const cashier = await User.findOne({ where: { _id: req.params.id }, ...WITHOUT_PASSWORD });
     res.json(cashier);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -164,7 +169,7 @@ router.put("/cashiers/:id/reset-password", authMiddleware, async (req, res) => {
     const { password } = req.body;
     if (!password) return res.status(400).json({ message: "Password required" });
     const hashed = await bcrypt.hash(password, 10);
-    await User.findByIdAndUpdate(req.params.id, { password: hashed });
+    await User.update({ password: hashed }, { where: { _id: req.params.id } });
     res.json({ message: "Password reset successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -181,12 +186,11 @@ router.put("/cashiers/by-phone/:phone", authMiddleware, async (req, res) => {
     const update = {};
     if (name) update.name = name;
     if (phone) update.phone = phone;
-    const cashier = await User.findOneAndUpdate(
-      { phone: req.params.phone, role: "cashier" },
-      update,
-      { new: true }
-    ).select("-password");
-    if (!cashier) return res.status(404).json({ message: "Cashier not found" });
+    const [count] = await User.update(update, {
+      where: { phone: req.params.phone, role: "cashier" },
+    });
+    if (!count) return res.status(404).json({ message: "Cashier not found" });
+    const cashier = await User.findOne({ where: { phone: req.params.phone, role: "cashier" }, ...WITHOUT_PASSWORD });
     res.json(cashier);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -199,7 +203,7 @@ router.put("/cashiers/:id/toggle-active", authMiddleware, async (req, res) => {
     if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Admin only" });
     }
-    const cashier = await User.findById(req.params.id);
+    const cashier = await User.findOne({ where: { _id: req.params.id } });
     if (!cashier) return res.status(404).json({ message: "Cashier not found" });
     cashier.active = !cashier.active;
     await cashier.save();
@@ -222,12 +226,13 @@ router.put("/me", authMiddleware, async (req, res) => {
     const { phone } = req.body;
     if (!phone) return res.status(400).json({ message: "Phone is required" });
 
-    const duplicate = await User.findOne({ phone, _id: { $ne: req.user.id } });
+    const duplicate = await User.findOne({ where: { phone, _id: { [Op.ne]: req.user.id } } });
     if (duplicate) return res.status(400).json({ message: "Phone number already in use" });
 
-    const user = await User.findByIdAndUpdate(req.user.id, { phone }, { new: true }).select("-password");
-    if (!user) return res.status(404).json({ message: "Admin user not found" });
+    const [count] = await User.update({ phone }, { where: { _id: req.user.id } });
+    if (!count) return res.status(404).json({ message: "Admin user not found" });
 
+    const user = await User.findOne({ where: { _id: req.user.id }, ...WITHOUT_PASSWORD });
     res.json({ message: "Phone updated successfully", user });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -248,7 +253,7 @@ router.put("/me/password", authMiddleware, async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     if (!currentPassword || !newPassword) return res.status(400).json({ message: "currentPassword and newPassword are required" });
 
-    const user = await User.findById(req.user.id);
+    const user = await User.findOne({ where: { _id: req.user.id } });
     if (!user) return res.status(404).json({ message: "Admin user not found" });
 
     const isMatch = await bcrypt.compare(currentPassword, user.password);

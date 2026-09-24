@@ -1,13 +1,21 @@
 
 import axios from "axios";
 
+function normalizeUrl(url) {
+  let u = (url || "").trim().replace(/[\/.]+$/, "");
+  if (!u) return u;
+  if (!/^https?:\/\//i.test(u)) u = `https://${u}`;
+  if (/\/api$/i.test(u)) return u;
+  return `${u}/api`;
+}
+
 function getBaseURL() {
   const saved = localStorage.getItem("api_url");
-  if (saved) return saved.replace(/[\/.]+$/, "");
+  if (saved) return normalizeUrl(saved);
   const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl) return envUrl.replace(/[\/.]+$/, "");
+  if (envUrl) return normalizeUrl(envUrl);
   if (import.meta.env.PROD) {
-    return "https://smg-backend-z72j.onrender.com/api";
+    return "https://smg-backend.onrender.com/api";
   }
   return "/api";
 }
