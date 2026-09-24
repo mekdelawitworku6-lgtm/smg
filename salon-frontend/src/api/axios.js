@@ -14,9 +14,6 @@ function getBaseURL() {
   if (saved) return normalizeUrl(saved);
   const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl) return normalizeUrl(envUrl);
-  if (import.meta.env.PROD) {
-    return "https://smg-backend.onrender.com/api";
-  }
   return "/api";
 }
 
