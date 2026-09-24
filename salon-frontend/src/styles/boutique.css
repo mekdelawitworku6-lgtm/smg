@@ -1,0 +1,772 @@
+/* Wondeya boutance design system — shared across restyled pages */
+.wb {
+  --g1: #8f6414;
+  --g2: #d4a643;
+  --g3: #b98a2b;
+  --ink: #2a1a20;
+  --mut: #7d6f74;
+  --line: #ecd9a6;
+  --pink: #d81b78;
+  --pink2: #ec4899;
+  --gold: #e0a94f;
+  --red: #d93a3a;
+  font-family: "Jost", "Noto Sans Ethiopic", system-ui, sans-serif;
+  color: var(--ink);
+  box-sizing: border-box;
+  background: #fbf8f9;
+}
+.wb *,
+.wb *::before,
+.wb *::after {
+  box-sizing: inherit;
+}
+.wb .serif,
+.wb .sc {
+  font-family: "Cormorant Garamond", "Noto Sans Ethiopic", Georgia, serif;
+  margin: 0;
+}
+.wb button,
+.wb input,
+.wb select {
+  font: inherit;
+}
+
+/* ---------- Header (shared) ---------- */
+.wb-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+.wb-ico {
+  width: 42px;
+  height: 42px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  color: var(--g1);
+}
+.wb-ico svg {
+  width: 24px;
+  height: 24px;
+}
+.wb-logo {
+  width: 44px;
+  height: auto;
+  flex: none;
+}
+.wb-name {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: linear-gradient(100deg, var(--g1), var(--g2) 50%, var(--g3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.wb-pill {
+  height: 38px;
+  padding: 0 13px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--g1);
+  font-size: 14px;
+  cursor: pointer;
+}
+.wb-pill.out {
+  color: var(--red);
+  border-color: #f0c4c4;
+}
+.wb-pill:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Hero + overlapping main ---------- */
+.wb-hero {
+  padding: 26px 16px 70px;
+  background: linear-gradient(150deg, var(--pink), var(--pink2) 50%, var(--gold));
+  border-radius: 0 0 42px 42px;
+  color: #fff;
+  text-align: center;
+  margin: -16px -16px 0;
+}
+.wb-hero h1 {
+  font-size: 38px;
+  font-weight: 600;
+}
+.wb-hero.pc {
+  background: linear-gradient(150deg, #b83b68, #d66a90 50%, #d9b06a);
+}
+.wb-main {
+  max-width: 560px;
+  margin: -46px auto 0;
+  padding: 0 0 60px;
+  position: relative;
+}
+
+/* ---------- Cards ---------- */
+.wb-card {
+  background: #fff;
+  border-radius: 28px;
+  padding: 22px 20px;
+  margin-bottom: 18px;
+  box-shadow: 0 18px 44px rgba(184, 59, 104, 0.13);
+}
+.wb-card > h2,
+.wb-card summary {
+  font-family: "Cormorant Garamond", "Noto Sans Ethiopic", Georgia, serif;
+  font-size: 25px;
+  font-weight: 600;
+}
+.wb-card > h2::before,
+.wb-card summary::before {
+  content: "";
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--g2), var(--pink));
+  margin-right: 10px;
+}
+.wb-card > p {
+  margin: 0 0 14px;
+  color: var(--mut);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.wb-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------- Fields ---------- */
+.wb-field {
+  position: relative;
+  margin-top: 14px;
+}
+.wb-field label {
+  display: block;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin: 0 0 6px 6px;
+}
+.wb-input,
+.wb-select {
+  width: 100%;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 99px;
+  border: 1px solid transparent;
+  background: #fbeef1;
+  color: var(--ink);
+  font-size: 16px;
+  outline: none;
+}
+.wb-select:focus,
+.wb-input:focus {
+  border-color: var(--pink);
+  background: #fff;
+}
+input[type="date"].wb-input,
+input[type="datetime-local"].wb-input,
+input[type="search"].wb-input {
+  padding: 0 16px;
+}
+input[type="checkbox"].wb-chk {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--pink);
+  flex: none;
+}
+.wb-eye {
+  position: absolute;
+  right: 6px;
+  top: 5px;
+  height: 38px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  color: var(--g1);
+  cursor: pointer;
+  font-size: 13px;
+}
+.wb-hr {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: 22px 0 18px;
+}
+
+/* ---------- Buttons ---------- */
+.wb-btn {
+  height: 46px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 99px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(120deg, var(--pink), var(--pink2));
+  box-shadow: 0 8px 20px rgba(184, 59, 104, 0.24);
+  transition: transform 0.15s;
+}
+.wb-btn:active {
+  transform: scale(0.97);
+}
+.wb-btn:disabled {
+  background: #eee9ea;
+  color: #a99fa3;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+.wb-btn.w {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+  box-shadow: none;
+}
+.wb-btn.line {
+  background: #fff;
+  color: var(--mut);
+  border: 1px solid #ddd;
+  box-shadow: none;
+}
+.wb-btn.red {
+  background: var(--red);
+  box-shadow: 0 8px 20px rgba(217, 58, 58, 0.22);
+}
+.wb-btn.block {
+  width: 100%;
+  height: 52px;
+  margin-top: 18px;
+}
+
+/* ---------- Segmented tabs ---------- */
+.wb-seg {
+  display: flex;
+  padding: 5px;
+  margin: 0 auto 18px;
+  background: #fff;
+  border-radius: 99px;
+  max-width: 340px;
+  box-shadow: 0 12px 30px rgba(120, 20, 70, 0.18);
+  position: relative;
+}
+.wb-seg button {
+  flex: 1;
+  height: 44px;
+  border: 0;
+  border-radius: 99px;
+  background: none;
+  font-size: 15px;
+  color: var(--mut);
+  cursor: pointer;
+}
+.wb-seg button.on {
+  background: linear-gradient(120deg, var(--pink), var(--pink2));
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 6px 16px rgba(216, 27, 120, 0.3);
+}
+
+/* ---------- Lists ---------- */
+.wb-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.wb-list:empty {
+  display: none;
+}
+.wb-li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #f3ead2;
+  font-size: 15px;
+}
+.wb-li:last-child {
+  border-bottom: 0;
+}
+.wb-li .m {
+  flex: 1;
+  min-width: 0;
+}
+.wb-li small {
+  display: block;
+  color: var(--mut);
+  font-size: 12px;
+  margin-top: 2px;
+}
+.wb-li b {
+  color: var(--g1);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wb-li .tag {
+  font-size: 11px;
+  background: #fbf0d2;
+  color: var(--g1);
+  border-radius: 99px;
+  padding: 1px 8px;
+  margin-left: 4px;
+}
+.wb-x {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--red);
+  cursor: pointer;
+  flex: none;
+}
+.wb-li label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 13px 14px;
+  color: var(--ink);
+  font-size: 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3ead2;
+}
+.wb-item {
+  padding: 0;
+}
+.wb-item label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 13px 14px;
+  color: var(--ink);
+  font-size: 15px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3ead2;
+}
+.wb-item:last-child label {
+  border-bottom: 0;
+}
+.wb-item label span {
+  flex: 1;
+}
+.wb-item label b {
+  color: var(--g1);
+}
+.wb-hint {
+  color: var(--mut);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ---------- Collapsible ---------- */
+.wb-card summary {
+  cursor: pointer;
+  list-style: none;
+}
+.wb-card summary::-webkit-details-marker {
+  display: none;
+}
+.wb-card summary::after {
+  content: "▸";
+  float: right;
+  color: var(--pink);
+  font-size: 18px;
+}
+.wb-card details[open] summary::after {
+  content: "▾";
+}
+.wb-empty {
+  color: var(--mut);
+  font-size: 14px;
+  margin: 12px 0 0;
+}
+
+/* ---------- Messages ---------- */
+.wb-err {
+  color: var(--red);
+  font-size: 13px;
+  margin: 10px 0 4px;
+  min-height: 18px;
+  text-align: center;
+}
+
+/* ---------- Drawer (admin shell mobile) ---------- */
+.wb-scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 15, 20, 0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s;
+  z-index: 30;
+}
+.wb-scrim.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.wb-drawer {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 280px;
+  max-width: 82vw;
+  background: #fff;
+  z-index: 31;
+  transform: translateX(-102%);
+  transition: transform 0.28s;
+  padding: 20px 16px;
+  border-right: 1px solid var(--line);
+  overflow-y: auto;
+}
+.wb-drawer.show {
+  transform: none;
+}
+.wb-drawer .top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.wb-nav {
+  display: block;
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  color: var(--ink);
+  background: none;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+}
+.wb-nav.on {
+  background: linear-gradient(120deg, #fbf0d2, #fff);
+  color: var(--g1);
+  font-weight: 600;
+  border: 1px solid var(--line);
+}
+
+/* ---------- Settings hero ---------- */
+.wb-hero.sb {
+  padding: 26px 16px 78px;
+}
+.wb-hero .t {
+  font-size: 22px;
+  opacity: 0.95;
+  margin-bottom: 14px;
+  font-style: normal;
+}
+.sb-av {
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 12px 30px rgba(80, 0, 40, 0.3);
+  margin: 0 auto;
+}
+.wb-hero .b {
+  font-size: 30px;
+  margin-top: 12px;
+  font-weight: 600;
+  display: block;
+}
+.wb-hero .sub {
+  opacity: 0.92;
+  margin-top: 2px;
+  display: block;
+  font-size: 15px;
+}
+
+/* ---------- Danger card ---------- */
+.wb-card.danger {
+  border: 1px solid #f3c9c9;
+  text-align: center;
+}
+.wb-card.danger h2 {
+  color: var(--red);
+}
+
+/* ---------- Start-day orb gate ---------- */
+.wb-gate {
+  min-height: 100vh;
+  background: radial-gradient(
+    circle at 50% 42%,
+    #fff 0,
+    #fdeef4 55%,
+    #f9e6bf 100%
+  );
+  display: flex;
+  flex-direction: column;
+}
+.wb-hero.orb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: none;
+  padding: 26px 16px 0;
+  margin: 0;
+  flex: 0 0 auto;
+}
+.wb-hero.orb .spark {
+  display: grid;
+  place-items: center;
+}
+.wb-hero.orb .spark svg {
+  width: 64px;
+  height: 64px;
+}
+.wb-hero.orb .t.big {
+  font-size: 42px;
+  margin: 6px 0 2px;
+  background: linear-gradient(100deg, var(--g1), var(--g2) 55%, var(--g3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-style: normal;
+  opacity: 1;
+  margin-bottom: 0;
+}
+.wb-hero.orb .sub {
+  color: var(--mut);
+  opacity: 1;
+  font-size: 15px;
+}
+.wb-gate main {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 6px 16px 60px;
+  width: 100%;
+  flex: 1;
+}
+.wb-gate .wb-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: none;
+  border: 0;
+  box-shadow: none;
+  text-align: center;
+  padding: 0;
+}
+.wb-day {
+  text-align: center;
+  padding: 26px 22px 24px;
+}
+.day-rowi {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--line);
+  padding: 18px 0 0;
+  font-size: 15px;
+  color: var(--mut);
+}
+.wb-chip {
+  font-style: normal;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1f7a4d;
+  background: #e5f6ec;
+  padding: 6px 13px;
+  border-radius: 99px;
+}
+.wb-date-line {
+  margin: 0;
+  font-size: 14px;
+  color: var(--mut);
+}
+.wb-date {
+  font-size: 27px;
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 4px 0 0;
+}
+.wb-orb-btn {
+  order: 2;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  margin: 38px auto;
+  border: 0;
+  font-family: "Cormorant Garamond", "Noto Sans Ethiopic", serif;
+  font-size: 30px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  background: linear-gradient(120deg, var(--pink), var(--pink2));
+  box-shadow: 0 0 0 14px rgba(236, 72, 153, 0.12),
+    0 0 0 32px rgba(224, 169, 79, 0.16), 0 18px 40px rgba(216, 27, 120, 0.35);
+  animation: wb-pulse 2.8s ease-in-out infinite;
+  display: block;
+}
+.wb-orb-btn.go {
+  animation: none;
+  background: #fff;
+  color: var(--pink);
+  border: 1.5px solid var(--pink);
+  font-size: 24px;
+  box-shadow: none;
+}
+.wb-ok {
+  margin: 14px 0 0;
+  color: #1f7a4d;
+  font-weight: 500;
+}
+@keyframes wb-pulse {
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+/* ---------- Dialog ---------- */
+.wb-dialog {
+  border: 0;
+  border-radius: 22px;
+  padding: 22px;
+  width: min(360px, 90vw);
+  color: var(--ink);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
+}
+.wb-dialog::backdrop {
+  background: rgba(30, 15, 20, 0.45);
+}
+.wb-dialog p {
+  margin: 0 0 16px;
+  line-height: 1.5;
+}
+.wb-acts {
+  display: flex;
+  gap: 10px;
+}
+.wb-acts .wb-btn {
+  flex: 1;
+}
+
+/* ---------- Summary tiles ---------- */
+.wb-sum {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.wb-tile {
+  border-radius: 20px;
+  background: #fff;
+  padding: 13px 16px;
+  box-shadow: 0 18px 44px rgba(184, 59, 104, 0.13);
+}
+.wb-tile i {
+  display: block;
+  font-style: normal;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-bottom: 3px;
+}
+.wb-tile b {
+  display: block;
+  font-size: 20px;
+  font-weight: 700;
+}
+.wb-tile.total {
+  background: linear-gradient(120deg, var(--pink), var(--gold));
+  color: #fff;
+}
+.wb-tile.total i {
+  color: rgba(255, 255, 255, 0.85);
+}
+@media (min-width: 520px) {
+  .wb-sum {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ---------- Transaction rows ---------- */
+.wb-tx {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.wb-tx-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 0;
+  border-bottom: 1px solid #f3ead2;
+}
+.wb-tx-item:last-child {
+  border-bottom: 0;
+}
+.wb-tx-item .grow {
+  flex: 1;
+  min-width: 0;
+}
+.wb-tx-item .ser {
+  font-weight: 600;
+  font-size: 15px;
+}
+.wb-tx-item .sub {
+  color: var(--mut);
+  font-size: 12.5px;
+}
+.wb-tx-item b {
+  color: var(--g1);
+  white-space: nowrap;
+}
+.wb-tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: #f6e7cf;
+  color: var(--g1);
+}
+
+:focus-visible {
+  outline: 2px solid var(--g2);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .wb *,
+  .wb *::before,
+  .wb *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

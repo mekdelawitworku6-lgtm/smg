@@ -1,12 +1,22 @@
 import { useState } from "react";
 import API from "../../api/axios";
+import { useTranslation } from "../../i18n/LanguageContext";
+import { useToast } from "../../components/Toast";
+import WbsLogo from "../../components/WbsLogo";
 
 export default function SettingsView() {
+  const { t } = useTranslation();
+  const toast = useToast();
+
   const [phone, setPhone] = useState(localStorage.getItem("phone") || "");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [message, setMessage] = useState({ text: "", type: "" });
+  const [showCur, setShowCur] = useState(false);
+  const [showNew, setShowNew] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState("");
+
+  const [seg, setSeg] = useState("acct");
 
   const [delDatetime, setDelDatetime] = useState("");
   const [delPassword, setDelPassword] = useState("");
@@ -16,8 +26,14 @@ export default function SettingsView() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [searched, setSearched] = useState(false);
 
+  const [confirm, setConfirm] = useState(null);
+
+  const fail = (text) => toast(text, "error");
+  const ok = (text) => toast(text, "success");
+
   const handleSearchTransactions = async () => {
-    if (!delDatetime) return showMsg("Select a date and time first", "error");
+    if (!delDatetime) return setErr(t("settings.selectFirst"));
+    setErr("");
     setSearching(true);
     setSearched(true);
     setFoundTransactions([]);
@@ -26,13 +42,18 @@ export default function SettingsView() {
       const res = await API.get(`/transactions/by-datetime?datetime=${encodeURIComponent(delDatetime)}`);
       setFoundTransactions(res.data || []);
       if (!res.data || res.data.length === 0) {
-        showMsg("No transactions found at this time", "error");
+        errCheck(t("settings.noTx"));
       }
-    } catch (err) {
-      showMsg(err.response?.data?.message || "Failed to search transactions", "error");
+    } catch (e) {
+      setErr(e.response?.data?.message || t("settings.noTx"));
     } finally {
       setSearching(false);
     }
+  };
+
+  const errCheck = (text) => {
+    setErr(text);
+    setTimeout(() => setErr(""), 3500);
   };
 
   const toggleSelect = (id) => {
@@ -45,53 +66,46 @@ export default function SettingsView() {
     if (selectedIds.length === foundTransactions.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(foundTransactions.map((t) => t._id));
+      setSelectedIds(foundTransactions.map((tr) => tr._id));
     }
   };
 
   const handleDeleteSelected = async () => {
-    if (selectedIds.length === 0) return showMsg("Select at least one transaction", "error");
-    if (!delPassword) return showMsg("Enter your password to confirm", "error");
-    const msg = `Delete ${selectedIds.length} selected transaction(s)?\n\nThis action cannot be undone!`;
-    if (!window.confirm(msg)) return;
+    if (selectedIds.length === 0) return fail(t("settings.selectOne"));
+    if (!delPassword) return fail(t("settings.pwConfirm"));
     setDeleting(true);
     try {
       const res = await API.post("/transactions/delete-multiple", {
         ids: selectedIds,
         password: delPassword,
       });
-      showMsg(res.data.message || "Deleted successfully");
+      ok(res.data.message || t("settings.deleted", { n: selectedIds.length }));
       setDelPassword("");
       setFoundTransactions([]);
       setSelectedIds([]);
       setSearched(false);
-    } catch (err) {
-      showMsg(err.response?.data?.message || "Failed to delete transactions", "error");
+    } catch (e) {
+      fail(e.response?.data?.message || t("settings.deleteFailed"));
     } finally {
       setDeleting(false);
     }
   };
 
   const handleClearCache = () => {
-    if (!window.confirm("Clear all cached data? This will reset offline services, staff, and categories.")) return;
     localStorage.removeItem("adminLocalServices");
     localStorage.removeItem("adminStaffList");
     localStorage.removeItem("adminCategories");
     localStorage.removeItem("dailySummaries");
-    showMsg("Cache cleared. Reloading...");
+    ok(t("settings.cacheCleared"));
     setTimeout(() => window.location.reload(), 1000);
   };
 
-  const showMsg = (text, type = "success") => {
-    setMessage({ text, type });
-    setTimeout(() => setMessage({ text: "", type: "" }), 3500);
-  };
-
-  const handleSave = async (e) => {
-    e.preventDefault();
-    if (!phone.trim()) return showMsg("Phone number is required", "error");
-    if (currentPassword && newPassword.length < 6)
-      return showMsg("New password must be at least 6 characters", "error");
+  const handleSave = async () => {
+    setErr("");
+    const ph = phone.replace(/\s/g, "");
+    if (!/^(\+?251|0)?9\d{8}$/.test(ph)) return setErr(t("settings.errPhone"));
+    if (newPassword && !currentPassword) return setErr(t("settings.errCurrentPw"));
+    if (newPassword && newPassword.length < 6) return setErr(t("settings.errPassword"));
     setSaving(true);
     try {
       if (phone !== localStorage.getItem("phone")) {
@@ -99,70 +113,18 @@ export default function SettingsView() {
         localStorage.setItem("phone", phone);
       }
       if (currentPassword && newPassword) {
-        await API.put("/auth/me/password", {
-          currentPassword,
-          newPassword,
-        });
+        await API.put("/auth/me/password", { currentPassword, newPassword });
         setCurrentPassword("");
         setNewPassword("");
       }
-      showMsg("Settings saved successfully");
-    } catch (err) {
-      showMsg(err.response?.data?.message || "Failed to save settings", "error");
+      setShowCur(false);
+      setShowNew(false);
+      ok(t("settings.updated"));
+    } catch (e) {
+      setErr(e.response?.data?.message || t("settings.updated"));
     } finally {
       setSaving(false);
     }
-  };
-
-  const card = {
-    background: "var(--bg-card)",
-    borderRadius: 12,
-    padding: 28,
-    maxWidth: 480,
-    margin: "0 auto",
-    boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
-    border: "1px solid var(--border-color)",
-  };
-
-  const label = {
-    display: "block",
-    fontSize: 13,
-    fontWeight: 600,
-    marginBottom: 6,
-    color: "var(--text-secondary)",
-    textTransform: "uppercase",
-    letterSpacing: "0.5px",
-  };
-
-  const input = {
-    width: "100%",
-    padding: "10px 14px",
-    fontSize: 15,
-    border: "1px solid var(--border-color)",
-    borderRadius: 8,
-    background: "var(--bg-body)",
-    color: "var(--text-primary)",
-    outline: "none",
-    boxSizing: "border-box",
-  };
-
-  const btn = {
-    width: "100%",
-    marginTop: 24,
-    padding: "12px 28px",
-    fontSize: 15,
-    fontWeight: 600,
-    border: "none",
-    borderRadius: 8,
-    background: "var(--color-primary)",
-    color: "#fff",
-    cursor: "pointer",
-  };
-
-  const divider = {
-    height: 1,
-    background: "var(--border-color)",
-    margin: "24px 0",
   };
 
   const formatTime = (iso) => {
@@ -173,145 +135,237 @@ export default function SettingsView() {
     });
   };
 
-  return (
-    <div>
-      <h2 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6, textAlign: "center" }}>
-        Settings
-      </h2>
-      <p style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 28, textAlign: "center" }}>
-        Update your phone number or password
-      </p>
+  const askConfirm = (msg, onYes) => setConfirm({ msg, onYes });
 
-      {message.text && (
-        <div style={{
-          padding: "10px 16px", borderRadius: 8, marginBottom: 20, maxWidth: 480,
-          marginLeft: "auto", marginRight: "auto", fontSize: 14, fontWeight: 500, textAlign: "center",
-          background: message.type === "error" ? "rgba(239,68,68,0.1)" : "rgba(16,185,129,0.1)",
-          color: message.type === "error" ? "var(--red-danger)" : "var(--teal-success)",
-        }}>
-          {message.text}
+  return (
+    <div className="wb">
+      <div className="wb-hero sb">
+        <i className="t serif">{t("settings.title")}</i>
+        <div className="sb-av">
+          <WbsLogo style={{ width: 84, height: 76 }} />
+        </div>
+        <b className="serif b">{t("settings.brandName")}</b>
+        <span className="sub">{phone}</span>
+      </div>
+
+      <div className="wb-main">
+        <div className="wb-seg" role="tablist">
+          <button className={seg === "acct" ? "on" : ""} onClick={() => setSeg("acct")}>
+            {t("settings.account")}
+          </button>
+          <button className={seg === "data" ? "on" : ""} onClick={() => setSeg("data")}>
+            {t("settings.data")}
+          </button>
+        </div>
+
+        {seg === "acct" && (
+          <section className="wb-card">
+            <h2>{t("settings.account")}</h2>
+            <div className="wb-field">
+              <label>{t("settings.phone")}</label>
+              <input
+                className="wb-input"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+            </div>
+
+            <hr className="wb-hr" />
+
+            <h2>{t("settings.password")}</h2>
+            <div className="wb-field">
+              <label>{t("settings.currentPw")}</label>
+              <input
+                className="wb-input"
+                type={showCur ? "text" : "password"}
+                autoComplete="current-password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                style={{ paddingRight: 70 }}
+              />
+              <button className="wb-eye" type="button" onClick={() => setShowCur((v) => !v)}>
+                {showCur ? t("login.hidePw") : t("login.showPw")}
+              </button>
+            </div>
+            <div className="wb-field">
+              <label>{t("settings.newPw")}</label>
+              <input
+                className="wb-input"
+                type={showNew ? "text" : "password"}
+                autoComplete="new-password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                style={{ paddingRight: 70 }}
+              />
+              <button className="wb-eye" type="button" onClick={() => setShowNew((v) => !v)}>
+                {showNew ? t("login.hidePw") : t("login.showPw")}
+              </button>
+            </div>
+
+            <p className="wb-err" role="alert">{err}</p>
+
+            <button className="wb-btn block" onClick={handleSave} disabled={saving}>
+              {saving ? t("settings.updating") : t("settings.update")}
+            </button>
+          </section>
+        )}
+
+        {seg === "data" && (
+          <>
+            <section className="wb-card danger">
+              <h2>{t("settings.dangerZone")}</h2>
+              <p>{t("settings.clearDesc")}</p>
+              <button
+                className="wb-btn red"
+                style={{ width: "auto", padding: "0 28px", marginTop: 4 }}
+                onClick={() => askConfirm(t("settings.clearConfirm"), handleClearCache)}
+              >
+                {t("settings.clearCache")}
+              </button>
+            </section>
+
+            <section className="wb-card">
+              <h2 style={{ color: "var(--red)" }}>{t("settings.deleteTx")}</h2>
+              <p>{t("settings.deleteDesc")}</p>
+
+              <div className="wb-field">
+                <label>{t("settings.datetime")}</label>
+                <input
+                  className="wb-input"
+                  type="datetime-local"
+                  value={delDatetime}
+                  onChange={(e) => {
+                    setDelDatetime(e.target.value);
+                    setErr("");
+                    setSearched(false);
+                    setFoundTransactions([]);
+                    setSelectedIds([]);
+                  }}
+                />
+              </div>
+
+              <button
+                className="wb-btn block"
+                onClick={handleSearchTransactions}
+                disabled={searching || !delDatetime}
+              >
+                {searching ? t("settings.searchingTx") : t("settings.searchTx")}
+              </button>
+
+              {foundTransactions.length > 0 && (
+                <>
+                  <div className="wb-top" style={{ marginTop: 16 }}>
+                    <span style={{ fontSize: 14, color: "var(--mut)" }}>
+                      {foundTransactions.length} ·{" "}
+                      <label style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          className="wb-chk"
+                          checked={selectedIds.length === foundTransactions.length}
+                          onChange={toggleSelectAll}
+                        />
+                        <span style={{ color: "var(--ink)" }}>{t("settings.selectAll")}</span>
+                      </label>
+                    </span>
+                  </div>
+
+                  <ul className="wb-list">
+                    {foundTransactions.map((tx) => {
+                      const sel = selectedIds.includes(tx._id);
+                      return (
+                        <li className="wb-item" key={tx._id}>
+                          <label style={{ background: sel ? "#fbeef1" : "transparent" }}>
+                            <input
+                              type="checkbox"
+                              className="wb-chk"
+                              checked={sel}
+                              onChange={() => toggleSelect(tx._id)}
+                            />
+                            <span>
+                              {tx.total} {t("tx.birr")} — {tx.paymentType}
+                              <small style={{ display: "block", color: "var(--mut)", fontSize: 12 }}>
+                                {formatTime(tx.createdAt)}
+                                {(tx.services || []).map((s) => s.name).join(", ")}
+                              </small>
+                            </span>
+                            <b>{formatTime(tx.createdAt)}</b>
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  <div className="wb-field">
+                    <label>{t("settings.pwConfirm")}</label>
+                    <input
+                      className="wb-input"
+                      type="password"
+                      autoComplete="off"
+                      value={delPassword}
+                      onChange={(e) => setDelPassword(e.target.value)}
+                      placeholder="••••••••"
+                    />
+                  </div>
+
+                  <button
+                    className="wb-btn red block"
+                    onClick={() =>
+                      askConfirm(
+                        t("settings.deleteConfirm", { n: selectedIds.length }),
+                        handleDeleteSelected
+                      )
+                    }
+                    disabled={deleting || selectedIds.length === 0}
+                  >
+                    {deleting
+                      ? t("settings.deleting")
+                      : `${t("settings.deleteSelected")} (${selectedIds.length})`}
+                  </button>
+                </>
+              )}
+
+              {searched && foundTransactions.length === 0 && !searching && (
+                <p className="wb-empty" style={{ textAlign: "center", marginTop: 16 }}>
+                  {t("settings.noTx")}
+                </p>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+
+      {confirm && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 1000,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            background: "rgba(30,15,20,.45)",
+          }}
+          onClick={() => setConfirm(null)}
+        >
+          <div className="wb-dialog" onClick={(e) => e.stopPropagation()}>
+            <p>{confirm.msg}</p>
+            <div className="wb-acts">
+              <button className="wb-btn line" onClick={() => setConfirm(null)}>
+                {t("settings.cancel")}
+              </button>
+              <button
+                className="wb-btn red"
+                onClick={() => {
+                  const fn = confirm.onYes;
+                  setConfirm(null);
+                  if (fn) fn();
+                }}
+              >
+                {t("settings.confirm")}
+              </button>
+            </div>
+          </div>
         </div>
       )}
-
-      <form onSubmit={handleSave} style={card}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Account</h3>
-
-        <label style={label}>Phone Number</label>
-        <input style={input} value={phone} onChange={(e) => setPhone(e.target.value)} />
-
-        <div style={divider} />
-
-        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 20 }}>Password</h3>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={label}>Current Password</label>
-          <input type="password" style={input} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
-        </div>
-        <div>
-          <label style={label}>New Password</label>
-          <input type="password" style={input} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-        </div>
-
-        <button type="submit" disabled={saving} style={{ ...btn, opacity: saving ? 0.6 : 1 }}>
-          {saving ? "Updating..." : "Update"}
-        </button>
-      </form>
-
-      <div style={{ ...card, marginTop: 24, textAlign: "center" }}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: "var(--color-danger)" }}>
-          Danger Zone
-        </h3>
-        <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 }}>
-          Clear locally cached services, staff, and categories data
-        </p>
-        <button onClick={handleClearCache} style={{
-          padding: "12px 28px", fontSize: 15, fontWeight: 600, border: "none", borderRadius: 8,
-          background: "var(--color-danger)", color: "#fff", cursor: "pointer",
-        }}>
-          Clear Cache
-        </button>
-      </div>
-
-      <div style={{ ...card, marginTop: 24 }}>
-        <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: "var(--color-danger)" }}>
-          Delete Transactions
-        </h3>
-        <p style={{ fontSize: 13, color: "var(--text-secondary)", marginBottom: 16 }}>
-          Search transactions by date & time, then select which ones to delete permanently.
-        </p>
-
-        <div style={{ marginBottom: 16 }}>
-          <label style={label}>Date & Time</label>
-          <input type="datetime-local" style={input} value={delDatetime} onChange={(e) => { setDelDatetime(e.target.value); setSearched(false); setFoundTransactions([]); setSelectedIds([]); }} />
-        </div>
-
-        <button onClick={handleSearchTransactions} disabled={searching || !delDatetime} style={{
-          width: "100%", padding: "12px 28px", fontSize: 15, fontWeight: 600, border: "none", borderRadius: 8,
-          background: !delDatetime ? "var(--border-color)" : "var(--color-primary)",
-          color: !delDatetime ? "var(--text-muted)" : "#fff",
-          cursor: !delDatetime ? "not-allowed" : "pointer",
-          opacity: searching ? 0.6 : 1,
-        }}>
-          {searching ? "Searching..." : "Search Transactions"}
-        </button>
-
-        {foundTransactions.length > 0 && (
-          <div style={{ marginTop: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: "var(--text-primary)" }}>
-                {foundTransactions.length} transaction(s) found
-              </span>
-              <label style={{ fontSize: 13, display: "flex", alignItems: "center", gap: 6, cursor: "pointer", color: "var(--text-secondary)" }}>
-                <input type="checkbox" checked={selectedIds.length === foundTransactions.length} onChange={toggleSelectAll} />
-                Select All
-              </label>
-            </div>
-
-            <div style={{ maxHeight: 300, overflowY: "auto", border: "1px solid var(--border-color)", borderRadius: 8, marginBottom: 16 }}>
-              {foundTransactions.map((tx) => (
-                <div key={tx._id} style={{
-                  display: "flex", alignItems: "center", gap: 10, padding: "10px 12px",
-                  borderBottom: "1px solid var(--border-color)", fontSize: 13,
-                  background: selectedIds.includes(tx._id) ? "var(--color-primary-light)" : "transparent",
-                  cursor: "pointer",
-                }} onClick={() => toggleSelect(tx._id)}>
-                  <input type="checkbox" checked={selectedIds.includes(tx._id)} onChange={() => toggleSelect(tx._id)} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, color: "var(--text-primary)" }}>
-                      {tx.total} Birr — {tx.paymentType}
-                    </div>
-                    <div style={{ color: "var(--text-secondary)", fontSize: 11 }}>
-                      {formatTime(tx.createdAt)}
-                      {(tx.services || []).map((s) => s.name).join(", ")}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ marginBottom: 16 }}>
-              <label style={label}>Confirm Password</label>
-              <input type="password" style={input} value={delPassword} onChange={(e) => setDelPassword(e.target.value)} placeholder="Enter your login password" />
-            </div>
-
-            <button onClick={handleDeleteSelected} disabled={deleting || selectedIds.length === 0} style={{
-              width: "100%", padding: "12px 28px", fontSize: 15, fontWeight: 600, border: "none", borderRadius: 8,
-              background: selectedIds.length === 0 ? "var(--border-color)" : "var(--color-danger)",
-              color: selectedIds.length === 0 ? "var(--text-muted)" : "#fff",
-              cursor: selectedIds.length === 0 ? "not-allowed" : "pointer",
-              opacity: deleting ? 0.6 : 1,
-            }}>
-              {deleting ? "Deleting..." : `Delete Selected (${selectedIds.length})`}
-            </button>
-          </div>
-        )}
-
-        {searched && foundTransactions.length === 0 && !searching && (
-          <p style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 16, textAlign: "center" }}>
-            No transactions found at the specified date and time.
-          </p>
-        )}
-      </div>
     </div>
   );
 }

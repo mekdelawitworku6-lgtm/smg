@@ -47,6 +47,7 @@ from "../components/OfflineTransactionHistory";
 import servicesData from "../data/services";
 import staffData from "../data/staff";
 import { sortCategories } from "../data/categoryOrder";
+import WbsLogo from "../components/WbsLogo";
 
 export default function CashierDashboard() {
 
@@ -479,20 +480,37 @@ export default function CashierDashboard() {
     const yesterdayStr = yesterday.toISOString().split("T")[0];
     const prevDay = lastDay?.date === yesterdayStr ? lastDay : null;
     const todayStr = new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+    const hour = new Date().getHours();
+    const greetKey = hour < 12 ? "day.greetingMorning" : hour < 18 ? "day.greetingAfternoon" : "day.greetingEvening";
 
     return (
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100dvh", padding: 20, background: "var(--bg-body)", textAlign: "center" }}>
-        <div style={{ fontSize: 48, marginBottom: 8 }}>☀️</div>
-        <h1 style={{ fontSize: 28, color: "var(--text-primary)", margin: "0 0 4px" }}>{t("day.greeting")}</h1>
-        <p style={{ color: "var(--text-secondary)", margin: "0 0 4px" }}>
-          {t("day.previousDay")} {prevDay ? (prevDay.status === "CLOSED" ? t("day.statusClosed") : prevDay.status) : t("day.statusClosed")}
-        </p>
-        <p style={{ color: "var(--text-secondary)", margin: "0 0 24px" }}>
-          {t("day.today")} {todayStr}
-        </p>
-        <button onClick={() => { dispatch(startDay()); if (!session.id) dispatch(initSession()); }} style={{ padding: "16px 48px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 8, fontSize: 18, fontWeight: 700, cursor: "pointer" }}>
-          {t("day.startDay")}
-        </button>
+      <div className="wb wb-gate">
+        <div className="wb-hero orb">
+          <div className="spark">
+            <WbsLogo style={{ width: 64, height: 64 }} />
+          </div>
+          <h1 className="t big serif">{t(greetKey)}</h1>
+          <span className="sub">{t("day.todaysDate")}</span>
+        </div>
+        <main>
+          <section className="wb-card">
+            <div className="wb-day">
+              <p className="wb-date-line">{todayStr}</p>
+              <div className="day-rowi">
+                <span>{t("day.prevDay")}</span>
+                <b className="wb-chip">
+                  {prevDay ? (prevDay.status === "CLOSED" ? t("day.closed") : prevDay.status) : t("day.closed")}
+                </b>
+              </div>
+              <button
+                className="wb-orb-btn"
+                onClick={() => { dispatch(startDay()); if (!session.id) dispatch(initSession()); }}
+              >
+                {t("day.startDay")}
+              </button>
+            </div>
+          </section>
+        </main>
       </div>
     );
   }
