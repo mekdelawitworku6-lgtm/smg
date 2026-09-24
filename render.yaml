@@ -1,6 +1,6 @@
 databases:
   - name: salon-postgres
-    databaseName: salonDB
+    databaseName: salon_db
     user: salon
     plan: free
 
