@@ -24,11 +24,10 @@ services:
         generateValue: true
       - key: NODE_VERSION
         value: 24
-      # TEMPORARY: one-time price list replacement on boot.
-      # Remove this line once the deploy log shows "Services replaced",
-      # otherwise every restart would overwrite prices edited in the admin UI.
-      - key: RESEED_SERVICES
-        value: "true"
+      # The 2026 price list is already live. RESEED_SERVICES is intentionally
+      # NOT set: leaving it true would overwrite admin price edits on every
+      # restart. Re-add it for one deploy only if the price list changes again
+      # (see salon-backend/.env.example).
 
   - type: web
     name: smg-frontend
