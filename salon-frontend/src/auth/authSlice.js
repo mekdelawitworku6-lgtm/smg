@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import API from "../api/axios";
+import { storeLocalVerifier, verifyLocalCredentials } from "./localVerifier";
 
 /* =========================
    LOGIN
@@ -10,12 +11,7 @@ export const loginUser = createAsyncThunk(
     try {
       const res = await API.post("/auth/login", data);
 
-      if (import.meta.env.PROD) {
-        console.log("[login] response status:", res.status);
-        console.log("[login] response data:", res.data);
-      }
-
-      const { token, role, name } = res.data;
+      const { token, refreshToken, role, name } = res.data;
 
       if (!token) {
         console.error("[login] No token in response:", JSON.stringify(res.data));
@@ -23,21 +19,21 @@ export const loginUser = createAsyncThunk(
       }
 
       localStorage.setItem("token", token);
+      if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
       localStorage.setItem("role", role);
       localStorage.setItem("name", name);
-      localStorage.setItem("phone", data.phone);
-      localStorage.setItem("password", data.password);
+
+      await storeLocalVerifier(data.phone, data.password);
 
       return res.data;
 
     } catch (err) {
-      const savedPhone = localStorage.getItem("phone");
-      const savedPassword = localStorage.getItem("password");
       const savedRole = localStorage.getItem("role");
       const savedName = localStorage.getItem("name");
+      const token = localStorage.getItem("token");
 
-      if (savedPhone === data.phone && savedPassword === data.password && savedRole) {
-        return { token: localStorage.getItem("token"), role: savedRole, name: savedName, offline: true };
+      if (token && savedRole && (await verifyLocalCredentials(data.phone, data.password))) {
+        return { token, role: savedRole, name: savedName, offline: true };
       }
 
       return thunkAPI.rejectWithValue(

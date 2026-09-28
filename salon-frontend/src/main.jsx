@@ -20,6 +20,11 @@ from "./i18n/LanguageContext";
 import { ToastProvider }
 from "./components/Toast";
 
+import { purgeLegacyCredentials }
+from "./auth/localVerifier";
+
+purgeLegacyCredentials();
+
 /* 🔥 PWA */
 import { registerSW }
 from "virtual:pwa-register";

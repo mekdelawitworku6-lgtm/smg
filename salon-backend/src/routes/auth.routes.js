@@ -1,8 +1,12 @@
 import express from "express";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
 import User from "../models/User.model.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  verifyRefreshToken,
+} from "../services/token.service.js";
 import { Op } from "sequelize";
 
 const router = express.Router();
@@ -10,32 +14,15 @@ const router = express.Router();
 const WITHOUT_PASSWORD = { attributes: { exclude: ["password"] } };
 
 /* =========================
-   REGISTER (TEST ONLY)
+   NO PUBLIC REGISTRATION
+   Accounts are provisioned
+   by an authenticated admin
+   via POST /auth/cashiers
+   and POST /auth/admins.
+   The first admin is created
+   by the idempotent seed on
+   server boot (seed.js).
 ========================= */
-router.post("/register", async (req, res) => {
-  try {
-    const { name, phone, password, role } = req.body;
-
-    if (!phone) {
-      return res.status(400).json({
-        message: "Phone is required",
-      });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await User.create({
-      name,
-      phone,
-      password: hashedPassword,
-      role,
-    });
-
-    res.status(201).json(user);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-});
 
 /* =========================
    LOGIN (MAIN FIX HERE)
@@ -74,21 +61,124 @@ router.post("/login", async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1d" }
-    );
+    const token = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
 
     res.json({
       token,
+      refreshToken,
       role: user.role,
       name: user.name,
     });
 
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/* =========================
+   REFRESH ACCESS TOKEN
+   Used to recover the session
+   after a long offline stretch
+========================= */
+router.post("/refresh", async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+
+    if (!refreshToken) {
+      return res.status(400).json({ message: "refreshToken is required" });
+    }
+
+    let decoded;
+    try {
+      decoded = verifyRefreshToken(refreshToken);
+    } catch (err) {
+      const message =
+        err.name === "TokenExpiredError" ? "refresh token expired" : "refresh token invalid";
+      return res.status(401).json({ message });
+    }
+
+    const user = await User.findOne({
+      where: { _id: decoded.id },
+      ...WITHOUT_PASSWORD,
+    });
+
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    if (user.active === false) {
+      return res.status(403).json({
+        message: "Account deactivated. Contact admin.",
+      });
+    }
+
+    res.json({
+      token: generateAccessToken(user),
+      refreshToken: generateRefreshToken(user),
+      role: user.role,
+      name: user.name,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/* =========================
+   ADMIN MANAGEMENT (ADMIN ONLY)
+   The only way to mint an
+   admin after the initial
+   seed. Role is hard-coded,
+   never taken from the body.
+========================= */
+
+/* GET ALL ADMINS */
+router.get("/admins", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin only" });
+    }
+    const admins = await User.findAll({
+      where: { role: "admin" },
+      ...WITHOUT_PASSWORD,
+      order: [["createdAt", "DESC"]],
+    });
+    res.json(admins);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/* CREATE ADMIN */
+router.post("/admins", authMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Admin only" });
+    }
+    const { name, phone, password } = req.body;
+    if (!name || !phone || !password) {
+      return res
+        .status(400)
+        .json({ message: "Name, phone, and password required" });
+    }
+    const existing = await User.findOne({ where: { phone } });
+    if (existing) {
+      return res.status(400).json({ message: "Phone number already exists" });
+    }
+    const hashed = await bcrypt.hash(password, 10);
+    const admin = await User.create({
+      name,
+      phone,
+      password: hashed,
+      role: "admin",
+    });
+    res.status(201).json({
+      _id: admin._id,
+      name: admin.name,
+      phone: admin.phone,
+      role: admin.role,
+      active: admin.active,
+    });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

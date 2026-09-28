@@ -10,9 +10,17 @@ export const fetchServices = createAsyncThunk("services/fetchServices", async (_
   }
 });
 
+const STORAGE_KEY = "adminLocalServices";
+const VERSION_KEY = "adminLocalServicesVersion";
+const SERVICES_VERSION = "v2";
+
 const loadLocal = () => {
   try {
-    const data = JSON.parse(localStorage.getItem("adminLocalServices"));
+    if (localStorage.getItem(VERSION_KEY) !== SERVICES_VERSION) {
+      localStorage.removeItem(STORAGE_KEY);
+      return [];
+    }
+    const data = JSON.parse(localStorage.getItem(STORAGE_KEY));
     return Array.isArray(data) ? data : [];
   } catch { return []; }
 };
@@ -23,7 +31,10 @@ const servicesSlice = createSlice({
   reducers: {
     setLocalServices(state, action) {
       state.localList = action.payload;
-      localStorage.setItem("adminLocalServices", JSON.stringify(action.payload));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(action.payload));
+        localStorage.setItem(VERSION_KEY, SERVICES_VERSION);
+      } catch { /* private mode */ }
     },
   },
   extraReducers: (builder) => {

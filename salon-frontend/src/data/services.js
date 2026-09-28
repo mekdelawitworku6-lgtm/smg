@@ -1,163 +1,110 @@
 const servicesData = [
   {
-    category: "Hair",
+    category: "የፀጉር አሰራር እና ዊግ",
     subcategories: [
       {
-        name: "ፒያስትራ",
+        name: "የፀጉር አሰራር እና ዊግ",
         services: [
-          { name: "ፒያስትራ ፀጉር", price: 400 },
-          { name: "ፒያስትራ ቡዊግ", price: 400 },
-        ],
-      },
-      {
-        name: "ዌቭ",
-        services: [
-          { name: "ዌቭ ፒቤሊስ ክሊፕ", price: 400 },
-          { name: "ሲንተቲክ ዌቭ ፒቤሊስ", price: 600 },
-        ],
-      },
-      {
-        name: "ቁርጥ",
-        services: [
-          { name: "ፀጉር ቁርጥ", price: 300 },
-          { name: "ጫፍ ቁርጥ", price: 100 },
-          { name: "ፀጉር ትሪትመንት", price: 350 },
-        ],
-      },
-      {
-        name: "ሌሎች",
-        services: [
+          { name: "ፓይስትራ በፀጉር", price: 300 },
+          { name: "ፓይስትራ በዊግ", price: 400 },
           { name: "ካከስ", price: 250 },
-          { name: "ቤቤ ሄር", price: 200 },
-          { name: "የፀጉር ጄል (ፖኒቴል)", price: 700 },
-        ],
-      },
-      {
-        name: "ቀለም",
-        services: [
-          { name: "ቀለም መቀቢያ ከራሶ", price: 500 },
-          { name: "ቀለም ስርስሩን", price: 500 },
-          { name: "ቀለም ፊት ፊቱን", price: 300 },
-          { name: "ፀጉር ቀለም", price: 5000 },
-          { name: "ፀጉር ሃይላይት", price: 5500 },
-          { name: "ሁማን ቀለም", price: 5500 },
-        ],
-      },
-      {
-        name: "ሹሩባ",
-        services: [
-          { name: "ሹሩባ ቡዊግ", price: 350 },
-          { name: "የልጆች ሹሩባ በፀጉር", price: 300 },
-        ],
-      },
-      {
-        name: "ትዊስት",
-        services: [
+          { name: "ዊግ ፕሊስ ከሌፕ", price: 600 },
+          { name: "ሴንቱሬክ ስትሬትነር ፕሊስና ዊግ", price: 600 },
           { name: "ትዊስት በፀጉር", price: 300 },
-          { name: "ትዊስት ቡዊግ", price: 400 },
+          { name: "ትዊስት በዊግ", price: 400 },
+          { name: "ሹሩባ በፀጉር", price: 300 },
+          { name: "ሹሩባ በዊግ", price: 350 },
+          { name: "ስፌት በኖርማል", price: 500 },
+          { name: "ስፌት ስግስግ", price: 600 },
+          { name: "ቢ.ቢ. ዜር", price: 200 },
         ],
       },
+    ],
+  },
+  {
+    category: "የፀጉር እንክብካቤ፣ እጥበት እና ቁርጥ",
+    subcategories: [
       {
-        name: "ስፌት",
+        name: "የፀጉር እንክብካቤ፣ እጥበት እና ቁርጥ",
         services: [
-          { name: "ስፌት ኖርማል", price: 450 },
-          { name: "ስፌት ስግስግ", price: 500 },
+          { name: "ፀጉር መታጠቢያ", price: 200 },
+          { name: "ቄቢ መታጠቢያ", price: 200 },
+          { name: "ቄቢ ስቲም", price: 300 },
+          { name: "ፀጉር ትሬትመንት", price: 350 },
+          { name: "ቁርጥ ፀጉር", price: 300 },
+          { name: "ጫፍ ቁርጥ", price: 100 },
+          { name: "ሻምፖ እና ኮንዲሽነር", price: 100 },
+          { name: "ኮንዲት", price: 500 },
           { name: "ስፌት መፍቻ", price: 100 },
-          { name: "ዊግ መፍቻ በ1 ዊግ", price: 10 },
+          { name: "ዊግ መፍቻ (1 ዊግ)", price: 100 },
         ],
       },
     ],
   },
   {
-    category: "Spa",
+    category: "የፀጉር ቀለም እና ሃይላይት",
     subcategories: [
       {
-        name: "Special Packages",
+        name: "የፀጉር ቀለም እና ሃይላይት",
         services: [
-          { name: "ወይባ ስፔሻል 1", price: 3000 },
-          { name: "ወይባ ስፔሻል 2", price: 2600 },
-          { name: "ወይባ ስፔሻል 3", price: 2300 },
-        ],
-      },
-      {
-        name: "Moroccan Packages",
-        services: [
-          { name: "ስፔሻል ሞሮኮ የቤቱ", price: 3000 },
-          { name: "ስፔሻል ሞሮኮ", price: 2600 },
-          { name: "ሞሮኮ የጥንዶች", price: 5000 },
-        ],
-      },
-      {
-        name: "Massage & Steam",
-        services: [
-          { name: "ማሳጅ", price: 1000 },
-          { name: "ስቲም ኖርማል", price: 600 },
-          { name: "ስቲም ስፔሻል", price: 700 },
-          { name: "ስቲም የጥንዶች ኖርማል", price: 1400 },
+          { name: "ቀለም ሙሉ ኩራሶም", price: 500 },
+          { name: "ቀለም ስር ሰሩን", price: 500 },
+          { name: "ቀለም ፊትፊትን", price: 300 },
+          { name: "የፀጉር ቀለም ከእኛ", price: 5000 },
+          { name: "ፀጉር በሃይላይት", price: 5500 },
+          { name: "የፀጉር ጀል", price: 700 },
         ],
       },
     ],
   },
   {
-    category: "Nails",
+    category: "ሜካፕ፣ ቅንድብ እና የፊት እንክብካቤ",
     subcategories: [
       {
-        name: "Gel Nails",
+        name: "ሜካፕ፣ ቅንድብ እና የፊት እንክብካቤ",
         services: [
-          { name: "ጥፍር ለመለጠፍ", price: 600 },
-          { name: "ጄል ሪፊል", price: 900 },
-          { name: "ጄል ሙሌት", price: 1300 },
-          { name: "ጄል አንድ ጣት", price: 150 },
-        ],
-      },
-      {
-        name: "Others",
-        services: [
-          { name: "ልጥፍ አንድ ጣት", price: 100 },
-          { name: "ሽላክ መቀባት", price: 400 },
-        ],
-      },
-      {
-        name: "Hands & Feet",
-        services: [
-          { name: "እጅ እና እግር ትሞርዶ መቀባት", price: 200 },
-          { name: "እጅ ተዘፍዝፎ መቀባት", price: 350 },
-          { name: "እግር ተዘፍዝፎ መቀባት", price: 700 },
-        ],
-      },
-    ],
-  },
-  {
-    category: "Makeup",
-    subcategories: [
-      {
-        name: "Makeup Services",
-        services: [
-          { name: "ኖርማል ሜክአፕ", price: 3000 },
-          { name: "የሙሽራ ሜክአፕ", price: 500 },
-        ],
-      },
-      {
-        name: "Eyebrow Services",
-        services: [
-          { name: "ቅንድብ ዋክስ", price: 200 },
+          { name: "ፍርግል ሜካፕ", price: 3000 },
+          { name: "የሙሽራ ሜካፕ", price: 5000 },
+          { name: "ቅንድብ ዳክስ", price: 200 },
           { name: "ቅንድብ ክር", price: 100 },
-          { name: "ቅንድብ በምላጭ", price: 100 },
-          { name: "ቅንድብ በሂና", price: 300 },
+          { name: "ቅንድብ ምላጭ", price: 100 },
+          { name: "የፊት ስክራብ", price: 150 },
         ],
       },
     ],
   },
   {
-    category: "Others",
+    category: "ጥፍር እና የእጅ/እግር እንክብካቤ",
     subcategories: [
       {
-        name: "Facial & Extras",
+        name: "ጥፍር እና የእጅ/እግር እንክብካቤ",
         services: [
-          { name: "የፊት ስክራብ", price: 150 },
-          { name: "ካንዲሽነር", price: 500 },
-          { name: "ፕላሴንታ", price: 100, nonAsrat: true },
-          { name: "ቅቤ", price: 250, nonAsrat: true },
+          { name: "እጅና እግር ተሞርዶ መቀባት", price: 400 },
+          { name: "እጅ ተዘፍዝፎ መቀባት", price: 300 },
+          { name: "እግር ተዘፍዝፎ መቀባት", price: 700 },
+          { name: "ጥፍር መስጠፍ", price: 600 },
+          { name: "ጀል ሪፊል", price: 900 },
+          { name: "ጀል አንድ ጣት", price: 150 },
+          { name: "ልጥፍ አንድ ጣት", price: 100 },
+          { name: "አክሲሊክ", price: 1300 },
+          { name: "ፔላክ መቀባት", price: 400 },
+        ],
+      },
+    ],
+  },
+  {
+    category: "ወይባ ጢስ",
+    subcategories: [
+      {
+        name: "ወይባ ጢስ",
+        services: [
+          { name: "ወይባ ስፔሻል 1 (ወይባ በምርጥ)", price: 4000 },
+          { name: "ወይባ ስፔሻል 2 (ፀጉር መስራት ከእግር መዘፍዘፍ ጋር)", price: 3000 },
+          { name: "ወይባ ስፔሻል 3 (ከስዲ ስቲም ጋር)", price: 2600 },
+          { name: "ወይባ ስፔሻል 4 (አሽሽ፣ ሸንበራ፣ ቡና በቅቤ)", price: 2300 },
+          { name: "ስፔሻል ፓኬጅ ቁጥር 1 (የፀጉር ትሬትመንት ሙሉ፣ የማሳጅ ሕክምና፣ የምርጥ ሳሙና፣ የፊት ትሬትመንት፣ የእጅ ትሬትመንት አጃ በውት፣ ጂስ 1/2 ሊትር ወሃ)", price: 3500 },
+          { name: "ስፔሻል ፓኬጅ ቁጥር 2 (ዓውሎ ፀጉር ትሬትመንት፣ የማሳጅ ሕክምና፣ ሕርት፣ የሰው መጠጥ፣ የምርጥ ሳሙና፣ የእጅ ትሬትመንት በና በግር)", price: 3000 },
+          { name: "ስፔሻል ፓኬጅ ቁጥር 3 (የምርጥ ሳሙና፣ የሬት ትሬትመንት፣ የሳሙና ስክራብ፣ ትልቅ ጂስ፣ 1/2 ሊትር ወሃ)", price: 2600 },
         ],
       },
     ],

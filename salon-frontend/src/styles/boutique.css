@@ -658,6 +658,7 @@ input[type="checkbox"].wb-chk {
   border-radius: 22px;
   padding: 22px;
   width: min(360px, 90vw);
+  background: #fff;
   color: var(--ink);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.3);
 }
@@ -756,6 +757,59 @@ input[type="checkbox"].wb-chk {
   border-radius: 99px;
   background: #f6e7cf;
   color: var(--g1);
+}
+
+/* ---------- Cashier POS ---------- */
+.wb-catbadge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 99px;
+  background: linear-gradient(120deg, var(--pink), var(--pink2));
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.wb-svc {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  border-bottom: 1px solid #f6ecd6;
+}
+.wb-svc:last-child {
+  border-bottom: 0;
+}
+.wb-svc .name {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 500;
+}
+.wb-svc .price {
+  width: 84px;
+  text-align: right;
+  font-weight: 600;
+  font-size: 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  color: var(--g1);
+}
+.wb-svc .wb-staff {
+  width: 132px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 99px;
+  border: 1px solid var(--line);
+  background: #fdf5f7;
+  color: var(--ink);
+  font-size: 13px;
+  outline: none;
+  flex-shrink: 0;
+}
+.wb-svc .wb-staff:focus {
+  border-color: var(--pink);
+  background: #fff;
 }
 
 :focus-visible {

@@ -24,6 +24,11 @@ services:
         generateValue: true
       - key: NODE_VERSION
         value: 24
+      # TEMPORARY: one-time price list replacement on boot.
+      # Remove this line once the deploy log shows "Services replaced",
+      # otherwise every restart would overwrite prices edited in the admin UI.
+      - key: RESEED_SERVICES
+        value: "true"
 
   - type: web
     name: smg-frontend
@@ -31,6 +36,9 @@ services:
     rootDir: salon-frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
+    routes:
+      - type: rewrite
+        destination: /index.html
     envVars:
       - key: VITE_API_URL
         fromService:

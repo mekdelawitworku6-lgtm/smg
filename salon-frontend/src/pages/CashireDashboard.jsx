@@ -154,8 +154,17 @@ export default function CashierDashboard() {
   };
 
   const serviceCatalog = useMemo(() => {
-    const allServices = [...(apiServices || []), ...(localServices || [])];
-    if (allServices.length > 0) return buildCatalogFromServices(allServices);
+    // API is the source of truth. The local cache is only an offline
+    // fallback, so merging the two naively rendered every service twice.
+    const seen = new Set();
+    const merged = [];
+    for (const svc of [...(apiServices || []), ...(localServices || [])]) {
+      const key = `${svc.category}|${svc.name}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      merged.push(svc);
+    }
+    if (merged.length > 0) return buildCatalogFromServices(merged);
     return servicesData;
   }, [apiServices, localServices]);
 
@@ -515,6 +524,169 @@ export default function CashierDashboard() {
     );
   }
 
+  const paymentTotal = (type) =>
+    sessionTransactions.filter((tt) => tt.paymentType === type).reduce((s, tt) => s + (Number(tt.total) || 0), 0);
+
+  const serviceBoard = (
+    <div style={{ overflowY: "auto", flex: 1, minHeight: 0, marginTop: 12, padding: "0 4px 16px" }}>
+      {groupedServices.length === 0 ? (
+        <p className="wb-empty" style={{ textAlign: "center" }}>{t("cashier.noServices")}</p>
+      ) : (
+        sortedGroupedServices.map((group) => (
+          <div key={group.category} style={{ marginBottom: "18px" }}>
+            <div className="wb-catbadge">{group.category}</div>
+            <div className="wb-card" style={{ padding: 0, boxShadow: "0 10px 26px rgba(184,59,104,.10)", borderRadius: 18, marginBottom: 0 }}>
+              {group.services.map((svc) => {
+                const key = `${svc.category}|${svc.name}`;
+                const sel = serviceSelections[key] || {};
+                return (
+                  <div key={key} className="wb-svc" style={{ background: sel.checked ? "#fbeef1" : "transparent" }}>
+                    <input
+                      className="wb-chk"
+                      type="checkbox"
+                      checked={!!sel.checked}
+                      onChange={(e) =>
+                        setServiceSelections((prev) => ({ ...prev, [key]: { ...prev[key], checked: e.target.checked } }))
+                      }
+                    />
+                    <span className="name">{svc.name}</span>
+                    <span className="price">{svc.price} {t("cashier.birr")}</span>
+                    <select
+                      className="wb-staff"
+                      value={sel.staff || ""}
+                      onChange={(e) =>
+                        setServiceSelections((prev) => ({ ...prev, [key]: { checked: prev[key]?.checked ?? true, staff: e.target.value } }))
+                      }
+                    >
+                      <option value="">{t("cashier.staffSelect")}</option>
+                      {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
+                    </select>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
+  const cartPanel = (
+    <div>
+      <div className="wb-top" style={{ marginBottom: 10 }}>
+        <h2 className="serif" style={{ fontSize: 24 }}>{t("cashier.cart")}</h2>
+        <span className="wb-tag" style={{ background: "#fbe7de" }}>
+          {items.length} · {total} {t("cashier.birr")}
+        </span>
+      </div>
+
+      {items.length > 0 ? (
+        <ul className="wb-list" style={{ maxHeight: 190, overflowY: "auto" }}>
+          {items.map((item, index) => (
+            <li className="wb-li" key={index}>
+              <span className="m">
+                {item.name}
+                <small>{item.staff}</small>
+              </span>
+              <span className="tag">{item.price} {t("cashier.birr")}</span>
+              <button className="wb-x" onClick={() => dispatch(removeFromCart(index))}>×</button>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="wb-empty" style={{ textAlign: "center", padding: "10px 0" }}>{t("cashier.cartEmpty")}</p>
+      )}
+
+      <div className="wb-field">
+        <label>{t("tx.payment")}</label>
+        <select className="wb-select" value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)}>
+          <option value="cash">{t("cashier.paymentCash")}</option>
+          <option value="telebirr">{t("cashier.paymentTelebirr")}</option>
+          <option value="abysinya">{t("cashier.paymentAbysinya")}</option>
+          <option value="cbe">{t("cashier.paymentCBE")}</option>
+        </select>
+      </div>
+
+      <div style={{ marginTop: 12 }}>
+        <label style={{ display: "block", fontSize: 12, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mut)", margin: "0 0 6px 6px" }}>
+          {t("cashier.tipLabel")}
+        </label>
+        {tipEntries.map((entry, i) => (
+          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
+            <select
+              className="wb-select"
+              style={{ height: 40, flex: 1 }}
+              value={entry.staff}
+              onChange={(e) => { const next = [...tipEntries]; next[i] = { ...next[i], staff: e.target.value }; setTipEntries(next); }}
+            >
+              <option value="">{t("cashier.staffSelect")}</option>
+              {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
+            </select>
+            <input
+              className="wb-input"
+              style={{ height: 40, width: 88, padding: "0 10px", textAlign: "center" }}
+              type="text"
+              inputMode="numeric"
+              value={entry.amount}
+              onChange={(e) => { const val = e.target.value.replace(/\D/g, ""); const next = [...tipEntries]; next[i] = { ...next[i], amount: val === "" ? 0 : Number(val) }; setTipEntries(next); }}
+            />
+            <button className="wb-x" onClick={() => setTipEntries(tipEntries.filter((_, idx) => idx !== i))}>×</button>
+          </div>
+        ))}
+        <button
+          className="wb-btn line"
+          style={{ width: "100%", marginTop: 4 }}
+          onClick={() => setTipEntries([...tipEntries, { staff: "", amount: 0 }])}
+        >
+          + {t("cashier.addStaff")}
+        </button>
+      </div>
+
+      <button className="wb-btn block" style={{ marginTop: 16 }} onClick={handleCompleteTransaction} disabled={savingTransaction}>
+        {savingTransaction ? t("cashier.saving") : t("cashier.completeTx")}
+      </button>
+      <button className="wb-btn red block" style={{ marginTop: 8 }} type="button" onClick={handleClearCart}>
+        {t("cashier.clearCart")}
+      </button>
+
+      <section className="wb-card" style={{ marginTop: 18 }}>
+        <h2 style={{ marginTop: 0 }}>{t("cashier.sessionSummary")}</h2>
+        {sessionTransactions.length === 0 ? (
+          <p className="wb-empty">{t("cashier.noTxYet")}</p>
+        ) : (
+          <>
+            <div className="wb-sum" style={{ marginBottom: 12 }}>
+              <div className="wb-tile"><i>{t("tx.cash")}</i><b>{paymentTotal("cash")}</b></div>
+              <div className="wb-tile"><i>{t("tx.telebirr")}</i><b>{paymentTotal("telebirr")}</b></div>
+              <div className="wb-tile"><i>{t("tx.abysinya")}</i><b>{paymentTotal("abysinya")}</b></div>
+              <div className="wb-tile"><i>{t("tx.cbe")}</i><b>{paymentTotal("cbe")}</b></div>
+              <div className="wb-tile"><i>{t("cashier.tipsLabel")}</i><b>{sessionTransactions.reduce((s, tt) => s + (tt.tip || 0), 0)}</b></div>
+              <div className="wb-tile total">
+                <i>{t("cashier.grandTotal")}</i>
+                <b>{sessionTransactions.reduce((s, tt) => s + (Number(tt.total) || 0), 0)}</b>
+              </div>
+            </div>
+            {staffTips.length > 0 && (
+              <div>
+                <strong style={{ fontSize: 13 }}>{t("cashier.tipsByStaff")}</strong>
+                {staffTips.map(([name, amount]) => (
+                  <div key={name} className="wb-tx-item" style={{ padding: "7px 0", fontSize: 13 }}>
+                    <span className="grow">{name}</span>
+                    <b>{Math.round(amount)}</b>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </section>
+
+      <div style={{ marginTop: 18 }}>
+        <OfflineTransactionHistory />
+      </div>
+    </div>
+  );
+
   return (
 
     <div
@@ -531,76 +703,59 @@ export default function CashierDashboard() {
           HEADER
       ========================= */}
 
-      <div
+      <header
         style={{
-          padding: "15px 20px",
-          backgroundColor: "var(--bg-card)",
-          borderBottom: "1px solid var(--border-color)",
+          padding: isMobile ? "10px 14px" : "10px 16px",
+          background: "rgba(255,255,255,.95)",
+          borderBottom: "1px solid var(--line)",
 
           display: "flex",
-          flexDirection: isMobile ? "column" : "row",
-          justifyContent: "space-between",
-          alignItems: isMobile ? "stretch" : "center",
-          gap: isMobile ? 12 : 0,
+          flexDirection: "row",
+          alignItems: "center",
+          gap: 10,
+          flexWrap: "wrap",
+          flexShrink: 0,
         }}
       >
+        <WbsLogo className="wb-logo" />
 
-        <div>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 18 : 24, color: "var(--text-primary)" }}>{t("cashier.title")}</h1>
-          <small style={{ color: "var(--text-secondary)" }}>
-            {currentDay?.date || formatDayName(sessionStart)}{" "}
-            | {sessionTransactions.length} {t("cashier.transactions")}
-          </small>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="wb-name serif" style={{ fontSize: isMobile ? 18 : 21 }}>
+            Wondeya
+          </div>
+          <div style={{ fontSize: 12, color: "var(--mut)" }}>
+            {currentDay?.date || formatDayName(sessionStart)}{" · "}
+            {sessionTransactions.length} {t("cashier.transactions")}
+          </div>
         </div>
 
-        <div style={{ display: "flex", gap: isMobile ? 6 : 10, alignItems: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <OfflineIndicator isOnline={isOnline} />
-          <button onClick={toggleLang} style={{ padding: isMobile ? "6px 8px" : "8px 12px", fontSize: isMobile ? 12 : undefined, background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontWeight: 600 }}>{t("lang.switch")}</button>
           <button
+            className="wb-pill"
+            onClick={toggleLang}
+            style={{ fontSize: isMobile ? 12 : 13 }}
+          >
+            {t("lang.switch")}
+          </button>
+          <button
+            className="wb-pill"
             onClick={handleEndDay}
-            disabled={
-              sessionTransactions.length === 0
-            }
+            disabled={sessionTransactions.length === 0}
             style={{
-              padding: isMobile ? "6px 10px" : "8px 16px",
-              fontSize: isMobile ? 12 : undefined,
-              backgroundColor:
-                sessionTransactions.length === 0
-                  ? "var(--border-color)"
-                  : "var(--color-primary)",
-              color:
-                sessionTransactions.length === 0
-                  ? "var(--text-muted)"
-                  : "#fff",
+              background: "linear-gradient(120deg,var(--pink),var(--pink2))",
+              color: "#fff",
               border: "none",
-              borderRadius: "4px",
-              cursor:
-                sessionTransactions.length === 0
-                  ? "not-allowed"
-                  : "pointer",
-              fontWeight: 700,
+              cursor: sessionTransactions.length === 0 ? "not-allowed" : "pointer",
             }}
           >
             {t("cashier.endDay")}
           </button>
-
-          <button
-            onClick={handleLogout}
-            style={{
-              padding: isMobile ? "6px 10px" : "8px 16px",
-              fontSize: isMobile ? 12 : undefined,
-              backgroundColor: "var(--color-danger)",
-              color: "white",
-              border: "none",
-              borderRadius: "4px",
-              cursor: "pointer",
-            }}
-          >
+          <button className="wb-pill out" onClick={handleLogout} style={{ fontSize: isMobile ? 12 : 13 }}>
             {t("cashier.logout")}
           </button>
         </div>
-
-      </div>
+      </header>
 
       {/* =========================
           MAIN CONTENT
@@ -617,254 +772,46 @@ export default function CashierDashboard() {
           showServices ? (
             <div style={{ height: "100%", display: "flex", flexDirection: "column", minHeight: 0 }}>
               <div style={{ flexShrink: 0, padding: "12px 12px 0" }}>
-                <h2 style={{ margin: "0 0 10px", fontSize: "18px", color: "var(--text-primary)" }}>
-                  {t("cashier.services")}
-                </h2>
-                <button
-                  onClick={handleAddSelectedServices}
-                  disabled={selectedCount === 0}
-                  style={{
-                    width: "100%", padding: "14px",
-                    backgroundColor: selectedCount === 0 ? "var(--border-color)" : "var(--color-primary)",
-                    color: selectedCount === 0 ? "var(--text-muted)" : "#fff",
-                    border: "none", borderRadius: "8px", fontSize: "16px", fontWeight: 700,
-                    cursor: selectedCount === 0 ? "not-allowed" : "pointer",
-                  }}
-                >
-                  {t("cashier.addSelected")}{selectedCount > 0 ? ` (${selectedCount})` : ""}
-                </button>
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                  <button type="button" onClick={() => setShowServices(false)}
-                    style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", cursor: "pointer" }}>
+                <div className="wb-top" style={{ marginBottom: 10 }}>
+                  <h2 className="serif" style={{ fontSize: 24 }}>{t("cashier.services")}</h2>
+                  <button className="wb-btn line" type="button" style={{ width: "auto", padding: "0 14px" }} onClick={() => setShowServices(false)}>
                     {t("cashier.hideServices")}
                   </button>
                 </div>
+                <button className="wb-btn block" onClick={handleAddSelectedServices} disabled={selectedCount === 0}>
+                  {t("cashier.addSelected")}{selectedCount > 0 ? ` (${selectedCount})` : ""}
+                </button>
               </div>
-              <div style={{ overflowY: "auto", flex: 1, minHeight: 0, marginTop: 12, padding: "0 12px 12px" }}>
-                {groupedServices.length === 0 ? (
-                  <p style={{ color: "var(--text-muted)" }}>{t("cashier.noServices")}</p>
-                ) : (
-                  sortedGroupedServices.map((group) => (
-                    <div key={group.category} style={{ marginBottom: "24px" }}>
-                      <div style={{ padding: "8px 12px", backgroundColor: "var(--color-primary)", color: "#fff", borderRadius: "6px", fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>
-                        {group.category}
-                      </div>
-                      <div style={{ background: "#fff", borderRadius: "6px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
-                        {group.services.map((svc) => {
-                          const key = `${svc.category}|${svc.name}`;
-                          const sel = serviceSelections[key] || {};
-                          return (
-                            <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderBottom: "1px solid var(--border-color)", backgroundColor: sel.checked ? "var(--color-primary-light)" : "transparent" }}>
-                              <input type="checkbox" checked={!!sel.checked} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { ...prev[key], checked: e.target.checked } }))} style={{ width: "18px", height: "18px", flexShrink: 0 }} />
-                              <span style={{ flex: 1, fontSize: "14px", fontWeight: 500 }}>{svc.name}</span>
-                              <span style={{ width: "80px", textAlign: "right", fontSize: "14px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>{svc.price} {t("cashier.birr")}</span>
-                              <select value={sel.staff || ""} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { checked: prev[key]?.checked ?? true, staff: e.target.value } }))} style={{ width: "130px", padding: "5px 4px", borderRadius: "4px", border: "1px solid var(--border-color)", fontSize: "13px", flexShrink: 0 }}>
-                                <option value="">{t("cashier.staffSelect")}</option>
-                                {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
-                              </select>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              {serviceBoard}
             </div>
           ) : (
-            <div style={{ height: "100%", overflowY: "auto", padding: "12px", background: "var(--bg-card)" }}>
+            <div style={{ width: "100%", height: "100%", overflowY: "auto", padding: "12px 12px 24px" }}>
               <button
+                className="wb-btn block"
                 onClick={() => setShowServices(true)}
-                style={{ width: "100%", padding: "14px", background: "var(--color-primary)", color: "#fff", border: "none", borderRadius: "8px", fontSize: "16px", fontWeight: 700, cursor: "pointer", marginBottom: "12px" }}
+                style={{ marginBottom: 14 }}
               >
                 + {t("cashier.showServices")}
               </button>
-              <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.cart")}</h2>
-              <p style={{ color: "var(--text-primary)", margin: "0 0 12px" }}>
-                {items.length} {t("cashier.services")} — {total} {t("cashier.birr")}
-              </p>
-              {items.length > 0 && (
-                <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 12, border: "1px solid var(--border-color)", borderRadius: 6, padding: "4px 8px", background: "#fff" }}>
-                  {items.map((item, index) => (
-                    <div key={index} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: index < items.length - 1 ? "1px solid var(--border-color)" : "none" }}>
-                      <span style={{ flex: 1, fontSize: 13 }}>
-                        {item.name} <small style={{ color: "var(--text-secondary)" }}>({item.staff})</small>
-                      </span>
-                      <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>{item.price} {t("cashier.birr")}</span>
-                      <button onClick={() => dispatch(removeFromCart(index))} style={{ fontSize: 11, padding: "2px 8px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>
-                        {t("cashier.remove")}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} style={{ width: "100%", padding: "10px", marginBottom: "15px", border: "1px solid var(--border-color)", borderRadius: "6px", background: "#fff", color: "var(--text-primary)" }}>
-                <option value="cash">{t("cashier.paymentCash")}</option>
-                <option value="telebirr">{t("cashier.paymentTelebirr")}</option>
-                <option value="abysinya">{t("cashier.paymentAbysinya")}</option>
-                <option value="cbe">{t("cashier.paymentCBE")}</option>
-              </select>
-              <div style={{ marginBottom: "15px" }}>
-                <label style={{ display: "block", marginBottom: "5px", fontWeight: 600, color: "var(--text-primary)" }}>{t("cashier.tipLabel")}</label>
-                {tipEntries.map((entry, i) => (
-                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
-                    <select value={entry.staff} onChange={(e) => { const next = [...tipEntries]; next[i] = { ...next[i], staff: e.target.value }; setTipEntries(next); }} style={{ flex: 1, padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)" }}>
-                      <option value="">{t("cashier.staffSelect")}</option>
-                      {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
-                    </select>
-                    <input type="text" inputMode="numeric" value={entry.amount} onChange={(e) => { const val = e.target.value.replace(/\D/g, ""); const next = [...tipEntries]; next[i] = { ...next[i], amount: val === "" ? 0 : Number(val) }; setTipEntries(next); }} style={{ width: "100px", padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)" }} />
-                    <button onClick={() => setTipEntries(tipEntries.filter((_, idx) => idx !== i))} style={{ padding: "6px 10px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>✕</button>
-                  </div>
-                ))}
-                <button onClick={() => setTipEntries([...tipEntries, { staff: "", amount: 0 }])} style={{ padding: "8px 12px", background: "#fff", color: "var(--text-primary)", border: "1px solid var(--border-color)", borderRadius: 6, cursor: "pointer", fontSize: 13, marginTop: 4 }}>+ {t("cashier.addStaff")}</button>
-              </div>
-              <button onClick={handleCompleteTransaction} disabled={savingTransaction} style={{ width: "100%", padding: "15px", background: savingTransaction ? "var(--text-muted)" : "var(--color-primary)", color: "#fff", border: "none", borderRadius: "8px", marginBottom: "10px" }}>
-                {savingTransaction ? t("cashier.saving") : t("cashier.completeTx")}
-              </button>
-              <button type="button" onClick={handleClearCart} style={{ width: "100%", padding: "15px", background: "var(--text-primary)", color: "#fff", border: "none", borderRadius: "8px" }}>
-                {t("cashier.clearCart")}
-              </button>
-              <div style={{ marginTop: "30px" }}>
-                <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.sessionSummary")}</h2>
-                {sessionTransactions.length === 0 ? (
-                  <p style={{ color: "var(--text-muted)" }}>{t("cashier.noTxYet")}</p>
-                ) : (
-                  <div>
-                    <p><strong>{sessionTransactions.length} {t("cashier.transactions")}</strong></p>
-                    <p>{t("cashier.cashLabel")} {sessionTransactions.filter((t) => t.paymentType === "cash").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
-                    <p>{t("cashier.telebirrLabel")} {sessionTransactions.filter((t) => t.paymentType === "telebirr").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
-                    <p>{t("cashier.abysinyaLabel")} {sessionTransactions.filter((t) => t.paymentType === "abysinya").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
-                    <p>{t("cashier.cbeLabel")} {sessionTransactions.filter((t) => t.paymentType === "cbe").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
-                    <p>{t("cashier.tipsLabel")} {sessionTransactions.reduce((s, t) => s + (t.tip || 0), 0)} {t("cashier.birr")}</p>
-                    {staffTips.length > 0 && (
-                      <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-primary)" }}>
-                        <strong>{t("cashier.tipsByStaff")}:</strong>
-                        {staffTips.map(([name, amount]) => (
-                          <div key={name} style={{ display: "flex", justifyContent: "space-between", paddingLeft: 8, marginTop: 2 }}>
-                            <span>{name}</span><span>{Math.round(amount)} {t("cashier.birr")}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "10px 0" }} />
-                    <p><strong>{t("cashier.grandTotal")} {sessionTransactions.reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</strong></p>
-                  </div>
-                )}
-              </div>
-              <div style={{ marginTop: "30px" }}>
-                <OfflineTransactionHistory />
-              </div>
+              {cartPanel}
             </div>
           )
         ) : (
           <div style={{ display: "flex", flexDirection: "row", flex: 1, minHeight: 0, overflow: "hidden" }}>
-            <div style={{ width: "60%", padding: "20px", display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--border-color)" }}>
-              <div style={{ flexShrink: 0 }}>
-                <h2 style={{ margin: "0 0 10px", fontSize: "18px", color: "var(--text-primary)" }}>{t("cashier.services")}</h2>
-                <button onClick={handleAddSelectedServices} disabled={selectedCount === 0} style={{ width: "100%", padding: "14px", backgroundColor: selectedCount === 0 ? "var(--border-color)" : "var(--color-primary)", color: selectedCount === 0 ? "var(--text-muted)" : "#fff", border: "none", borderRadius: "8px", fontSize: "16px", fontWeight: 700, cursor: selectedCount === 0 ? "not-allowed" : "pointer" }}>
-                  {t("cashier.addSelected")}{selectedCount > 0 ? ` (${selectedCount})` : ""}
+            <div style={{ width: "60%", padding: "16px", display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--line)", overflow: "hidden" }}>
+              <div className="wb-top" style={{ marginBottom: 12 }}>
+                <h2 className="serif" style={{ fontSize: 24 }}>{t("cashier.services")}</h2>
+                <button className="wb-btn line" type="button" style={{ width: "auto", padding: "0 14px" }} onClick={() => setShowServices(false)}>
+                  {t("cashier.hideServices")}
                 </button>
-                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-                  <button type="button" onClick={() => setShowServices(false)} style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", cursor: "pointer" }}>{t("cashier.hideServices")}</button>
-                </div>
               </div>
-              <div style={{ overflowY: "auto", flex: 1, minHeight: 0, paddingRight: 20, marginTop: 12 }}>
-                {groupedServices.length === 0 ? (
-                  <p style={{ color: "var(--text-muted)" }}>{t("cashier.noServices")}</p>
-                ) : (
-                  sortedGroupedServices.map((group) => (
-                    <div key={group.category} style={{ marginBottom: "24px" }}>
-                      <div style={{ padding: "8px 12px", backgroundColor: "var(--color-primary)", color: "#fff", borderRadius: "6px", fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px", marginBottom: "4px" }}>{group.category}</div>
-                      <div style={{ background: "#fff", borderRadius: "6px", overflow: "hidden", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
-                        {group.services.map((svc) => {
-                          const key = `${svc.category}|${svc.name}`;
-                          const sel = serviceSelections[key] || {};
-                          return (
-                            <div key={key} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 12px", borderBottom: "1px solid var(--border-color)", backgroundColor: sel.checked ? "var(--color-primary-light)" : "transparent" }}>
-                              <input type="checkbox" checked={!!sel.checked} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { ...prev[key], checked: e.target.checked } }))} style={{ width: "18px", height: "18px", flexShrink: 0 }} />
-                              <span style={{ flex: 1, fontSize: "14px", fontWeight: 500 }}>{svc.name}</span>
-                              <span style={{ width: "80px", textAlign: "right", fontSize: "14px", fontWeight: 700, whiteSpace: "nowrap", flexShrink: 0 }}>{svc.price} {t("cashier.birr")}</span>
-                              <select value={sel.staff || ""} onChange={(e) => setServiceSelections((prev) => ({ ...prev, [key]: { checked: prev[key]?.checked ?? true, staff: e.target.value } }))} style={{ width: "130px", padding: "5px 4px", borderRadius: "4px", border: "1px solid var(--border-color)", fontSize: "13px", flexShrink: 0 }}>
-                                <option value="">{t("cashier.staffSelect")}</option>
-                                {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
-                              </select>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+              <button className="wb-btn block" style={{ flexShrink: 0 }} onClick={handleAddSelectedServices} disabled={selectedCount === 0}>
+                {t("cashier.addSelected")}{selectedCount > 0 ? ` (${selectedCount})` : ""}
+              </button>
+              {serviceBoard}
             </div>
-            <div style={{ width: "40%", padding: "20px", overflowY: "auto", height: "100%" }}>
-              <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.cart")}</h2>
-              <p style={{ color: "var(--text-primary)", margin: "0 0 12px" }}>{items.length} {t("cashier.services")} — {total} {t("cashier.birr")}</p>
-              {items.length > 0 && (
-                <div style={{ maxHeight: 200, overflowY: "auto", marginBottom: 12, border: "1px solid var(--border-color)", borderRadius: 6, padding: "4px 8px", background: "#fff" }}>
-                  {items.map((item, index) => (
-                    <div key={index} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 0", borderBottom: index < items.length - 1 ? "1px solid var(--border-color)" : "none" }}>
-                      <span style={{ flex: 1, fontSize: 13 }}>{item.name} <small style={{ color: "var(--text-secondary)" }}>({item.staff})</small></span>
-                      <span style={{ fontSize: 13, fontWeight: 600, whiteSpace: "nowrap" }}>{item.price} {t("cashier.birr")}</span>
-                      <button onClick={() => dispatch(removeFromCart(index))} style={{ fontSize: 11, padding: "2px 8px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer" }}>{t("cashier.remove")}</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              <select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} style={{ width: "100%", padding: "10px", marginBottom: "15px", border: "1px solid var(--border-color)", borderRadius: "6px", background: "#fff", color: "var(--text-primary)" }}>
-                <option value="cash">{t("cashier.paymentCash")}</option>
-                <option value="telebirr">{t("cashier.paymentTelebirr")}</option>
-                <option value="abysinya">{t("cashier.paymentAbysinya")}</option>
-                <option value="cbe">{t("cashier.paymentCBE")}</option>
-              </select>
-              <div style={{ marginBottom: "15px" }}>
-                <label style={{ display: "block", marginBottom: "5px", fontWeight: 600, color: "var(--text-primary)" }}>{t("cashier.tipLabel")}</label>
-                {tipEntries.map((entry, i) => (
-                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "center" }}>
-                    <select value={entry.staff} onChange={(e) => { const next = [...tipEntries]; next[i] = { ...next[i], staff: e.target.value }; setTipEntries(next); }} style={{ flex: 1, padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)" }}>
-                      <option value="">{t("cashier.staffSelect")}</option>
-                      {staffNames.map((s) => (<option key={s} value={s}>{s}</option>))}
-                    </select>
-                    <input type="text" inputMode="numeric" value={entry.amount} onChange={(e) => { const val = e.target.value.replace(/\D/g, ""); const next = [...tipEntries]; next[i] = { ...next[i], amount: val === "" ? 0 : Number(val) }; setTipEntries(next); }} style={{ width: "100px", padding: "8px", borderRadius: "5px", border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)" }} />
-                    <button onClick={() => setTipEntries(tipEntries.filter((_, idx) => idx !== i))} style={{ padding: "6px 10px", background: "var(--color-danger)", color: "#fff", border: "none", borderRadius: 4, cursor: "pointer", fontSize: 12 }}>✕</button>
-                  </div>
-                ))}
-                <button onClick={() => setTipEntries([...tipEntries, { staff: "", amount: 0 }])} style={{ padding: "8px 12px", background: "#fff", color: "var(--text-primary)", border: "1px solid var(--border-color)", borderRadius: 6, cursor: "pointer", fontSize: 13, marginTop: 4 }}>+ {t("cashier.addStaff")}</button>
-              </div>
-              <button onClick={handleCompleteTransaction} disabled={savingTransaction} style={{ width: "100%", padding: "15px", background: savingTransaction ? "var(--text-muted)" : "var(--color-primary)", color: "#fff", border: "none", borderRadius: "8px", marginBottom: "10px" }}>
-                {savingTransaction ? t("cashier.saving") : t("cashier.completeTx")}
-              </button>
-              <button type="button" onClick={handleClearCart} style={{ width: "100%", padding: "15px", background: "var(--text-primary)", color: "#fff", border: "none", borderRadius: "8px" }}>
-                {t("cashier.clearCart")}
-              </button>
-              <div style={{ marginTop: "30px" }}>
-                <h2 style={{ color: "var(--text-primary)" }}>{t("cashier.sessionSummary")}</h2>
-                {sessionTransactions.length === 0 ? (
-                  <p style={{ color: "var(--text-muted)" }}>{t("cashier.noTxYet")}</p>
-                ) : (
-                  <div>
-                    <p><strong>{sessionTransactions.length} {t("cashier.transactions")}</strong></p>
-                    <p>{t("cashier.cashLabel")} {sessionTransactions.filter((t) => t.paymentType === "cash").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
-                    <p>{t("cashier.telebirrLabel")} {sessionTransactions.filter((t) => t.paymentType === "telebirr").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
-                    <p>{t("cashier.abysinyaLabel")} {sessionTransactions.filter((t) => t.paymentType === "abysinya").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
-                    <p>{t("cashier.cbeLabel")} {sessionTransactions.filter((t) => t.paymentType === "cbe").reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</p>
-                    <p>{t("cashier.tipsLabel")} {sessionTransactions.reduce((s, t) => s + (t.tip || 0), 0)} {t("cashier.birr")}</p>
-                    {staffTips.length > 0 && (
-                      <div style={{ marginTop: 8, fontSize: 13, color: "var(--text-primary)" }}>
-                        <strong>{t("cashier.tipsByStaff")}:</strong>
-                        {staffTips.map(([name, amount]) => (
-                          <div key={name} style={{ display: "flex", justifyContent: "space-between", paddingLeft: 8, marginTop: 2 }}><span>{name}</span><span>{Math.round(amount)} {t("cashier.birr")}</span></div>
-                        ))}
-                      </div>
-                    )}
-                    <hr style={{ border: "none", borderTop: "1px solid var(--border-color)", margin: "10px 0" }} />
-                    <p><strong>{t("cashier.grandTotal")} {sessionTransactions.reduce((s, t) => s + t.total, 0)} {t("cashier.birr")}</strong></p>
-                  </div>
-                )}
-              </div>
-              <div style={{ marginTop: "30px" }}>
-                <OfflineTransactionHistory />
-              </div>
+            <div className="wb" style={{ width: "40%", padding: "16px", overflowY: "auto", height: "100%" }}>
+              {cartPanel}
             </div>
           </div>
         )}
@@ -878,168 +825,69 @@ export default function CashierDashboard() {
           style={{
             position: "fixed",
             inset: 0,
-            background:
-              "rgba(0,0,0,0.5)",
+            background: "rgba(30,15,20,.45)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             zIndex: 1000,
+            padding: "14px",
           }}
         >
-          <div
-            style={{
-              background: "#fff",
-              padding: "30px",
-              borderRadius: "12px",
-              maxWidth: "420px",
-              width: "90%",
-              boxShadow:
-                "0 10px 40px rgba(0,0,0,0.3)",
-              color: "var(--text-primary)",
-            }}
-          >
-            <h2
-              style={{
-                margin: "0 0 20px",
-                color: "var(--text-primary)",
-              }}
-            >
-                            {t("cashier.endSummaryTitle")}
+          <div className="wb-dialog" style={{ maxWidth: 420, width: "100%" }}>
+            <h2 className="serif" style={{ fontSize: 24, margin: "0 0 8px" }}>
+              {t("cashier.endSummaryTitle")}
             </h2>
 
-            <p>
-              <strong>{t("cashier.date")}</strong> {" "}
-              {formatDayName(endSummary.date)}
-            </p>
-            <p>
-                            <strong>{t("cashier.txCount")}</strong> {" "}
-              {endSummary.transactionCount}
-            </p>
+            <div className="wb-tx-item" style={{ padding: "6px 0" }}>
+              <span className="grow">{t("cashier.date")}</span>
+              <b>{formatDayName(endSummary.date)}</b>
+            </div>
+            <div className="wb-tx-item" style={{ padding: "6px 0" }}>
+              <span className="grow">{t("cashier.txCount")}</span>
+              <b>{endSummary.transactionCount}</b>
+            </div>
 
-            <hr
-              style={{
-                border: "none",
-                borderTop:
-                  "1px solid var(--border-color)",
-                margin: "15px 0",
-              }}
-            />
+            <hr className="wb-hr" />
 
-            <p>
-              <strong>{t("cashier.totalIncome")}{" "}
-              {endSummary.totalIncome} {t("cashier.birr")}</strong>
-            </p>
-            <p>
-              <strong>{t("day.totalExpenses")}{" "}
-              {endSummary.totalExpenses || 0} {t("cashier.birr")}</strong>
-            </p>
-            <p>
-              {t("cashier.cashPayments")}{" "}
-              {endSummary.cashPayments} {t("cashier.birr")}
-            </p>
-            <p>
-              {t("cashier.paymentTelebirr")}{" "}
-              {endSummary.telebirrPayments} {t("cashier.birr")}
-            </p>
-            <p>
-              {t("cashier.paymentAbysinya")}{" "}
-              {endSummary.abysinyaPayments} {t("cashier.birr")}
-            </p>
-            <p>
-              {t("cashier.paymentCBE")}{" "}
-              {endSummary.cbePayments} {t("cashier.birr")}
-            </p>
+            <div className="wb-sum" style={{ marginBottom: 0 }}>
+              <div className="wb-tile total">
+                <i>{t("cashier.totalIncome")}</i>
+                <b>{endSummary.totalIncome} {t("cashier.birr")}</b>
+              </div>
+              <div className="wb-tile">
+                <i>{t("day.totalExpenses")}</i>
+                <b>{endSummary.totalExpenses || 0} {t("cashier.birr")}</b>
+              </div>
+              <div className="wb-tile"><i>{t("tx.cash")}</i><b>{endSummary.cashPayments}</b></div>
+              <div className="wb-tile"><i>{t("tx.telebirr")}</i><b>{endSummary.telebirrPayments}</b></div>
+              <div className="wb-tile"><i>{t("tx.abysinya")}</i><b>{endSummary.abysinyaPayments}</b></div>
+              <div className="wb-tile"><i>{t("tx.cbe")}</i><b>{endSummary.cbePayments}</b></div>
+              <div className="wb-tile"><i>{t("cashier.asratMoney")}</i><b>{endSummary.asratMoney} {t("cashier.birr")}</b></div>
+              <div className="wb-tile"><i>{t("cashier.totalTips")}</i><b>{endSummary.totalTips} {t("cashier.birr")}</b></div>
+            </div>
 
-            <hr
-              style={{
-                border: "none",
-                borderTop:
-                  "1px solid var(--border-color)",
-                margin: "15px 0",
-              }}
-            />
+            <hr className="wb-hr" />
 
-            <p>
-              {t("cashier.asratMoney")}{" "}
-              <strong>
-                {endSummary.asratMoney} {t("cashier.birr")}
-              </strong>
-            </p>
-            <p>
-              {t("cashier.totalTips")}{" "}
-              {endSummary.totalTips} {t("cashier.birr")}
-            </p>
+            <div className="wb-tx-item" style={{ padding: "5px 0", fontSize: 16 }}>
+              <span className="grow"><strong>{t("cashier.finalCash")}</strong></span>
+              <b>{endSummary.finalCashAmount} {t("cashier.birr")}</b>
+            </div>
 
-            <hr
-              style={{
-                border: "none",
-                borderTop:
-                  "1px solid var(--border-color)",
-                margin: "15px 0",
-              }}
-            />
-
-            <p
-              style={{
-                fontSize: "18px",
-              }}
-            >
-              <strong>
-                {t("cashier.finalCash")}{" "}
-                {endSummary.finalCashAmount} {t("cashier.birr")}
-              </strong>
-            </p>
-
-            <div style={{ margin: "15px 0" }}>
-              <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--text-primary)", marginBottom: 4 }}>
-                {t("day.closingBalance")}
-              </label>
+            <div className="wb-field" style={{ marginTop: 14 }}>
+              <label>{t("day.closingBalance")}</label>
               <input
+                className="wb-input"
                 type="text"
                 inputMode="numeric"
                 value={closingBalance}
                 onChange={(e) => setClosingBalance(e.target.value.replace(/\D/g, ""))}
                 placeholder={t("day.enterClosingBalance")}
-                style={{ width: "100%", padding: "10px", borderRadius: 6, border: "1px solid var(--border-color)", background: "#fff", color: "var(--text-primary)", fontSize: 14, boxSizing: "border-box" }}
               />
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                marginTop: "20px",
-              }}
-            >
-              <button
-                onClick={confirmEndDay}
-                style={{
-                  flex: 1,
-                  padding: "12px",
-                  background: "var(--color-primary)",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: "8px",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                {t("cashier.confirmEnd")}
-              </button>
-              <button
-                onClick={cancelEndDay}
-                style={{
-                  flex: 1,
-                  padding: "12px",
-                  background: "#fff",
-                  color: "var(--text-primary)",
-                  border: "1px solid var(--border-color)",
-                  borderRadius: "8px",
-                  cursor: "pointer",
-                }}
-              >
-                {t("cashier.cancel")}
-              </button>
+            <div className="wb-acts" style={{ marginTop: 18 }}>
+              <button className="wb-btn line" onClick={cancelEndDay}>{t("cashier.cancel")}</button>
+              <button className="wb-btn" onClick={confirmEndDay}>{t("cashier.confirmEnd")}</button>
             </div>
           </div>
         </div>

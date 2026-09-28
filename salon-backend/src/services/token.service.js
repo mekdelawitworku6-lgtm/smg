@@ -1,5 +1,12 @@
 import jwt from "jsonwebtoken";
 
+const ACCESS_TOKEN_TTL = "15m";
+const REFRESH_TOKEN_TTL = "30d";
+
+function getRefreshSecret() {
+  return process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET;
+}
+
 export const generateAccessToken = (user) => {
   return jwt.sign(
     {
@@ -7,7 +14,7 @@ export const generateAccessToken = (user) => {
       role: user.role,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "15m" }
+    { expiresIn: ACCESS_TOKEN_TTL }
   );
 };
 
@@ -16,7 +23,11 @@ export const generateRefreshToken = (user) => {
     {
       id: user._id,
     },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: "7d" }
+    getRefreshSecret(),
+    { expiresIn: REFRESH_TOKEN_TTL }
   );
+};
+
+export const verifyRefreshToken = (token) => {
+  return jwt.verify(token, getRefreshSecret());
 };

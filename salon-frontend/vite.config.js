@@ -6,7 +6,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const apiTarget = (env.VITE_API_URL || "http://localhost:10000").replace(/\/api\/?$/, "");
+  const apiTarget = (env.VITE_API_URL || "http://localhost:4000").replace(/\/api\/?$/, "");
 
   return {
     plugins: [
