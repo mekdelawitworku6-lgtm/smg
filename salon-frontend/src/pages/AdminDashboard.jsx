@@ -127,7 +127,7 @@ export default function AdminDashboard() {
         )}
         <WbsLogo className="wb-logo" />
         <span className="wb-name serif">Wondeya</span>
-        <button className="wb-pill" onClick={toggleLang}>{t("lang.switch")}</button>
+          <button className="wb-pill pink" onClick={toggleLang}>{t("lang.switch")}</button>
         <button className="wb-pill out" onClick={handleLogout}>{t("admin.logout")}</button>
       </header>
 

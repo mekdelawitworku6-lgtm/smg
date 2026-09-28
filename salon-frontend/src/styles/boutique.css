@@ -14,7 +14,7 @@
      action on a screen, soft red marks logout/destructive. Tuned here. */
   --btn-pink-1: #fadce8;
   --btn-pink-2: #f8cfe0;
-  --btn-red: #e05555;
+  --btn-red: #e04a4a;
   font-family: "Jost", "Noto Sans Ethiopic", system-ui, sans-serif;
   color: var(--ink);
   box-sizing: border-box;
@@ -96,7 +96,13 @@
   background: var(--btn-red);
   color: #000;
   border-color: transparent;
-  font-weight: 600;
+  font-weight: 700;
+}
+.wb-pill.pink {
+  background: linear-gradient(120deg, var(--btn-pink-1), var(--btn-pink-2));
+  color: #000;
+  border-color: transparent;
+  font-weight: 700;
 }
 .wb-pill:disabled {
   opacity: 0.5;

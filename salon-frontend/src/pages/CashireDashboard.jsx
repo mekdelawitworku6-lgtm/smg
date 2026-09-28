@@ -732,20 +732,17 @@ export default function CashierDashboard() {
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <OfflineIndicator isOnline={isOnline} />
           <button
-            className="wb-pill"
+            className="wb-pill pink"
             onClick={toggleLang}
             style={{ fontSize: isMobile ? 12 : 13 }}
           >
             {t("lang.switch")}
           </button>
           <button
-            className="wb-pill"
+            className="wb-pill pink"
             onClick={handleEndDay}
             disabled={sessionTransactions.length === 0}
             style={{
-              background: "linear-gradient(120deg,var(--pink),var(--pink2))",
-              color: "#fff",
-              border: "none",
               cursor: sessionTransactions.length === 0 ? "not-allowed" : "pointer",
             }}
           >
