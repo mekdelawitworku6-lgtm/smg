@@ -10,11 +10,14 @@
   --pink2: #ec4899;
   --gold: #e0a94f;
   --red: #d93a3a;
-  /* Button fills: white is the default, baby pink marks the primary
-     action on a screen, soft red marks logout/destructive. Tuned here. */
-  --btn-pink-1: #fadce8;
-  --btn-pink-2: #f8cfe0;
-  --btn-red: #e04a4a;
+  /* Button fills: white is the default, pink marks the primary action
+     on a screen, red marks logout/destructive. Tuned here. The rules
+     below pass the same values as var() fallbacks, because an undefined
+     custom property makes a declaration invalid at computed-value time
+     and resolves to transparent -- which reads as "no colour at all". */
+  --btn-pink-1: #f8b8d2;
+  --btn-pink-2: #f4a8c8;
+  --btn-red: #e03131;
   font-family: "Jost", "Noto Sans Ethiopic", system-ui, sans-serif;
   color: var(--ink);
   box-sizing: border-box;
@@ -93,13 +96,13 @@
   cursor: pointer;
 }
 .wb-pill.out {
-  background: var(--btn-red);
+  background: var(--btn-red, #e03131);
   color: #000;
   border-color: transparent;
   font-weight: 700;
 }
 .wb-pill.pink {
-  background: linear-gradient(120deg, var(--btn-pink-1), var(--btn-pink-2));
+  background: linear-gradient(120deg, var(--btn-pink-1, #f8b8d2), var(--btn-pink-2, #f4a8c8));
   color: #000;
   border-color: transparent;
   font-weight: 700;
@@ -244,7 +247,7 @@ input[type="checkbox"].wb-chk {
   transition: transform 0.15s;
 }
 .wb-btn.pink {
-  background: linear-gradient(120deg, var(--btn-pink-1), var(--btn-pink-2));
+  background: linear-gradient(120deg, var(--btn-pink-1, #f8b8d2), var(--btn-pink-2, #f4a8c8));
   border-color: transparent;
   box-shadow: 0 8px 20px rgba(216, 27, 120, 0.16);
 }
@@ -270,7 +273,7 @@ input[type="checkbox"].wb-chk {
   box-shadow: none;
 }
 .wb-btn.red {
-  background: var(--btn-red);
+  background: var(--btn-red, #e03131);
   box-shadow: 0 8px 20px rgba(217, 58, 58, 0.22);
 }
 .wb-btn.block {
@@ -301,7 +304,7 @@ input[type="checkbox"].wb-chk {
   cursor: pointer;
 }
 .wb-seg button.on {
-  background: linear-gradient(120deg, var(--btn-pink-1), var(--btn-pink-2));
+  background: linear-gradient(120deg, var(--btn-pink-1, #f8b8d2), var(--btn-pink-2, #f4a8c8));
   color: #000;
   font-weight: 600;
   box-shadow: 0 6px 16px rgba(216, 27, 120, 0.3);
@@ -646,7 +649,7 @@ input[type="checkbox"].wb-chk {
   font-weight: 600;
   cursor: pointer;
   color: #000;
-  background: linear-gradient(120deg, var(--btn-pink-1), var(--btn-pink-2));
+  background: linear-gradient(120deg, var(--btn-pink-1, #f8b8d2), var(--btn-pink-2, #f4a8c8));
   box-shadow: 0 0 0 14px rgba(236, 72, 153, 0.12),
     0 0 0 32px rgba(224, 169, 79, 0.16), 0 18px 40px rgba(216, 27, 120, 0.35);
   animation: wb-pulse 2.8s ease-in-out infinite;
