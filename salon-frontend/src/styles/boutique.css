@@ -783,8 +783,11 @@ input[type="checkbox"].wb-chk {
 .wb-svc .name {
   flex: 1;
   min-width: 0;
-  font-size: 14px;
-  font-weight: 500;
+  font-family: "Jost", "Noto Sans Ethiopic", system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: #000;
+  line-height: 1.45;
 }
 .wb-svc .price {
   width: 84px;
