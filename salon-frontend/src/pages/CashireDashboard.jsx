@@ -642,7 +642,7 @@ export default function CashierDashboard() {
         </button>
       </div>
 
-      <button className="wb-btn block" style={{ marginTop: 16 }} onClick={handleCompleteTransaction} disabled={savingTransaction}>
+      <button className="wb-btn pink block" style={{ marginTop: 16 }} onClick={handleCompleteTransaction} disabled={savingTransaction}>
         {savingTransaction ? t("cashier.saving") : t("cashier.completeTx")}
       </button>
       <button className="wb-btn red block" style={{ marginTop: 8 }} type="button" onClick={handleClearCart}>
@@ -778,7 +778,7 @@ export default function CashierDashboard() {
                     {t("cashier.hideServices")}
                   </button>
                 </div>
-                <button className="wb-btn block" onClick={handleAddSelectedServices} disabled={selectedCount === 0}>
+                <button className="wb-btn pink block" onClick={handleAddSelectedServices} disabled={selectedCount === 0}>
                   {t("cashier.addSelected")}{selectedCount > 0 ? ` (${selectedCount})` : ""}
                 </button>
               </div>
@@ -787,7 +787,7 @@ export default function CashierDashboard() {
           ) : (
             <div style={{ width: "100%", height: "100%", overflowY: "auto", padding: "12px 12px 24px" }}>
               <button
-                className="wb-btn block"
+                className="wb-btn pink block"
                 onClick={() => setShowServices(true)}
                 style={{ marginBottom: 14 }}
               >
@@ -805,7 +805,7 @@ export default function CashierDashboard() {
                   {t("cashier.hideServices")}
                 </button>
               </div>
-              <button className="wb-btn block" style={{ flexShrink: 0 }} onClick={handleAddSelectedServices} disabled={selectedCount === 0}>
+              <button className="wb-btn pink block" style={{ flexShrink: 0 }} onClick={handleAddSelectedServices} disabled={selectedCount === 0}>
                 {t("cashier.addSelected")}{selectedCount > 0 ? ` (${selectedCount})` : ""}
               </button>
               {serviceBoard}
@@ -887,7 +887,7 @@ export default function CashierDashboard() {
 
             <div className="wb-acts" style={{ marginTop: 18 }}>
               <button className="wb-btn line" onClick={cancelEndDay}>{t("cashier.cancel")}</button>
-              <button className="wb-btn" onClick={confirmEndDay}>{t("cashier.confirmEnd")}</button>
+              <button className="wb-btn pink" onClick={confirmEndDay}>{t("cashier.confirmEnd")}</button>
             </div>
           </div>
         </div>

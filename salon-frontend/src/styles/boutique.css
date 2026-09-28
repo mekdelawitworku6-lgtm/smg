@@ -10,10 +10,10 @@
   --pink2: #ec4899;
   --gold: #e0a94f;
   --red: #d93a3a;
-  /* Button fills: light enough for black labels, still clearly tinted
-     rather than white. Tuned in one place. */
-  --btn-pink-1: #f472b6;
-  --btn-pink-2: #f9a8d4;
+  /* Button fills: white is the default, baby pink marks the primary
+     action on a screen, soft red marks logout/destructive. Tuned here. */
+  --btn-pink-1: #fadce8;
+  --btn-pink-2: #f8cfe0;
   --btn-red: #e05555;
   font-family: "Jost", "Noto Sans Ethiopic", system-ui, sans-serif;
   color: var(--ink);
@@ -232,9 +232,15 @@ input[type="checkbox"].wb-chk {
   font-size: 15px;
   cursor: pointer;
   color: #000;
-  background: linear-gradient(120deg, var(--btn-pink-1), var(--btn-pink-2));
-  box-shadow: 0 8px 20px rgba(184, 59, 104, 0.24);
+  background: #fff;
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 16px rgba(120, 20, 70, 0.1);
   transition: transform 0.15s;
+}
+.wb-btn.pink {
+  background: linear-gradient(120deg, var(--btn-pink-1), var(--btn-pink-2));
+  border-color: transparent;
+  box-shadow: 0 8px 20px rgba(216, 27, 120, 0.16);
 }
 .wb-btn:active {
   transform: scale(0.97);
