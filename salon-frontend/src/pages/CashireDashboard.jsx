@@ -772,6 +772,8 @@ export default function CashierDashboard() {
           flex: 1,
           minHeight: 0,
           overflow: "hidden",
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         {isMobile ? (
@@ -803,7 +805,7 @@ export default function CashierDashboard() {
             </div>
           )
         ) : (
-          <div style={{ display: "flex", flexDirection: "row", flex: 1, minHeight: 0, overflow: "hidden" }}>
+          <div style={{ display: "flex", flexDirection: "row", flex: 1, minHeight: 0, overflow: "hidden", height: "100%" }}>
             {showServices ? (
               <>
                 <div style={{ width: "60%", padding: "16px", display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--line)", overflow: "hidden" }}>
