@@ -218,7 +218,9 @@ export default function CashierDashboard() {
 
   const [serviceSelections, setServiceSelections] =
     useState({});
-  const [showServices, setShowServices] = useState(false);
+  const [showServices, setShowServices] = useState(
+    () => typeof window !== "undefined" && window.innerWidth >= 768
+  );
 
   /* =========================
      COMPLETE TRANSACTION
@@ -437,10 +439,17 @@ export default function CashierDashboard() {
     setShowEndSummary(true);
   };
 
-  const confirmEndDay = () => {
+  const confirmEndDay = async () => {
     const cb = Number(closingBalance) || 0;
     const summaryTransactions = endSummary?.transactions || sessionTransactions;
     const totalIncome = summaryTransactions.reduce((s, t) => s + (Number(t.total) || 0), 0);
+
+    try {
+      await API.post("/transactions/clear-day");
+    } catch {
+      toast(t("cashier.clearDayFailed"), "error");
+    }
+
     dispatch(setTransactions(summaryTransactions));
     dispatch(closeDay({
       closingBalance: cb,
@@ -795,21 +804,34 @@ export default function CashierDashboard() {
           )
         ) : (
           <div style={{ display: "flex", flexDirection: "row", flex: 1, minHeight: 0, overflow: "hidden" }}>
-            <div style={{ width: "60%", padding: "16px", display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--line)", overflow: "hidden" }}>
-              <div className="wb-top" style={{ marginBottom: 12 }}>
-                <h2 className="serif" style={{ fontSize: 24 }}>{t("cashier.services")}</h2>
-                <button className="wb-btn line" type="button" style={{ width: "auto", padding: "0 14px" }} onClick={() => setShowServices(false)}>
-                  {t("cashier.hideServices")}
-                </button>
+            {showServices ? (
+              <>
+                <div style={{ width: "60%", padding: "16px", display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--line)", overflow: "hidden" }}>
+                  <div className="wb-top" style={{ marginBottom: 12 }}>
+                    <h2 className="serif" style={{ fontSize: 24 }}>{t("cashier.services")}</h2>
+                    <button className="wb-btn line" type="button" style={{ width: "auto", padding: "0 14px" }} onClick={() => setShowServices(false)}>
+                      {t("cashier.hideServices")}
+                    </button>
+                  </div>
+                  <button className="wb-btn pink block" style={{ flexShrink: 0 }} onClick={handleAddSelectedServices} disabled={selectedCount === 0}>
+                    {t("cashier.addSelected")}{selectedCount > 0 ? ` (${selectedCount})` : ""}
+                  </button>
+                  {serviceBoard}
+                </div>
+                <div className="wb" style={{ width: "40%", padding: "16px", overflowY: "auto", height: "100%" }}>
+                  {cartPanel}
+                </div>
+              </>
+            ) : (
+              <div style={{ width: "100%", height: "100%", overflowY: "auto", padding: "16px 16px 24px" }}>
+                <div style={{ maxWidth: 640, margin: "0 auto" }}>
+                  <button className="wb-btn pink block" onClick={() => setShowServices(true)} style={{ marginBottom: 14 }}>
+                    + {t("cashier.showServices")}
+                  </button>
+                  {cartPanel}
+                </div>
               </div>
-              <button className="wb-btn pink block" style={{ flexShrink: 0 }} onClick={handleAddSelectedServices} disabled={selectedCount === 0}>
-                {t("cashier.addSelected")}{selectedCount > 0 ? ` (${selectedCount})` : ""}
-              </button>
-              {serviceBoard}
-            </div>
-            <div className="wb" style={{ width: "40%", padding: "16px", overflowY: "auto", height: "100%" }}>
-              {cartPanel}
-            </div>
+            )}
           </div>
         )}
 

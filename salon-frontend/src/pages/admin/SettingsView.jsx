@@ -100,6 +100,16 @@ export default function SettingsView() {
     setTimeout(() => window.location.reload(), 1000);
   };
 
+  const handleResetAllData = async () => {
+    try {
+      const res = await API.post("/transactions/clear-all");
+      ok(res.data?.message || t("settings.dataReset"));
+      setTimeout(() => window.location.reload(), 1000);
+    } catch (e) {
+      fail(e.response?.data?.message || t("settings.dataResetFailed"));
+    }
+  };
+
   const handleSave = async () => {
     setErr("");
     const ph = phone.replace(/\s/g, "");
@@ -224,6 +234,18 @@ export default function SettingsView() {
                 onClick={() => askConfirm(t("settings.clearConfirm"), handleClearCache)}
               >
                 {t("settings.clearCache")}
+              </button>
+
+              <hr className="wb-hr" />
+
+              <h2 style={{ color: "var(--red)" }}>{t("settings.resetData")}</h2>
+              <p>{t("settings.resetDesc")}</p>
+              <button
+                className="wb-btn red"
+                style={{ width: "auto", padding: "0 28px", marginTop: 4 }}
+                onClick={() => askConfirm(t("settings.resetConfirm"), handleResetAllData)}
+              >
+                {t("settings.resetDataBtn")}
               </button>
             </section>
 

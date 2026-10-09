@@ -34,9 +34,11 @@ function isToday(d) {
 function isThisWeek(d) {
   const now = new Date();
   const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
   start.setDate(now.getDate() - now.getDay());
   const end = new Date(start);
   end.setDate(start.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
   return d >= start && d <= end;
 }
 
